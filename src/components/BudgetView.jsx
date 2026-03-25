@@ -4,7 +4,7 @@ import { useToast } from './Toast.jsx';
 import CategoryManager from './CategoryManager.jsx';
 
 export default function BudgetView() {
-  const { appState, categories, getWeekSpentByCategory, getMonthSpentByCategory, setBudget, handleExport, handleImport, handleReset } = useStore();
+  const { appState, categories, getWeekSpentByCategory, getMonthSpentByCategory, setBudget, handleExport, handleImport, handleReset, currentUser, syncStatus, signIn, signOut, pullFromFirestore } = useStore();
   const showToast = useToast();
   const fileInputRef = useRef(null);
   const [showManager, setShowManager] = useState(false);
@@ -140,6 +140,35 @@ export default function BudgetView() {
         <button className="btn-secondary btn-danger" onClick={onReset}>
           {'\u{1F5D1}'} Reset All
         </button>
+      </div>
+
+      <div className="data-actions">
+        <div className="section-title">{'\u2601\uFE0F'} Cloud Sync</div>
+        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '0 0 8px' }}>
+          {currentUser
+            ? `Signed in as ${currentUser.displayName || currentUser.email}`
+            : 'Sign in to sync across devices'}
+        </p>
+        {syncStatus === 'syncing' && (
+          <p style={{ fontSize: '11px', color: 'var(--accent)', margin: '0 0 8px' }}>Syncing...</p>
+        )}
+        {syncStatus === 'error' && (
+          <p style={{ fontSize: '11px', color: '#c44', margin: '0 0 8px' }}>Sync error — data saved locally</p>
+        )}
+        {currentUser ? (
+          <>
+            <button className="btn-secondary" onClick={pullFromFirestore}>
+              {'\u21BB'} Sync Now
+            </button>
+            <button className="btn-secondary" onClick={signOut}>
+              Sign Out
+            </button>
+          </>
+        ) : (
+          <button className="btn-secondary" onClick={signIn}>
+            Sign in with Google
+          </button>
+        )}
       </div>
     </div>
   );

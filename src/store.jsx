@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db, initializeState, initializeHabits, initializeCategories, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
+import { useFirebaseSync } from './useFirebaseSync.js';
 
 const StoreContext = createContext(null);
 
@@ -27,7 +28,7 @@ export function StoreProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
-  const loadAll = useCallback(async () => {
+  const loadAllBase = useCallback(async () => {
     const state = await db.state.get('app');
     const allExpenses = await db.expenses.orderBy('timestamp').reverse().toArray();
     const allHabits = await db.habits.toArray();
@@ -44,6 +45,18 @@ export function StoreProvider({ children }) {
     setCategories(allCategories);
   }, []);
 
+  // Firebase sync hook (uses loadAllBase for cloud → local pulls)
+  const {
+    currentUser, syncStatus, signIn, signOut,
+    syncToFirestore, syncNow, pullFromFirestore
+  } = useFirebaseSync(loadAllBase);
+
+  // Wrapped loadAll: reload from IndexedDB, then queue cloud sync
+  const loadAll = useCallback(async () => {
+    await loadAllBase();
+    syncToFirestore();
+  }, [loadAllBase, syncToFirestore]);
+
   // Initialize on mount
   useEffect(() => {
     async function init() {
@@ -51,11 +64,11 @@ export function StoreProvider({ children }) {
       await initializeState();
       await initializeHabits();
       await initializeCategories();
-      await loadAll();
+      await loadAllBase();
       setLoading(false);
     }
     init();
-  }, [loadAll]);
+  }, [loadAllBase]);
 
   // Get expenses for the current week
   const getWeekExpenses = useCallback(() => {
@@ -497,8 +510,10 @@ export function StoreProvider({ children }) {
     const text = await file.text();
     const data = JSON.parse(text);
     await importAllData(data);
-    await loadAll();
-  }, [loadAll]);
+    // Push imported data to cloud before reloading
+    if (currentUser) await syncNow();
+    await loadAllBase();
+  }, [loadAllBase, currentUser, syncNow]);
 
   // Reset
   const handleReset = useCallback(async () => {
@@ -539,7 +554,12 @@ export function StoreProvider({ children }) {
       logMeal,
       handleExport,
       handleImport,
-      handleReset
+      handleReset,
+      currentUser,
+      syncStatus,
+      signIn,
+      signOut,
+      pullFromFirestore
     }}>
       {children}
     </StoreContext.Provider>

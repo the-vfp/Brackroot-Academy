@@ -4,8 +4,16 @@ All notable changes to Brackroot Academy are documented here.
 
 ## 2026-03-25
 
+### Added
+- Firebase cloud sync — sign in with Google to sync data across devices
+- Cloud Sync section in the Budgets tab with sign in/out and Sync Now
+- Uses same Firebase project as Melody's Medicines
+- Offline support via Firestore persistence
+- Debounced cloud writes (2s) after every data mutation
+
 ### Changed
 - Moved to its own repo (previously part of Melody's Medicines repo)
+- Import now pushes to Firestore before reloading
 
 ## 2026-03-20
 

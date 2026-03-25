@@ -45,6 +45,23 @@ export function useFirebaseSync(loadAll) {
     return () => unsubscribe();
   }, [loadAll]);
 
+  // Flush pending sync when page goes to background (mobile tabs, screen lock)
+  useEffect(() => {
+    function handleVisibility() {
+      if (document.hidden && fbAuth.currentUser && timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+        exportAllData().then(data => {
+          data._lastSaved = serverTimestamp();
+          const docRef = doc(fbDb, 'users', fbAuth.currentUser.uid, 'apps', 'brackroot');
+          setDoc(docRef, data).catch(err => console.error('Background sync failed:', err));
+        });
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
   // Write to Firestore (debounced)
   const syncToFirestore = useCallback(() => {
     if (!fbAuth.currentUser) return;
@@ -82,13 +99,19 @@ export function useFirebaseSync(loadAll) {
     }
   }, []);
 
-  // Pull from Firestore (for Sync Now button)
+  // Push then pull (for Sync Now button)
   const pullFromFirestore = useCallback(async () => {
     if (!fbAuth.currentUser) return;
     try {
       setSyncStatus('syncing');
-      const docRef = doc(fbDb, 'users', fbAuth.currentUser.uid, 'apps', 'brackroot');
-      const snap = await getDoc(docRef);
+      // Push local changes first
+      if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+      const pushData = await exportAllData();
+      pushData._lastSaved = serverTimestamp();
+      const pushRef = doc(fbDb, 'users', fbAuth.currentUser.uid, 'apps', 'brackroot');
+      await setDoc(pushRef, pushData);
+      // Then pull latest
+      const snap = await getDoc(pushRef);
       if (snap.exists()) {
         const data = snap.data();
         delete data._lastSaved;
@@ -97,7 +120,7 @@ export function useFirebaseSync(loadAll) {
       }
       setSyncStatus('idle');
     } catch (err) {
-      console.error('Firestore pull failed:', err);
+      console.error('Firestore sync failed:', err);
       setSyncStatus('error');
     }
   }, [loadAll]);

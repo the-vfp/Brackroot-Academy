@@ -10,10 +10,10 @@ const MEAL_TYPES = [
 ];
 
 const MEAL_SOURCES = [
-  { id: 'home_cooked', label: 'Home-cooked', icon: '\u{1F468}\u200D\u{1F373}', silver: 25 },
-  { id: 'prepped', label: 'Groceries / Prepped', icon: '\u{1F96C}', silver: 15 },
-  { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', silver: 15 },
-  { id: 'dining_out', label: 'Dining Out', icon: '\u{1F37D}\uFE0F', silver: 15 },
+  { id: 'home_cooked', label: 'Home-cooked', icon: '\u{1F468}\u200D\u{1F373}', stardust: 25 },
+  { id: 'prepped', label: 'Groceries / Prepped', icon: '\u{1F96C}', stardust: 15 },
+  { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', stardust: 15 },
+  { id: 'dining_out', label: 'Dining Out', icon: '\u{1F37D}\uFE0F', stardust: 15 },
 ];
 
 function formatDate(dateStr) {
@@ -43,14 +43,10 @@ export default function MealTracker() {
     setDescription('');
     setDate(new Date().toISOString().split('T')[0]);
 
-    if (result.unlockedBuilding) {
-      showToast(`\u{1F3F0} ${result.unlockedBuilding.name} has been erected!`);
-    } else {
-      let msg = `+${result.silver} \u{1FA99} logged`;
-      if (result.weeklyStreak) msg += ' \u{1F525} Weekly meal streak!';
-      if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';
-      showToast(msg);
-    }
+    let msg = `+${result.stardust} \u2728 logged`;
+    if (result.weeklyStreak) msg += ' \u{1F525} Weekly meal streak!';
+    if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';
+    showToast(msg);
   }
 
   // Today's meals
@@ -86,7 +82,7 @@ export default function MealTracker() {
                 <div className="history-note">{m.description}</div>
               </div>
               <div className="history-meta">
-                <div className="history-silver">+{m.silverEarned} {'\u{1FA99}'}</div>
+                <div className="history-stardust">+{m.stardustEarned ?? 0} {'\u2728'}</div>
                 <div className="history-date">{formatDate(m.date)}</div>
               </div>
               {confirmId === m.id ? (
@@ -94,7 +90,7 @@ export default function MealTracker() {
                   <button className="delete-confirm-btn" onClick={async () => {
                     await deleteMeal(m.id);
                     setConfirmId(null);
-                    showToast(`-${m.silverEarned} \u{1FA99} meal removed`);
+                    showToast(`-${m.stardustEarned ?? 0} \u2728 meal removed`);
                   }}>Delete</button>
                   <button className="delete-cancel-btn" onClick={() => setConfirmId(null)}>Cancel</button>
                 </div>
@@ -167,10 +163,10 @@ export default function MealTracker() {
           </div>
         </div>
 
-        <div className="meal-silver-preview">
+        <div className="meal-stardust-preview">
           {selectedSource?.id === 'home_cooked'
-            ? `\u{1F373} Home-cooked bonus: +${selectedSource.silver} \u{1FA99}`
-            : `+${selectedSource?.silver || 15} \u{1FA99}`
+            ? `\u{1F373} Home-cooked bonus: +${selectedSource.stardust} \u2728`
+            : `+${selectedSource?.stardust || 15} \u2728`
           }
         </div>
 
@@ -197,14 +193,14 @@ export default function MealTracker() {
                 <div className="history-note">{m.description}</div>
               </div>
               <div className="history-meta">
-                <div className="history-silver">+{m.silverEarned} {'\u{1FA99}'}</div>
+                <div className="history-stardust">+{m.stardustEarned ?? 0} {'\u2728'}</div>
               </div>
               {confirmId === m.id ? (
                 <div className="delete-confirm">
                   <button className="delete-confirm-btn" onClick={async () => {
                     await deleteMeal(m.id);
                     setConfirmId(null);
-                    showToast(`-${m.silverEarned} \u{1FA99} meal removed`);
+                    showToast(`-${m.stardustEarned ?? 0} \u2728 meal removed`);
                   }}>Delete</button>
                   <button className="delete-cancel-btn" onClick={() => setConfirmId(null)}>Cancel</button>
                 </div>

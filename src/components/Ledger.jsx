@@ -37,7 +37,7 @@ export default function Ledger() {
             </div>
             <div className="history-meta">
               <div className="history-amount">${e.amount.toFixed(2)}</div>
-              <div className="history-silver">+{e.silverEarned} {'\u{1FA99}'}</div>
+              <div className="history-stardust">+{e.stardustEarned ?? 0} {'\u2728'}</div>
               <div className="history-date">{formatDate(e.date)}</div>
             </div>
             {confirmId === e.id ? (
@@ -45,7 +45,7 @@ export default function Ledger() {
                 <button className="delete-confirm-btn" onClick={async () => {
                   await deleteExpense(e.id);
                   setConfirmId(null);
-                  showToast(`-${e.silverEarned} \u{1FA99} entry removed`);
+                  showToast(`-${e.stardustEarned ?? 0} \u2728 entry removed`);
                 }}>Delete</button>
                 <button className="delete-cancel-btn" onClick={() => setConfirmId(null)}>Cancel</button>
               </div>

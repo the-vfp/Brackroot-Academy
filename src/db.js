@@ -32,38 +32,83 @@ db.version(4).stores({
   categories: 'id, sortOrder'
 });
 
+db.version(5).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, buildingTree, timestamp'
+});
+
+// v6 — Theme overhaul: unified Stardust pool, characters/interactions/events/challenges.
+// User decision: "preserve logs, reset currency" on upgrade.
+db.version(6).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, timestamp',
+  characters: 'id',
+  interactions: '++id, characterId, date, timestamp',
+  events: 'id, purchasedAt',
+  challenges: '++id, status, startedAt'
+}).upgrade(async tx => {
+  // State: drop silverPerCategory / unlockedBuildings / budgets; reset currency.
+  const state = await tx.table('state').get('app');
+  await tx.table('state').put({
+    key: 'app',
+    stardust: 0,
+    totalStardustEarned: 0,
+    weekStart: state?.weekStart || getWeekStart(),
+    habitDay: state?.habitDay,
+    dayBoundary: state?.dayBoundary || 0,
+    fullDayDates: state?.fullDayDates || [],
+    mealStreakWeeks: state?.mealStreakWeeks || []
+  });
+
+  // Rename silverEarned → stardustEarned on log records (historical amounts).
+  await tx.table('expenses').toCollection().modify(e => {
+    if ('silverEarned' in e) { e.stardustEarned = e.silverEarned; delete e.silverEarned; }
+  });
+  await tx.table('meals').toCollection().modify(m => {
+    if ('silverEarned' in m) { m.stardustEarned = m.silverEarned; delete m.silverEarned; }
+  });
+
+  // Rename buildingTree → category on habits + tasks (it was always a category id).
+  await tx.table('habits').toCollection().modify(h => {
+    if ('buildingTree' in h) { h.category = h.buildingTree; delete h.buildingTree; }
+  });
+  await tx.table('tasks').toCollection().modify(t => {
+    if ('buildingTree' in t) { t.category = t.buildingTree; delete t.buildingTree; }
+  });
+
+  // Strip building lore from categories — icons and names stay.
+  await tx.table('categories').toCollection().modify(c => {
+    if ('buildings' in c) delete c.buildings;
+  });
+});
+
 // Initialize default state values if they don't exist
 export async function initializeState() {
   const existing = await db.state.get('app');
   if (!existing) {
     await db.state.put({
       key: 'app',
-      silver: 0,
-      totalSilverEarned: 0,
-      silverPerCategory: {},
-      budgets: {},
-      unlockedBuildings: {},
-      weekStart: getWeekStart()
+      stardust: 0,
+      totalStardustEarned: 0,
+      weekStart: getWeekStart(),
+      dayBoundary: 0,
+      fullDayDates: [],
+      mealStreakWeeks: []
     });
   } else {
-    // Check if new week
     const currentWeek = getWeekStart();
     if (existing.weekStart !== currentWeek) {
       await db.state.update('app', { weekStart: currentWeek });
-    }
-
-    // Migrate budgets from plain numbers to { amount, period } objects
-    if (existing.budgets) {
-      const needsMigration = Object.values(existing.budgets).some(v => typeof v === 'number');
-      if (needsMigration) {
-        const migrated = {};
-        for (const [catId, val] of Object.entries(existing.budgets)) {
-          migrated[catId] = typeof val === 'number'
-            ? { amount: val, period: 'weekly' }
-            : val;
-        }
-        await db.state.update('app', { budgets: migrated });
-      }
     }
   }
 }
@@ -81,7 +126,8 @@ export function getMonthStart() {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
 }
 
-// Migrate from localStorage if old prototype data exists
+// Migrate from localStorage if old prototype data exists (pre-Dexie).
+// Writes v6 shape directly — the "reset currency" rule applies here too.
 export async function migrateFromLocalStorage() {
   try {
     const raw = localStorage.getItem('brackroot_tracker');
@@ -90,18 +136,16 @@ export async function migrateFromLocalStorage() {
     const old = JSON.parse(raw);
     if (!old.expenses || old.silver === undefined) return false;
 
-    // Migrate state
     await db.state.put({
       key: 'app',
-      silver: old.silver || 0,
-      totalSilverEarned: old.totalSilverEarned || 0,
-      silverPerCategory: old.silverPerCategory || {},
-      budgets: old.budgets || {},
-      unlockedBuildings: old.unlockedBuildings || {},
-      weekStart: old.weekStart || getWeekStart()
+      stardust: 0,
+      totalStardustEarned: 0,
+      weekStart: old.weekStart || getWeekStart(),
+      dayBoundary: 0,
+      fullDayDates: [],
+      mealStreakWeeks: []
     });
 
-    // Migrate expenses
     if (old.expenses.length > 0) {
       await db.expenses.bulkAdd(old.expenses.map(e => ({
         amount: e.amount,
@@ -109,11 +153,10 @@ export async function migrateFromLocalStorage() {
         note: e.note,
         date: e.date,
         timestamp: e.timestamp,
-        silverEarned: e.silverEarned
+        stardustEarned: e.silverEarned ?? e.stardustEarned ?? 0
       })));
     }
 
-    // Remove old data
     localStorage.removeItem('brackroot_tracker');
     return true;
   } catch (e) {
@@ -125,16 +168,16 @@ export async function migrateFromLocalStorage() {
 // Default habit definitions
 // type: 'daily' = checkbox (once per day), 'repeatable' = counter (multiple per day)
 export const DEFAULT_HABITS = [
-  { name: 'Drink water', icon: '\u{1F4A7}', buildingTree: 'health', type: 'repeatable', sortOrder: 0 },
-  { name: 'Walk / steps', icon: '\u{1F6B6}', buildingTree: 'transport', type: 'daily', sortOrder: 1 },
-  { name: 'Journal', icon: '\u{1F4D3}', buildingTree: 'stationery', type: 'daily', sortOrder: 2 },
-  { name: 'Read', icon: '\u{1F4D6}', buildingTree: 'stationery', type: 'daily', sortOrder: 3 },
-  { name: 'Went to bed on time', icon: '\u{1F319}', buildingTree: 'bills', type: 'daily', sortOrder: 4 },
-  { name: 'Took medication', icon: '\u{1F48A}', buildingTree: 'health', type: 'daily', sortOrder: 5 },
-  { name: 'Cooked a meal', icon: '\u{1F373}', buildingTree: 'groceries', type: 'repeatable', sortOrder: 6 },
-  { name: 'Tidied up', icon: '\u{1F9F9}', buildingTree: 'bills', type: 'daily', sortOrder: 7 },
-  { name: 'Creative writing', icon: '\u2728', buildingTree: 'stationery', type: 'daily', sortOrder: 8 },
-  { name: 'Went outside', icon: '\u{1F324}', buildingTree: 'transport', type: 'daily', sortOrder: 9 },
+  { name: 'Drink water', icon: '\u{1F4A7}', category: 'health', type: 'repeatable', sortOrder: 0 },
+  { name: 'Walk / steps', icon: '\u{1F6B6}', category: 'transport', type: 'daily', sortOrder: 1 },
+  { name: 'Journal', icon: '\u{1F4D3}', category: 'stationery', type: 'daily', sortOrder: 2 },
+  { name: 'Read', icon: '\u{1F4D6}', category: 'stationery', type: 'daily', sortOrder: 3 },
+  { name: 'Went to bed on time', icon: '\u{1F319}', category: 'bills', type: 'daily', sortOrder: 4 },
+  { name: 'Took medication', icon: '\u{1F48A}', category: 'health', type: 'daily', sortOrder: 5 },
+  { name: 'Cooked a meal', icon: '\u{1F373}', category: 'groceries', type: 'repeatable', sortOrder: 6 },
+  { name: 'Tidied up', icon: '\u{1F9F9}', category: 'bills', type: 'daily', sortOrder: 7 },
+  { name: 'Creative writing', icon: '\u2728', category: 'stationery', type: 'daily', sortOrder: 8 },
+  { name: 'Went outside', icon: '\u{1F324}', category: 'transport', type: 'daily', sortOrder: 9 },
 ];
 
 export async function initializeHabits() {
@@ -152,14 +195,13 @@ export async function initializeCategories() {
         id: c.id,
         name: c.name,
         icon: c.icon,
-        buildings: c.buildings,
         sortOrder: i
       }))
     );
   }
 }
 
-// Export all data as JSON
+// Export all data as JSON (v6).
 export async function exportAllData() {
   const appState = await db.state.get('app');
   const expenses = await db.expenses.toArray();
@@ -167,70 +209,143 @@ export async function exportAllData() {
   const habitLogs = await db.habitLogs.toArray();
   const meals = await db.meals.toArray();
   const categories = await db.categories.toArray();
+  const tasks = await db.tasks.toArray();
+  const characters = await db.characters.toArray();
+  const interactions = await db.interactions.toArray();
+  const events = await db.events.toArray();
+  const challenges = await db.challenges.toArray();
   return {
-    version: 4,
+    version: 6,
     exportedAt: new Date().toISOString(),
     state: {
-      silver: appState.silver,
-      totalSilverEarned: appState.totalSilverEarned,
-      silverPerCategory: appState.silverPerCategory,
-      budgets: appState.budgets,
-      unlockedBuildings: appState.unlockedBuildings,
+      stardust: appState.stardust || 0,
+      totalStardustEarned: appState.totalStardustEarned || 0,
       weekStart: appState.weekStart,
-      habitDay: appState.habitDay
+      habitDay: appState.habitDay,
+      dayBoundary: appState.dayBoundary || 0,
+      fullDayDates: appState.fullDayDates || [],
+      mealStreakWeeks: appState.mealStreakWeeks || []
     },
     expenses,
     habits,
     habitLogs,
     meals,
-    categories
+    categories,
+    tasks,
+    characters,
+    interactions,
+    events,
+    challenges
   };
 }
 
-// Import data from JSON
-export async function importAllData(data) {
-  // Support v4, v3, v2, v1, and legacy prototype formats
-  let stateData, expenses, habits, habitLogs, meals, categories;
+// Helpers to normalize v1–v5 payloads to v6 shape.
+function transformExpensesToV6(list) {
+  if (!list) return null;
+  return list.map(e => ({
+    amount: e.amount,
+    category: e.category,
+    note: e.note || '',
+    date: e.date,
+    timestamp: e.timestamp,
+    stardustEarned: e.stardustEarned ?? e.silverEarned ?? 0
+  }));
+}
+function transformMealsToV6(list) {
+  if (!list) return null;
+  return list.map(m => ({
+    description: m.description,
+    mealType: m.mealType,
+    source: m.source,
+    date: m.date,
+    timestamp: m.timestamp,
+    stardustEarned: m.stardustEarned ?? m.silverEarned ?? 0
+  }));
+}
+function transformHabitsToV6(list) {
+  if (!list) return null;
+  return list.map(h => {
+    const { buildingTree, ...rest } = h;
+    return { ...rest, category: rest.category ?? buildingTree };
+  });
+}
+function transformTasksToV6(list) {
+  if (!list) return null;
+  return list.map(t => {
+    const { buildingTree, ...rest } = t;
+    return { ...rest, category: rest.category ?? buildingTree };
+  });
+}
+function transformCategoriesToV6(list) {
+  if (!list) return null;
+  return list.map(c => ({
+    id: c.id,
+    name: c.name,
+    icon: c.icon,
+    sortOrder: c.sortOrder
+  }));
+}
 
-  if (data.version === 4 && data.state) {
-    stateData = data.state;
+// Import data from JSON (accepts v1–v6 payloads).
+export async function importAllData(data) {
+  let stateData, expenses, habits, habitLogs, meals, categories, tasks;
+  let characters = null, interactions = null, events = null, challenges = null;
+  const version = data.version;
+
+  if (version === 6 && data.state) {
+    // v6: round-trip — preserve stardust as stored.
+    stateData = {
+      stardust: data.state.stardust || 0,
+      totalStardustEarned: data.state.totalStardustEarned || 0,
+      weekStart: data.state.weekStart || getWeekStart(),
+      habitDay: data.state.habitDay,
+      dayBoundary: data.state.dayBoundary || 0,
+      fullDayDates: data.state.fullDayDates || [],
+      mealStreakWeeks: data.state.mealStreakWeeks || []
+    };
     expenses = data.expenses;
     habits = data.habits;
     habitLogs = data.habitLogs;
     meals = data.meals;
     categories = data.categories;
-  } else if (data.version === 3 && data.state) {
-    stateData = data.state;
-    expenses = data.expenses;
-    habits = data.habits;
-    habitLogs = data.habitLogs;
-    meals = data.meals;
-    categories = null;
-  } else if (data.version === 2 && data.state) {
-    stateData = data.state;
-    expenses = data.expenses;
-    habits = data.habits;
-    habitLogs = data.habitLogs;
-    meals = null;
-  } else if (data.version === 1 && data.state) {
-    stateData = data.state;
-    expenses = data.expenses;
-    habits = null;
-    habitLogs = null;
-  } else if (data.expenses && data.silver !== undefined) {
-    // Legacy prototype format
+    tasks = data.tasks;
+    characters = data.characters || null;
+    interactions = data.interactions || null;
+    events = data.events || null;
+    challenges = data.challenges || null;
+  } else if ((version === 5 || version === 4 || version === 3 || version === 2 || version === 1) && data.state) {
+    // Pre-v6: drop silverPerCategory / budgets / unlockedBuildings; reset currency.
     stateData = {
-      silver: data.silver,
-      totalSilverEarned: data.totalSilverEarned || 0,
-      silverPerCategory: data.silverPerCategory || {},
-      budgets: data.budgets || {},
-      unlockedBuildings: data.unlockedBuildings || {},
-      weekStart: data.weekStart || getWeekStart()
+      stardust: 0,
+      totalStardustEarned: 0,
+      weekStart: data.state.weekStart || getWeekStart(),
+      habitDay: data.state.habitDay,
+      dayBoundary: data.state.dayBoundary || 0,
+      fullDayDates: data.state.fullDayDates || [],
+      mealStreakWeeks: data.state.mealStreakWeeks || []
     };
-    expenses = data.expenses;
+    expenses = transformExpensesToV6(data.expenses);
+    habits = transformHabitsToV6(data.habits);
+    habitLogs = data.habitLogs || null;
+    meals = transformMealsToV6(data.meals);
+    categories = transformCategoriesToV6(data.categories);
+    tasks = transformTasksToV6(data.tasks);
+  } else if (data.expenses && data.silver !== undefined) {
+    // Legacy prototype format (pre-Dexie).
+    stateData = {
+      stardust: 0,
+      totalStardustEarned: 0,
+      weekStart: data.weekStart || getWeekStart(),
+      dayBoundary: 0,
+      fullDayDates: [],
+      mealStreakWeeks: []
+    };
+    expenses = transformExpensesToV6(data.expenses);
     habits = null;
     habitLogs = null;
     meals = null;
+    categories = null;
+    tasks = null;
   } else {
     throw new Error('Unrecognized data format');
   }
@@ -239,43 +354,31 @@ export async function importAllData(data) {
   await db.expenses.clear();
   await db.habitLogs.clear();
   await db.meals.clear();
+  await db.tasks.clear();
+  await db.characters.clear();
+  await db.interactions.clear();
+  await db.events.clear();
+  await db.challenges.clear();
 
   // Write state
   await db.state.put({ key: 'app', ...stateData });
 
-  // Write expenses
-  if (expenses && expenses.length > 0) {
-    await db.expenses.bulkAdd(expenses.map(e => ({
-      amount: e.amount,
-      category: e.category,
-      note: e.note || '',
-      date: e.date,
-      timestamp: e.timestamp,
-      silverEarned: e.silverEarned
-    })));
-  }
-
-  // Write habits (replace definitions if provided)
+  if (expenses && expenses.length > 0) await db.expenses.bulkAdd(expenses);
   if (habits && habits.length > 0) {
     await db.habits.clear();
     await db.habits.bulkAdd(habits);
   }
-
-  // Write habit logs
-  if (habitLogs && habitLogs.length > 0) {
-    await db.habitLogs.bulkAdd(habitLogs);
-  }
-
-  // Write meals
-  if (meals && meals.length > 0) {
-    await db.meals.bulkAdd(meals);
-  }
-
-  // Write categories (replace if provided)
+  if (habitLogs && habitLogs.length > 0) await db.habitLogs.bulkAdd(habitLogs);
+  if (meals && meals.length > 0) await db.meals.bulkAdd(meals);
   if (categories && categories.length > 0) {
     await db.categories.clear();
     await db.categories.bulkAdd(categories);
   }
+  if (tasks && tasks.length > 0) await db.tasks.bulkAdd(tasks);
+  if (characters && characters.length > 0) await db.characters.bulkAdd(characters);
+  if (interactions && interactions.length > 0) await db.interactions.bulkAdd(interactions);
+  if (events && events.length > 0) await db.events.bulkAdd(events);
+  if (challenges && challenges.length > 0) await db.challenges.bulkAdd(challenges);
 }
 
 // Reset all data
@@ -285,19 +388,24 @@ export async function resetAllData() {
   await db.habits.clear();
   await db.meals.clear();
   await db.categories.clear();
+  await db.tasks.clear();
+  await db.characters.clear();
+  await db.interactions.clear();
+  await db.events.clear();
+  await db.challenges.clear();
   await db.habits.bulkAdd(DEFAULT_HABITS);
   await db.categories.bulkAdd(
     DEFAULT_CATEGORIES.map((c, i) => ({
-      id: c.id, name: c.name, icon: c.icon, buildings: c.buildings, sortOrder: i
+      id: c.id, name: c.name, icon: c.icon, sortOrder: i
     }))
   );
   await db.state.put({
     key: 'app',
-    silver: 0,
-    totalSilverEarned: 0,
-    silverPerCategory: {},
-    budgets: {},
-    unlockedBuildings: {},
-    weekStart: getWeekStart()
+    stardust: 0,
+    totalStardustEarned: 0,
+    weekStart: getWeekStart(),
+    dayBoundary: 0,
+    fullDayDates: [],
+    mealStreakWeeks: []
   });
 }

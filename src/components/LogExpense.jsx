@@ -28,11 +28,9 @@ export default function LogExpense() {
     setNote('');
     setDate(new Date().toISOString().split('T')[0]);
 
-    if (result.unlockedBuilding) {
-      showToast(`\u{1F3F0} ${result.unlockedBuilding.name} has been erected!`);
-    } else {
-      showToast(`+${result.silver} \u{1FA99} recorded in the Ledger`);
-    }
+    let msg = `+${result.stardust} \u2728 recorded in the Ledger`;
+    if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';
+    showToast(msg);
   }
 
   return (

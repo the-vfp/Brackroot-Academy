@@ -22,10 +22,9 @@ export default function HabitChecklist() {
     const result = await toggleHabit(habitId);
 
     if (result.completed) {
-      let msg = `+${result.silver} \u{1FA99}`;
+      let msg = `+${result.stardust} \u2728`;
       if (result.weeklyStreak) msg += ' \u{1F525} Weekly streak bonus!';
       if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';
-      if (result.unlockedBuilding) msg = `\u{1F3F0} ${result.unlockedBuilding.name} has been erected!`;
       showToast(msg);
     }
   }
@@ -79,7 +78,7 @@ export default function HabitChecklist() {
                 <div className="habit-details">
                   <div className="habit-name">{habit.name}</div>
                   <div className="habit-streak" style={{ color: count > 0 ? 'var(--accent-gold)' : 'var(--text-warm)' }}>
-                    {count > 0 ? `${count}\u00D7 today \u00B7 +${count * 10} \u{1FA99}` : 'Tap + each time'}
+                    {count > 0 ? `${count}\u00D7 today \u00B7 +${count * 10} \u2728` : 'Tap + each time'}
                   </div>
                 </div>
                 <button
@@ -110,8 +109,8 @@ export default function HabitChecklist() {
                   </div>
                 )}
               </div>
-              <div className="habit-silver">
-                {isDone ? `+10 \u{1FA99}` : `10 \u{1FA99}`}
+              <div className="habit-stardust">
+                {isDone ? `+10 \u2728` : `10 \u2728`}
               </div>
             </button>
           );

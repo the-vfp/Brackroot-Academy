@@ -9,30 +9,18 @@ const ICON_OPTIONS = [
   '\u{1F48E}', '\u{1F3B5}', '\u{1F52C}', '\u{1F4F1}', '\u{1F9F9}', '\u2728'
 ];
 
-const DEFAULT_BUILDINGS = [
-  { name: '', desc: '', cost: 50 },
-  { name: '', desc: '', cost: 150 },
-  { name: '', desc: '', cost: 400 },
-  { name: '', desc: '', cost: 1000 }
-];
-
-const TIER_NAMES = ['I', 'II', 'III', 'IV'];
-
 export default function CategoryManager({ onBack }) {
   const { categories, addCategory, updateCategory, deleteCategory } = useStore();
   const showToast = useToast();
   const [editing, setEditing] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
 
-  // Form state
   const [name, setName] = useState('');
   const [icon, setIcon] = useState(ICON_OPTIONS[0]);
-  const [buildings, setBuildings] = useState(DEFAULT_BUILDINGS.map(b => ({ ...b })));
 
   function resetForm() {
     setName('');
     setIcon(ICON_OPTIONS[0]);
-    setBuildings(DEFAULT_BUILDINGS.map(b => ({ ...b })));
     setShowAdd(false);
     setEditing(null);
   }
@@ -41,7 +29,6 @@ export default function CategoryManager({ onBack }) {
     setEditing(cat.id);
     setName(cat.name);
     setIcon(cat.icon);
-    setBuildings(cat.buildings.map(b => ({ ...b })));
     setShowAdd(false);
   }
 
@@ -50,34 +37,24 @@ export default function CategoryManager({ onBack }) {
     setShowAdd(true);
   }
 
-  function updateBuilding(index, field, value) {
-    setBuildings(prev => prev.map((b, i) => i === index ? { ...b, [field]: value } : b));
-  }
-
   async function handleSave() {
     if (!name.trim()) {
       showToast('Give your category a name.');
       return;
     }
 
-    const hasEmptyBuilding = buildings.some(b => !b.name.trim());
-    if (hasEmptyBuilding) {
-      showToast('All four buildings need a name.');
-      return;
-    }
-
     if (editing) {
-      await updateCategory(editing, { name: name.trim(), icon, buildings });
+      await updateCategory(editing, { name: name.trim(), icon });
       showToast('Category updated');
     } else {
-      await addCategory(name.trim(), icon, buildings);
+      await addCategory(name.trim(), icon);
       showToast('Category added!');
     }
     resetForm();
   }
 
   async function handleDelete(id, catName) {
-    if (confirm(`Remove "${catName}"? All expenses, Silver progress, and buildings for this category will be permanently deleted.`)) {
+    if (confirm(`Remove "${catName}"? All expenses filed under it will also be removed.`)) {
       await deleteCategory(id);
       showToast('Category removed');
       if (editing === id) resetForm();
@@ -95,16 +72,12 @@ export default function CategoryManager({ onBack }) {
         </button>
       </div>
 
-      {/* Existing categories list */}
       <div className="habit-list">
         {categories.map(cat => (
           <div key={cat.id} className="habit-item habit-manage-row">
             <div className="habit-icon">{cat.icon}</div>
             <div className="habit-details">
               <div className="habit-name">{cat.name}</div>
-              <div className="habit-streak" style={{ opacity: 0.6 }}>
-                {cat.buildings.length} buildings
-              </div>
             </div>
             <button
               className="btn-secondary"
@@ -124,7 +97,6 @@ export default function CategoryManager({ onBack }) {
         ))}
       </div>
 
-      {/* Add / Edit form */}
       {showForm && (
         <div className="form-card" style={{ marginTop: 12 }}>
           <div className="form-group">
@@ -151,29 +123,6 @@ export default function CategoryManager({ onBack }) {
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Campus Buildings</label>
-            {buildings.map((b, i) => (
-              <div key={i} className="building-form-tier">
-                <div className="building-form-header">Tier {TIER_NAMES[i]} — {b.cost} Silver</div>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder={`Building name (Tier ${TIER_NAMES[i]})`}
-                  value={b.name}
-                  onChange={(e) => updateBuilding(i, 'name', e.target.value)}
-                />
-                <textarea
-                  className="form-textarea"
-                  placeholder="Description (optional)"
-                  value={b.desc}
-                  rows={2}
-                  onChange={(e) => updateBuilding(i, 'desc', e.target.value)}
-                />
-              </div>
-            ))}
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>

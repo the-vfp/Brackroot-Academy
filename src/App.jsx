@@ -3,25 +3,28 @@ import { StoreProvider, useStore } from './store.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import FallingLeaves from './components/FallingLeaves.jsx';
 import Navigation from './components/Navigation.jsx';
-import CampusView from './components/CampusView.jsx';
+import CampusPlaceholder from './components/CampusPlaceholder.jsx';
+import JournalPlaceholder from './components/JournalPlaceholder.jsx';
 import SpendView from './components/SpendView.jsx';
 import MealTracker from './components/MealTracker.jsx';
-import BudgetView from './components/BudgetView.jsx';
-import HabitChecklist from './components/HabitChecklist.jsx';
+import TendView from './components/TendView.jsx';
+import Settings from './components/Settings.jsx';
 import './App.css';
+
+const VALID_TABS = ['campus', 'journal', 'spend', 'eat', 'tend'];
 
 function AppContent() {
   const { appState } = useStore();
-  const [activeTab, setActiveTab] = useState('campus');
+  const [activeTab, setActiveTab] = useState('tend');
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Support ?tab=log deep link for PWA shortcut
+  // Support ?tab= deep links (PWA shortcut aliases "log" → "spend" for backcompat).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab === 'log') setActiveTab('spend'); // backwards compat
-    else if (['campus', 'spend', 'eat', 'habits', 'budget'].includes(tab)) {
-      setActiveTab(tab);
-    }
+    if (tab === 'log') setActiveTab('spend');
+    else if (tab === 'habits' || tab === 'tasks') setActiveTab('tend');
+    else if (VALID_TABS.includes(tab)) setActiveTab(tab);
   }, []);
 
   return (
@@ -29,22 +32,37 @@ function AppContent() {
       <FallingLeaves />
       <div className="app">
         <header className="header">
+          <button
+            className="header-settings-btn"
+            onClick={() => setShowSettings(true)}
+            aria-label="Settings"
+          >
+            {'\u2699\uFE0F'}
+          </button>
           <h1>{'\u{1F3F0}'} Brackroot Academy</h1>
-          <div className="silver-display">
-            <span className="coin">{'\u{1FA99}'}</span>
-            <span>{(appState?.silver || 0).toLocaleString()}</span> Silver
+          <div className="stardust-display">
+            <span className="sparkle">{'\u2728'}</span>
+            <span>{(appState?.stardust || 0).toLocaleString()}</span> Stardust
           </div>
         </header>
 
         <div className="main">
-          {activeTab === 'campus' && <CampusView />}
-          {activeTab === 'spend' && <SpendView />}
-          {activeTab === 'eat' && <MealTracker />}
-          {activeTab === 'habits' && <HabitChecklist />}
-          {activeTab === 'budget' && <BudgetView />}
+          {showSettings ? (
+            <Settings onBack={() => setShowSettings(false)} />
+          ) : (
+            <>
+              {activeTab === 'campus' && <CampusPlaceholder />}
+              {activeTab === 'journal' && <JournalPlaceholder />}
+              {activeTab === 'spend' && <SpendView />}
+              {activeTab === 'eat' && <MealTracker />}
+              {activeTab === 'tend' && <TendView />}
+            </>
+          )}
         </div>
 
-        <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        {!showSettings && (
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+        )}
       </div>
     </>
   );

@@ -18,13 +18,13 @@ export default function HabitManager({ onBack }) {
   // Form state
   const [name, setName] = useState('');
   const [icon, setIcon] = useState(ICON_OPTIONS[0]);
-  const [buildingTree, setBuildingTree] = useState('health');
+  const [category, setCategory] = useState('health');
   const [habitType, setHabitType] = useState('daily');
 
   function resetForm() {
     setName('');
     setIcon(ICON_OPTIONS[0]);
-    setBuildingTree('health');
+    setCategory('health');
     setHabitType('daily');
     setShowAdd(false);
     setEditing(null);
@@ -34,7 +34,7 @@ export default function HabitManager({ onBack }) {
     setEditing(habit.id);
     setName(habit.name);
     setIcon(habit.icon);
-    setBuildingTree(habit.buildingTree);
+    setCategory(habit.category || habit.buildingTree || 'health');
     setHabitType(habit.type || 'daily');
     setShowAdd(false);
   }
@@ -51,10 +51,10 @@ export default function HabitManager({ onBack }) {
     }
 
     if (editing) {
-      await updateHabit(editing, { name: name.trim(), icon, buildingTree, type: habitType });
+      await updateHabit(editing, { name: name.trim(), icon, category, type: habitType });
       showToast('Habit updated');
     } else {
-      await addHabit(name.trim(), icon, buildingTree, habitType);
+      await addHabit(name.trim(), icon, category, habitType);
       showToast('Habit added!');
     }
     resetForm();
@@ -87,7 +87,7 @@ export default function HabitManager({ onBack }) {
             <div className="habit-details">
               <div className="habit-name">{habit.name}</div>
               <div className="habit-streak" style={{ opacity: 0.6 }}>
-                {habit.type === 'repeatable' ? '+ Repeatable' : '\u2713 Daily'} \u00B7 {categories.find(c => c.id === habit.buildingTree)?.name || habit.buildingTree}
+                {habit.type === 'repeatable' ? '+ Repeatable' : '\u2713 Daily'} \u00B7 {categories.find(c => c.id === (habit.category || habit.buildingTree))?.name || habit.category || habit.buildingTree}
               </div>
             </div>
             <button
@@ -158,11 +158,11 @@ export default function HabitManager({ onBack }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Building Tree</label>
+            <label className="form-label">Category</label>
             <select
               className="form-select"
-              value={buildingTree}
-              onChange={(e) => setBuildingTree(e.target.value)}
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
             >
               {categories.map(c => (
                 <option key={c.id} value={c.id}>{c.icon} {c.name}</option>

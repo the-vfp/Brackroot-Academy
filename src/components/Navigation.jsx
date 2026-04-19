@@ -1,9 +1,9 @@
 const TABS = [
-  { id: 'campus', icon: '\u{1F3F0}', label: 'Campus' },
-  { id: 'spend', icon: '\u{1FA99}', label: 'Spend' },
-  { id: 'eat', icon: '\u{1F37D}\uFE0F', label: 'Eat' },
-  { id: 'habits', icon: '\u2728', label: 'Habits' },
-  { id: 'budget', icon: '\u2696\uFE0F', label: 'Budget' },
+  { id: 'campus',  icon: '\u{1F3F0}',         label: 'Campus' },
+  { id: 'journal', icon: '\u{1F4D6}',         label: 'Journal' },
+  { id: 'spend',   icon: '\u{1FA99}',         label: 'Spend' },
+  { id: 'eat',     icon: '\u{1F37D}\uFE0F',   label: 'Eat' },
+  { id: 'tend',    icon: '\u2728',            label: 'Tend' },
 ];
 
 export default function Navigation({ activeTab, onTabChange }) {

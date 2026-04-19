@@ -4,19 +4,12 @@ import { useFirebaseSync } from './useFirebaseSync.js';
 
 const StoreContext = createContext(null);
 
-const HABIT_SILVER = 10;
-const MEAL_SILVER_BASE = 15;
-const MEAL_SILVER_HOME_COOKED = 25;
+const HABIT_STARDUST = 10;
+const MEAL_STARDUST_BASE = 15;
+const MEAL_STARDUST_HOME_COOKED = 25;
 const FULL_DAY_BONUS = 20;
 const WEEKLY_STREAK_BONUS = 50;
-
-// Which building tree a meal source feeds into
-const MEAL_SOURCE_TREE = {
-  home_cooked: 'groceries',
-  delivery: 'food_delivery',
-  dining_out: 'dining',
-  prepped: 'groceries'
-};
+const TASK_STARDUST = 10;
 
 export function StoreProvider({ children }) {
   const [appState, setAppState] = useState(null);
@@ -25,6 +18,7 @@ export function StoreProvider({ children }) {
   const [habitLogs, setHabitLogs] = useState([]);
   const [meals, setMeals] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
@@ -37,12 +31,14 @@ export function StoreProvider({ children }) {
     const allMeals = await db.meals.orderBy('timestamp').reverse().toArray();
     const allCategories = await db.categories.toArray();
     allCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const allTasks = await db.tasks.orderBy('timestamp').reverse().toArray();
     setAppState(state);
     setExpenses(allExpenses);
     setHabits(allHabits);
     setHabitLogs(allHabitLogs);
     setMeals(allMeals);
     setCategories(allCategories);
+    setTasks(allTasks);
   }, []);
 
   // Firebase sync hook (uses loadAllBase for cloud → local pulls)
@@ -102,114 +98,59 @@ export function StoreProvider({ children }) {
     return spent;
   }, [getMonthExpenses, categories]);
 
-  // Calculate silver for an expense
-  const calculateSilver = useCallback((amount, categoryId) => {
-    let base = 10 + Math.floor(amount);
-    const budgetEntry = appState?.budgets?.[categoryId];
-    const budgetAmount = budgetEntry?.amount || 0;
-    const budgetPeriod = budgetEntry?.period || 'weekly';
-    if (budgetAmount > 0) {
-      const spent = budgetPeriod === 'monthly'
-        ? getMonthSpentByCategory()
-        : getWeekSpentByCategory();
-      if ((spent[categoryId] || 0) + amount <= budgetAmount) {
-        base = base * 2;
-      }
-    }
-    return base;
-  }, [appState, getWeekSpentByCategory, getMonthSpentByCategory]);
+  // Stardust earned for an expense: flat 10 + floor(amount).
+  const calculateStardust = useCallback((amount) => {
+    return 10 + Math.floor(amount);
+  }, []);
 
-  // Helper: award silver to a building tree
-  const awardSilver = useCallback(async (silver, buildingTree) => {
+  // Award stardust to the unified pool.
+  const awardStardust = useCallback(async (amount) => {
     const state = await db.state.get('app');
-    const newSilverPerCat = { ...state.silverPerCategory };
-    newSilverPerCat[buildingTree] = (newSilverPerCat[buildingTree] || 0) + silver;
-
-    // Check for building unlock
-    const newUnlocked = { ...state.unlockedBuildings };
-    const cat = categories.find(c => c.id === buildingTree);
-    let unlockedBuilding = null;
-
-    if (cat) {
-      const currentTier = newUnlocked[buildingTree] || 0;
-      if (currentTier < cat.buildings.length) {
-        const nextBuilding = cat.buildings[currentTier];
-        if (newSilverPerCat[buildingTree] >= nextBuilding.cost) {
-          newUnlocked[buildingTree] = currentTier + 1;
-          newSilverPerCat[buildingTree] -= nextBuilding.cost;
-          unlockedBuilding = nextBuilding;
-        }
-      }
-    }
-
     await db.state.update('app', {
-      silver: state.silver + silver,
-      totalSilverEarned: state.totalSilverEarned + silver,
-      silverPerCategory: newSilverPerCat,
-      unlockedBuildings: newUnlocked
+      stardust: (state.stardust || 0) + amount,
+      totalStardustEarned: (state.totalStardustEarned || 0) + amount
     });
-
-    return unlockedBuilding;
-  }, [categories]);
+  }, []);
 
   // Log an expense
   const logExpense = useCallback(async (amount, categoryId, note, customDate) => {
-    const silver = calculateSilver(amount, categoryId);
+    const stardust = calculateStardust(amount);
     const expense = {
       amount: Math.round(amount * 100) / 100,
       category: categoryId,
       note: note,
       date: customDate || new Date().toISOString().split('T')[0],
       timestamp: Date.now(),
-      silverEarned: silver
+      stardustEarned: stardust
     };
 
     await db.expenses.add(expense);
-    const unlockedBuilding = await awardSilver(silver, categoryId);
+    await awardStardust(stardust);
 
-    // Check for Full Day bonus
+    // Full Day bonus (habits + expenses logged the same day).
     const today = new Date().toISOString().split('T')[0];
     const todayHabitLogs = habitLogs.filter(l => l.date === today);
-    const hasHabitsToday = todayHabitLogs.length > 0;
     let fullDayBonus = false;
-
-    if (hasHabitsToday) {
-      // Check if Full Day bonus already awarded today
+    if (todayHabitLogs.length > 0) {
       const state = await db.state.get('app');
       const fullDayDates = state.fullDayDates || [];
       if (!fullDayDates.includes(today)) {
-        await awardSilver(FULL_DAY_BONUS, categoryId);
+        await awardStardust(FULL_DAY_BONUS);
         await db.state.update('app', { fullDayDates: [...fullDayDates, today] });
         fullDayBonus = true;
       }
     }
 
     await loadAll();
-    return { silver, unlockedBuilding, fullDayBonus };
-  }, [calculateSilver, awardSilver, loadAll, habitLogs]);
-
-  // Set budget for a category
-  const setBudget = useCallback(async (categoryId, value, period) => {
-    const state = await db.state.get('app');
-    const newBudgets = { ...state.budgets };
-    const existing = newBudgets[categoryId] || {};
-    newBudgets[categoryId] = {
-      amount: Math.max(0, parseFloat(value) || 0),
-      period: period || existing.period || 'weekly'
-    };
-    await db.state.update('app', { budgets: newBudgets });
-    await loadAll();
-  }, [loadAll]);
+    return { stardust, fullDayBonus };
+  }, [calculateStardust, awardStardust, loadAll, habitLogs]);
 
   // ====== HABIT DAY (user-controlled "today") ======
 
-  // The habit day the user considers "today" — persists until they tap "New Day"
   const getHabitDay = useCallback(() => {
     return appState?.habitDay || new Date().toISOString().split('T')[0];
   }, [appState]);
 
-  // Start a new day — sets habit day to calendar today and marks a boundary timestamp
-  // Only habits completed AFTER this boundary count for the current day's view
   const startNewDay = useCallback(async () => {
     const calendarToday = new Date().toISOString().split('T')[0];
     await db.state.update('app', {
@@ -221,81 +162,67 @@ export function StoreProvider({ children }) {
 
   // ====== HABIT OPERATIONS ======
 
-  // Toggle a daily habit, or add a count for a repeatable habit
   const toggleHabit = useCallback(async (habitId) => {
     const today = getHabitDay();
     const habit = habits.find(h => h.id === habitId);
 
-    // Persist habitDay on first toggle so it sticks
     if (!appState?.habitDay) {
       await db.state.update('app', { habitDay: today });
     }
     const isRepeatable = habit?.type === 'repeatable';
 
-    // For daily habits, check if already done today
     if (!isRepeatable) {
       const existing = await db.habitLogs.where({ date: today, habitId }).first();
 
       if (existing) {
-        // Uncomplete: remove log and deduct silver
+        // Uncomplete: remove log and deduct stardust
         await db.habitLogs.delete(existing.id);
-        if (habit) {
-          const state = await db.state.get('app');
-          const newSilverPerCat = { ...state.silverPerCategory };
-          newSilverPerCat[habit.buildingTree] = Math.max(0, (newSilverPerCat[habit.buildingTree] || 0) - HABIT_SILVER);
-          await db.state.update('app', {
-            silver: Math.max(0, state.silver - HABIT_SILVER),
-            totalSilverEarned: Math.max(0, state.totalSilverEarned - HABIT_SILVER),
-            silverPerCategory: newSilverPerCat
-          });
-        }
+        const state = await db.state.get('app');
+        await db.state.update('app', {
+          stardust: Math.max(0, (state.stardust || 0) - HABIT_STARDUST),
+          totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - HABIT_STARDUST)
+        });
         await loadAll();
-        return { completed: false, silver: 0 };
+        return { completed: false, stardust: 0 };
       }
     }
 
-    // Complete (daily) or add one more (repeatable): add log and award silver
     await db.habitLogs.add({
       habitId,
       date: today,
       timestamp: Date.now()
     });
 
-    let unlockedBuilding = null;
-    if (habit) {
-      unlockedBuilding = await awardSilver(HABIT_SILVER, habit.buildingTree);
-    }
+    await awardStardust(HABIT_STARDUST);
 
-    // Check for Full Day bonus (habits + expenses today)
+    // Full Day bonus (habits + expenses the same day).
     const todayExpenses = expenses.filter(e => e.date === today);
     let fullDayBonus = false;
     if (todayExpenses.length > 0) {
       const state = await db.state.get('app');
       const fullDayDates = state.fullDayDates || [];
       if (!fullDayDates.includes(today)) {
-        const tree = habit?.buildingTree || 'health';
-        await awardSilver(FULL_DAY_BONUS, tree);
+        await awardStardust(FULL_DAY_BONUS);
         await db.state.update('app', { fullDayDates: [...fullDayDates, today] });
         fullDayBonus = true;
       }
     }
 
-    // Check for weekly streak bonus (daily habits only, first completion per day)
+    // Weekly streak bonus (daily habits only, first completion per day).
     let weeklyStreak = false;
     if (habit && !isRepeatable) {
       const weekStart = appState.weekStart;
       const logsThisWeek = habitLogs.filter(l => l.habitId === habitId && l.date >= weekStart);
       if (logsThisWeek.length + 1 >= 7) {
-        await awardSilver(WEEKLY_STREAK_BONUS, habit.buildingTree);
+        await awardStardust(WEEKLY_STREAK_BONUS);
         weeklyStreak = true;
       }
     }
 
     await loadAll();
-    return { completed: true, silver: HABIT_SILVER, unlockedBuilding, fullDayBonus, weeklyStreak };
-  }, [habits, habitLogs, expenses, appState, awardSilver, loadAll, getHabitDay]);
+    return { completed: true, stardust: HABIT_STARDUST, fullDayBonus, weeklyStreak };
+  }, [habits, habitLogs, expenses, appState, awardStardust, loadAll, getHabitDay]);
 
-  // Get today's completed habit IDs (for daily habits)
   const getTodayCompletedHabits = useCallback(() => {
     const today = getHabitDay();
     const boundary = appState?.dayBoundary || 0;
@@ -304,7 +231,6 @@ export function StoreProvider({ children }) {
       .map(l => l.habitId);
   }, [habitLogs, getHabitDay, appState]);
 
-  // Get today's count per habit (for repeatable habits)
   const getTodayHabitCounts = useCallback(() => {
     const today = getHabitDay();
     const boundary = appState?.dayBoundary || 0;
@@ -317,7 +243,6 @@ export function StoreProvider({ children }) {
     return counts;
   }, [habitLogs, getHabitDay, appState]);
 
-  // Get streak for a habit (consecutive days ending today or yesterday)
   const getHabitStreak = useCallback((habitId) => {
     const logs = habitLogs.filter(l => l.habitId === habitId).map(l => l.date);
     const uniqueDates = [...new Set(logs)].sort().reverse();
@@ -326,7 +251,6 @@ export function StoreProvider({ children }) {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-    // Streak must include today or yesterday
     if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0;
 
     let streak = 1;
@@ -343,33 +267,29 @@ export function StoreProvider({ children }) {
     return streak;
   }, [habitLogs]);
 
-  // Add a new habit
-  const addHabit = useCallback(async (name, icon, buildingTree, type = 'daily') => {
+  const addHabit = useCallback(async (name, icon, category, type = 'daily') => {
     const maxOrder = habits.reduce((max, h) => Math.max(max, h.sortOrder || 0), -1);
-    await db.habits.add({ name, icon, buildingTree, type, sortOrder: maxOrder + 1 });
+    await db.habits.add({ name, icon, category, type, sortOrder: maxOrder + 1 });
     await loadAll();
   }, [habits, loadAll]);
 
-  // Update a habit
   const updateHabit = useCallback(async (id, updates) => {
     await db.habits.update(id, updates);
     await loadAll();
   }, [loadAll]);
 
-  // Delete a habit
   const deleteHabit = useCallback(async (id) => {
     await db.habits.delete(id);
-    // Also delete its logs
     await db.habitLogs.where('habitId').equals(id).delete();
     await loadAll();
   }, [loadAll]);
 
   // ====== CATEGORY OPERATIONS ======
 
-  const addCategory = useCallback(async (name, icon, buildings) => {
+  const addCategory = useCallback(async (name, icon) => {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
     const maxOrder = categories.reduce((max, c) => Math.max(max, c.sortOrder || 0), -1);
-    await db.categories.add({ id: slug, name, icon, buildings, sortOrder: maxOrder + 1 });
+    await db.categories.add({ id: slug, name, icon, sortOrder: maxOrder + 1 });
     await loadAll();
   }, [categories, loadAll]);
 
@@ -380,70 +300,81 @@ export function StoreProvider({ children }) {
 
   const deleteCategory = useCallback(async (id) => {
     await db.categories.delete(id);
-    // Clean up expenses, silver, budgets, and buildings for this category
     await db.expenses.where('category').equals(id).delete();
-    const state = await db.state.get('app');
-    const newSilverPerCat = { ...state.silverPerCategory };
-    const newUnlocked = { ...state.unlockedBuildings };
-    const newBudgets = { ...state.budgets };
-    delete newSilverPerCat[id];
-    delete newUnlocked[id];
-    delete newBudgets[id];
-    await db.state.update('app', {
-      silverPerCategory: newSilverPerCat,
-      unlockedBuildings: newUnlocked,
-      budgets: newBudgets
-    });
     await loadAll();
   }, [loadAll]);
 
-  // Delete an expense and deduct the silver it earned
+  // Delete an expense and deduct the stardust it earned.
   const deleteExpense = useCallback(async (id) => {
     const expense = await db.expenses.get(id);
     if (!expense) return;
 
     await db.expenses.delete(id);
 
-    // Deduct silver
+    const earned = expense.stardustEarned ?? 0;
     const state = await db.state.get('app');
-    const newSilverPerCat = { ...state.silverPerCategory };
-    newSilverPerCat[expense.category] = Math.max(0, (newSilverPerCat[expense.category] || 0) - expense.silverEarned);
     await db.state.update('app', {
-      silver: Math.max(0, state.silver - expense.silverEarned),
-      totalSilverEarned: Math.max(0, state.totalSilverEarned - expense.silverEarned),
-      silverPerCategory: newSilverPerCat
+      stardust: Math.max(0, (state.stardust || 0) - earned),
+      totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - earned)
     });
 
     await loadAll();
   }, [loadAll]);
 
-  // Delete a meal and deduct the silver it earned
+  // Delete a meal and deduct the stardust it earned.
   const deleteMeal = useCallback(async (id) => {
     const meal = await db.meals.get(id);
     if (!meal) return;
 
     await db.meals.delete(id);
 
-    // Deduct silver
-    const buildingTree = MEAL_SOURCE_TREE[meal.source] || 'groceries';
+    const earned = meal.stardustEarned ?? 0;
     const state = await db.state.get('app');
-    const newSilverPerCat = { ...state.silverPerCategory };
-    newSilverPerCat[buildingTree] = Math.max(0, (newSilverPerCat[buildingTree] || 0) - meal.silverEarned);
     await db.state.update('app', {
-      silver: Math.max(0, state.silver - meal.silverEarned),
-      totalSilverEarned: Math.max(0, state.totalSilverEarned - meal.silverEarned),
-      silverPerCategory: newSilverPerCat
+      stardust: Math.max(0, (state.stardust || 0) - earned),
+      totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - earned)
     });
 
     await loadAll();
   }, [loadAll]);
 
+  // ====== TASK OPERATIONS ======
+
+  const addTask = useCallback(async (text, category) => {
+    await db.tasks.add({
+      text,
+      category,
+      completed: false,
+      timestamp: Date.now(),
+      completedAt: null
+    });
+    await loadAll();
+  }, [loadAll]);
+
+  const completeTask = useCallback(async (id) => {
+    const task = await db.tasks.get(id);
+    if (!task || task.completed) return null;
+
+    await db.tasks.update(id, { completed: true, completedAt: Date.now() });
+    await awardStardust(TASK_STARDUST);
+    await loadAll();
+    return { stardust: TASK_STARDUST };
+  }, [awardStardust, loadAll]);
+
+  const deleteTask = useCallback(async (id) => {
+    await db.tasks.delete(id);
+    await loadAll();
+  }, [loadAll]);
+
+  const clearCompletedTasks = useCallback(async () => {
+    await db.tasks.where('completed').equals(1).delete();
+    await loadAll();
+  }, [loadAll]);
+
   // ====== MEAL OPERATIONS ======
 
-  // Log a meal
   const logMeal = useCallback(async (description, mealType, source, customDate) => {
-    const silver = source === 'home_cooked' ? MEAL_SILVER_HOME_COOKED : MEAL_SILVER_BASE;
-    const buildingTree = MEAL_SOURCE_TREE[source] || 'groceries';
+    const stardust = source === 'home_cooked' ? MEAL_STARDUST_HOME_COOKED : MEAL_STARDUST_BASE;
     const today = customDate || new Date().toISOString().split('T')[0];
 
     const meal = {
@@ -452,13 +383,13 @@ export function StoreProvider({ children }) {
       source,
       date: today,
       timestamp: Date.now(),
-      silverEarned: silver
+      stardustEarned: stardust
     };
 
     await db.meals.add(meal);
-    const unlockedBuilding = await awardSilver(silver, buildingTree);
+    await awardStardust(stardust);
 
-    // Check Full Day bonus (meals + expenses + habits)
+    // Full Day bonus (expenses + habits + meal all today).
     const todayExpenses = expenses.filter(e => e.date === today);
     const todayHabits = habitLogs.filter(l => l.date === today);
     let fullDayBonus = false;
@@ -466,32 +397,31 @@ export function StoreProvider({ children }) {
       const state = await db.state.get('app');
       const fullDayDates = state.fullDayDates || [];
       if (!fullDayDates.includes(today)) {
-        await awardSilver(FULL_DAY_BONUS, buildingTree);
+        await awardStardust(FULL_DAY_BONUS);
         await db.state.update('app', { fullDayDates: [...fullDayDates, today] });
         fullDayBonus = true;
       }
     }
 
-    // Check weekly meal logging streak (logged a meal every day this week)
+    // Weekly meal logging streak (a meal every day this week).
     let weeklyStreak = false;
     const weekStart = appState.weekStart;
     const mealDatesThisWeek = new Set(
       [...meals.filter(m => m.date >= weekStart).map(m => m.date), today]
     );
     if (mealDatesThisWeek.size >= 7) {
-      // Check if already awarded this week
       const state = await db.state.get('app');
       const mealStreakWeeks = state.mealStreakWeeks || [];
       if (!mealStreakWeeks.includes(weekStart)) {
-        await awardSilver(WEEKLY_STREAK_BONUS, buildingTree);
+        await awardStardust(WEEKLY_STREAK_BONUS);
         await db.state.update('app', { mealStreakWeeks: [...mealStreakWeeks, weekStart] });
         weeklyStreak = true;
       }
     }
 
     await loadAll();
-    return { silver, unlockedBuilding, fullDayBonus, weeklyStreak };
-  }, [expenses, habitLogs, meals, appState, awardSilver, loadAll]);
+    return { stardust, fullDayBonus, weeklyStreak };
+  }, [expenses, habitLogs, meals, appState, awardStardust, loadAll]);
 
   // Export data
   const handleExport = useCallback(async () => {
@@ -510,7 +440,6 @@ export function StoreProvider({ children }) {
     const text = await file.text();
     const data = JSON.parse(text);
     await importAllData(data);
-    // Push imported data to cloud before reloading
     if (currentUser) await syncNow();
     await loadAllBase();
   }, [loadAllBase, currentUser, syncNow]);
@@ -531,14 +460,14 @@ export function StoreProvider({ children }) {
       habits,
       habitLogs,
       categories,
+      tasks,
       getWeekExpenses,
       getWeekSpentByCategory,
       getMonthSpentByCategory,
-      calculateSilver,
+      calculateStardust,
       logExpense,
       deleteExpense,
       deleteMeal,
-      setBudget,
       toggleHabit,
       getTodayCompletedHabits,
       getTodayHabitCounts,
@@ -552,6 +481,10 @@ export function StoreProvider({ children }) {
       getHabitDay,
       startNewDay,
       logMeal,
+      addTask,
+      completeTask,
+      deleteTask,
+      clearCompletedTasks,
       handleExport,
       handleImport,
       handleReset,

@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-19
+
+### Fixed
+- Expense Stardust reverted to a flat 10, regardless of amount. Tying earning to the dollar value broke the relationship economy — a single $500 expense could nearly level a character. Logging remains unchanged; only the Stardust math.
+
 ## 2026-04-18 — Theme Overhaul Phase 2: characters, interactions, heart events
 
 ### Added

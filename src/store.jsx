@@ -8,6 +8,7 @@ import { getHeartEvent } from './data/heartEvents/index.js';
 
 const StoreContext = createContext(null);
 
+const EXPENSE_STARDUST = 10;
 const HABIT_STARDUST = 10;
 const MEAL_STARDUST_BASE = 15;
 const MEAL_STARDUST_HOME_COOKED = 25;
@@ -116,9 +117,11 @@ export function StoreProvider({ children }) {
     return spent;
   }, [getMonthExpenses, categories]);
 
-  // Stardust earned for an expense: flat 10 + floor(amount).
-  const calculateStardust = useCallback((amount) => {
-    return 10 + Math.floor(amount);
+  // Stardust earned for an expense: flat 10, regardless of amount. Tying
+  // earning to the dollar value broke the relationship economy — a single
+  // $500 expense would nearly level a character.
+  const calculateStardust = useCallback(() => {
+    return EXPENSE_STARDUST;
   }, []);
 
   // Award stardust to the unified pool.
@@ -132,7 +135,7 @@ export function StoreProvider({ children }) {
 
   // Log an expense
   const logExpense = useCallback(async (amount, categoryId, note, customDate) => {
-    const stardust = calculateStardust(amount);
+    const stardust = calculateStardust();
     const expense = {
       amount: Math.round(amount * 100) / 100,
       category: categoryId,

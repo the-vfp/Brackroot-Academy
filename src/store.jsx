@@ -598,12 +598,28 @@ export function StoreProvider({ children }) {
 
     await db.events.put({ id: ev.id, purchasedAt: Date.now() });
 
+    // Character-unlock events are played as the character's Level 1 heart event —
+    // the unlock IS the meeting. We persist an L1 heartEvents row so the Journal
+    // can replay it, and return the heart event so the EventModal can show it.
+    let heartEvent = null;
     if (ev.unlocks?.type === 'character') {
-      await db.characters.update(ev.unlocks.characterId, { unlocked: true });
+      const characterId = ev.unlocks.characterId;
+      await db.characters.update(characterId, { unlocked: true });
+      await db.heartEvents.put({
+        characterId,
+        level: 1,
+        timestamp: Date.now()
+      });
+      heartEvent = {
+        characterId,
+        level: 1,
+        title: getTitle(characterId, 1),
+        text: getHeartEvent(characterId, 1)
+      };
     }
 
     await loadAll();
-    return { ok: true, event: ev };
+    return { ok: true, event: ev, heartEvent };
   }, [canPurchaseEvent, loadAll]);
 
   // Heart event lookup helpers (for Journal replay).

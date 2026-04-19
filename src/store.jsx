@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
 import { useFirebaseSync } from './useFirebaseSync.js';
+import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
+import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
+import { EVENTS, getEvent } from './data/events.js';
+import { getHeartEvent } from './data/heartEvents/index.js';
 
 const StoreContext = createContext(null);
 
@@ -19,6 +23,10 @@ export function StoreProvider({ children }) {
   const [meals, setMeals] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [characters, setCharacters] = useState([]);
+  const [interactions, setInteractions] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [heartEvents, setHeartEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
@@ -32,6 +40,10 @@ export function StoreProvider({ children }) {
     const allCategories = await db.categories.toArray();
     allCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     const allTasks = await db.tasks.orderBy('timestamp').reverse().toArray();
+    const allCharacters = await db.characters.toArray();
+    const allInteractions = await db.interactions.orderBy('timestamp').reverse().toArray();
+    const allEvents = await db.events.toArray();
+    const allHeartEvents = await db.heartEvents.orderBy('timestamp').reverse().toArray();
     setAppState(state);
     setExpenses(allExpenses);
     setHabits(allHabits);
@@ -39,6 +51,10 @@ export function StoreProvider({ children }) {
     setMeals(allMeals);
     setCategories(allCategories);
     setTasks(allTasks);
+    setCharacters(allCharacters);
+    setInteractions(allInteractions);
+    setEvents(allEvents);
+    setHeartEvents(allHeartEvents);
   }, []);
 
   // Firebase sync hook (uses loadAllBase for cloud → local pulls)
@@ -60,6 +76,7 @@ export function StoreProvider({ children }) {
       await initializeState();
       await initializeHabits();
       await initializeCategories();
+      await initializeCharacters();
       await loadAllBase();
       setLoading(false);
     }
@@ -423,6 +440,186 @@ export function StoreProvider({ children }) {
     return { stardust, fullDayBonus, weeklyStreak };
   }, [expenses, habitLogs, meals, appState, awardStardust, loadAll]);
 
+  // ====== CHARACTER + INTERACTION OPERATIONS ======
+
+  const getCharacterState = useCallback((id) => {
+    return characters.find(c => c.id === id);
+  }, [characters]);
+
+  const isCharacterUnlocked = useCallback((id) => {
+    return !!getCharacterState(id)?.unlocked;
+  }, [getCharacterState]);
+
+  // Gating for an interaction tier. Returns { ok: bool, reason?: string }.
+  const canInteract = useCallback((characterId, tier) => {
+    const char = getCharacterState(characterId);
+    if (!char) return { ok: false, reason: 'Character not initialized.' };
+    if (!char.unlocked) return { ok: false, reason: 'Character not unlocked yet.' };
+    if (!isTierUnlocked(tier, char.level)) {
+      const unlockLv = INTERACTION_TIERS[tier].unlockLevel;
+      return { ok: false, reason: `Unlocks at Level ${unlockLv}.` };
+    }
+    const today = new Date().toISOString().split('T')[0];
+    if (char.lastInteractionDate === today) {
+      return { ok: false, reason: 'You\u2019ve already spent time with them today.' };
+    }
+    const cost = INTERACTION_TIERS[tier].cost;
+    if ((appState?.stardust || 0) < cost) {
+      return { ok: false, reason: `Need ${cost} \u2728 (you have ${appState?.stardust || 0}).` };
+    }
+    return { ok: true };
+  }, [getCharacterState, appState]);
+
+  const purchaseInteraction = useCallback(async (characterId, tier) => {
+    const gate = canInteract(characterId, tier);
+    if (!gate.ok) return { ok: false, reason: gate.reason };
+
+    const char = await db.characters.get(characterId);
+    const tierDef = INTERACTION_TIERS[tier];
+    const today = new Date().toISOString().split('T')[0];
+    const line = drawLine(characterId, tier, char.level);
+
+    // Deduct Stardust
+    const state = await db.state.get('app');
+    await db.state.update('app', {
+      stardust: Math.max(0, (state.stardust || 0) - tierDef.cost)
+    });
+
+    // Determine level-up BEFORE writing the log row, so we can store levelAtTime
+    const levelAtTime = char.level;
+    let newLevel = char.level;
+    let newRp = char.rpTowardNext + tierDef.rp;
+    let leveledUp = false;
+    let heartEvent = null;
+    let newTitle = null;
+
+    if (char.level < MAX_LEVEL) {
+      const threshold = RP_THRESHOLDS[char.level];
+      if (newRp >= threshold) {
+        leveledUp = true;
+        newLevel = char.level + 1;
+        newRp = newRp - threshold; // carry overflow into next level
+        newTitle = getTitle(characterId, newLevel);
+        // Persist heart event row (idempotent via compound key).
+        await db.heartEvents.put({
+          characterId,
+          level: newLevel,
+          timestamp: Date.now()
+        });
+        heartEvent = {
+          characterId,
+          level: newLevel,
+          title: newTitle,
+          text: getHeartEvent(characterId, newLevel)
+        };
+      }
+    } else {
+      // At MAX_LEVEL — RP goes to totalRpEarned only; rpTowardNext stays at 0.
+      newRp = 0;
+    }
+
+    // Write interaction log.
+    await db.interactions.add({
+      characterId,
+      tier,
+      date: today,
+      timestamp: Date.now(),
+      cost: tierDef.cost,
+      rpGained: tierDef.rp,
+      line,
+      levelAtTime
+    });
+
+    // Update character row.
+    await db.characters.update(characterId, {
+      level: newLevel,
+      rpTowardNext: newRp,
+      totalRpEarned: (char.totalRpEarned || 0) + tierDef.rp,
+      lastInteractionDate: today
+    });
+
+    await loadAll();
+    return {
+      ok: true,
+      line,
+      tier,
+      cost: tierDef.cost,
+      rpGained: tierDef.rp,
+      leveledUp,
+      newLevel,
+      newTitle,
+      heartEvent
+    };
+  }, [canInteract, loadAll]);
+
+  // ====== EVENT OPERATIONS ======
+
+  const isEventPurchased = useCallback((eventId) => {
+    return events.some(e => e.id === eventId);
+  }, [events]);
+
+  const canPurchaseEvent = useCallback((eventId) => {
+    const ev = getEvent(eventId);
+    if (!ev) return { ok: false, reason: 'Event not found.' };
+    if (isEventPurchased(eventId)) return { ok: false, reason: 'Already purchased.' };
+    if ((appState?.stardust || 0) < ev.cost) {
+      return { ok: false, reason: `Need ${ev.cost} \u2728.` };
+    }
+    for (const gate of ev.requires || []) {
+      if (gate.type === 'character_level') {
+        const char = getCharacterState(gate.characterId);
+        if (!char || char.level < gate.level) {
+          const def = CHARACTER_DEFS[gate.characterId];
+          return { ok: false, reason: `Requires ${def?.name || gate.characterId} at Lv ${gate.level}.` };
+        }
+      } else if (gate.type === 'event') {
+        if (!isEventPurchased(gate.eventId)) {
+          const req = getEvent(gate.eventId);
+          return { ok: false, reason: `Requires: ${req?.title || gate.eventId}.` };
+        }
+      } else if (gate.type === 'challenge') {
+        // Phase 4 territory — treat as locked for now.
+        return { ok: false, reason: 'Requires a challenge (Phase 4).' };
+      }
+    }
+    return { ok: true };
+  }, [appState, getCharacterState, events, isEventPurchased]);
+
+  const purchaseEvent = useCallback(async (eventId) => {
+    const gate = canPurchaseEvent(eventId);
+    if (!gate.ok) return { ok: false, reason: gate.reason };
+
+    const ev = getEvent(eventId);
+    const state = await db.state.get('app');
+
+    await db.state.update('app', {
+      stardust: Math.max(0, (state.stardust || 0) - ev.cost)
+    });
+
+    await db.events.put({ id: ev.id, purchasedAt: Date.now() });
+
+    if (ev.unlocks?.type === 'character') {
+      await db.characters.update(ev.unlocks.characterId, { unlocked: true });
+    }
+
+    await loadAll();
+    return { ok: true, event: ev };
+  }, [canPurchaseEvent, loadAll]);
+
+  // Heart event lookup helpers (for Journal replay).
+  const getHeartEventText = useCallback((characterId, level) => {
+    return getHeartEvent(characterId, level);
+  }, []);
+
+  const getInteractionsForCharacter = useCallback((characterId) => {
+    return interactions.filter(i => i.characterId === characterId);
+  }, [interactions]);
+
+  const getHeartEventsForCharacter = useCallback((characterId) => {
+    return heartEvents.filter(h => h.characterId === characterId)
+      .sort((a, b) => a.level - b.level);
+  }, [heartEvents]);
+
   // Export data
   const handleExport = useCallback(async () => {
     const data = await exportAllData();
@@ -461,6 +658,10 @@ export function StoreProvider({ children }) {
       habitLogs,
       categories,
       tasks,
+      characters,
+      interactions,
+      events,
+      heartEvents,
       getWeekExpenses,
       getWeekSpentByCategory,
       getMonthSpentByCategory,
@@ -485,6 +686,16 @@ export function StoreProvider({ children }) {
       completeTask,
       deleteTask,
       clearCompletedTasks,
+      getCharacterState,
+      isCharacterUnlocked,
+      canInteract,
+      purchaseInteraction,
+      canPurchaseEvent,
+      isEventPurchased,
+      purchaseEvent,
+      getHeartEventText,
+      getInteractionsForCharacter,
+      getHeartEventsForCharacter,
       handleExport,
       handleImport,
       handleReset,

@@ -3,8 +3,8 @@ import { StoreProvider, useStore } from './store.jsx';
 import { ToastProvider } from './components/Toast.jsx';
 import FallingLeaves from './components/FallingLeaves.jsx';
 import Navigation from './components/Navigation.jsx';
-import CampusPlaceholder from './components/CampusPlaceholder.jsx';
-import JournalPlaceholder from './components/JournalPlaceholder.jsx';
+import Campus from './components/Campus/Campus.jsx';
+import Journal from './components/Journal.jsx';
 import SpendView from './components/SpendView.jsx';
 import MealTracker from './components/MealTracker.jsx';
 import TendView from './components/TendView.jsx';
@@ -51,8 +51,8 @@ function AppContent() {
             <Settings onBack={() => setShowSettings(false)} />
           ) : (
             <>
-              {activeTab === 'campus' && <CampusPlaceholder />}
-              {activeTab === 'journal' && <JournalPlaceholder />}
+              {activeTab === 'campus' && <Campus />}
+              {activeTab === 'journal' && <Journal />}
               {activeTab === 'spend' && <SpendView />}
               {activeTab === 'eat' && <MealTracker />}
               {activeTab === 'tend' && <TendView />}

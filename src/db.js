@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
 import { DEFAULT_CATEGORIES } from './data/categories.js';
+import { CHARACTER_DEFS } from './data/characters.js';
 
 export const db = new Dexie('brackroot-tracker');
 
@@ -90,6 +91,24 @@ db.version(6).stores({
   await tx.table('categories').toCollection().modify(c => {
     if ('buildings' in c) delete c.buildings;
   });
+});
+
+// v7 — Phase 2: heart events table (scripted narrative on level-up).
+// Compound primary key [characterId+level] makes the write idempotent —
+// re-firing a level-up never creates duplicates.
+db.version(7).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, timestamp',
+  characters: 'id',
+  interactions: '++id, characterId, date, timestamp',
+  events: 'id, purchasedAt',
+  challenges: '++id, status, startedAt',
+  heartEvents: '[characterId+level], characterId, timestamp'
 });
 
 // Initialize default state values if they don't exist
@@ -201,7 +220,28 @@ export async function initializeCategories() {
   }
 }
 
-// Export all data as JSON (v6).
+// Seed per-character progression rows on first boot. Idempotent — skips
+// characters that already have a row (so new characters can be added later
+// without disturbing existing progress).
+export async function initializeCharacters() {
+  const existing = await db.characters.toArray();
+  const existingIds = new Set(existing.map(c => c.id));
+  const toAdd = Object.values(CHARACTER_DEFS)
+    .filter(def => !existingIds.has(def.id))
+    .map(def => ({
+      id: def.id,
+      unlocked: false,
+      level: 1,
+      rpTowardNext: 0,
+      totalRpEarned: 0,
+      lastInteractionDate: null
+    }));
+  if (toAdd.length > 0) {
+    await db.characters.bulkAdd(toAdd);
+  }
+}
+
+// Export all data as JSON (v7).
 export async function exportAllData() {
   const appState = await db.state.get('app');
   const expenses = await db.expenses.toArray();
@@ -214,8 +254,9 @@ export async function exportAllData() {
   const interactions = await db.interactions.toArray();
   const events = await db.events.toArray();
   const challenges = await db.challenges.toArray();
+  const heartEvents = await db.heartEvents.toArray();
   return {
-    version: 6,
+    version: 7,
     exportedAt: new Date().toISOString(),
     state: {
       stardust: appState.stardust || 0,
@@ -235,7 +276,8 @@ export async function exportAllData() {
     characters,
     interactions,
     events,
-    challenges
+    challenges,
+    heartEvents
   };
 }
 
@@ -286,14 +328,14 @@ function transformCategoriesToV6(list) {
   }));
 }
 
-// Import data from JSON (accepts v1–v6 payloads).
+// Import data from JSON (accepts v1–v7 payloads).
 export async function importAllData(data) {
   let stateData, expenses, habits, habitLogs, meals, categories, tasks;
-  let characters = null, interactions = null, events = null, challenges = null;
+  let characters = null, interactions = null, events = null, challenges = null, heartEvents = null;
   const version = data.version;
 
-  if (version === 6 && data.state) {
-    // v6: round-trip — preserve stardust as stored.
+  if ((version === 7 || version === 6) && data.state) {
+    // v6/v7: round-trip — preserve stardust as stored.
     stateData = {
       stardust: data.state.stardust || 0,
       totalStardustEarned: data.state.totalStardustEarned || 0,
@@ -313,6 +355,7 @@ export async function importAllData(data) {
     interactions = data.interactions || null;
     events = data.events || null;
     challenges = data.challenges || null;
+    heartEvents = data.heartEvents || null;
   } else if ((version === 5 || version === 4 || version === 3 || version === 2 || version === 1) && data.state) {
     // Pre-v6: drop silverPerCategory / budgets / unlockedBuildings; reset currency.
     stateData = {
@@ -359,6 +402,7 @@ export async function importAllData(data) {
   await db.interactions.clear();
   await db.events.clear();
   await db.challenges.clear();
+  await db.heartEvents.clear();
 
   // Write state
   await db.state.put({ key: 'app', ...stateData });
@@ -379,6 +423,7 @@ export async function importAllData(data) {
   if (interactions && interactions.length > 0) await db.interactions.bulkAdd(interactions);
   if (events && events.length > 0) await db.events.bulkAdd(events);
   if (challenges && challenges.length > 0) await db.challenges.bulkAdd(challenges);
+  if (heartEvents && heartEvents.length > 0) await db.heartEvents.bulkAdd(heartEvents);
 }
 
 // Reset all data
@@ -393,6 +438,7 @@ export async function resetAllData() {
   await db.interactions.clear();
   await db.events.clear();
   await db.challenges.clear();
+  await db.heartEvents.clear();
   await db.habits.bulkAdd(DEFAULT_HABITS);
   await db.categories.bulkAdd(
     DEFAULT_CATEGORIES.map((c, i) => ({

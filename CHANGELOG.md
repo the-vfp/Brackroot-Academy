@@ -4,6 +4,10 @@ All notable changes to Brackroot Academy are documented here.
 
 ## 2026-04-19
 
+### Changed
+- Richard's default location is now The Gardens (was The Atrium).
+- Tasks no longer carry a category. The Add Task form is now just a text input; existing task records keep their orphaned category field but it's ignored.
+
 ### Fixed
 - Expense Stardust reverted to a flat 10, regardless of amount. Tying earning to the dollar value broke the relationship economy — a single $500 expense could nearly level a character. Logging remains unchanged; only the Stardust math.
 

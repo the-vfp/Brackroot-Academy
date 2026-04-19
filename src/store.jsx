@@ -361,10 +361,9 @@ export function StoreProvider({ children }) {
 
   // ====== TASK OPERATIONS ======
 
-  const addTask = useCallback(async (text, category) => {
+  const addTask = useCallback(async (text) => {
     await db.tasks.add({
       text,
-      category,
       completed: false,
       timestamp: Date.now(),
       completedAt: null

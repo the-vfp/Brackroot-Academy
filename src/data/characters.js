@@ -102,7 +102,7 @@ export const CHARACTER_DEFS = {
     id: 'richard',
     name: 'Richard Devereaux',
     arcLabel: 'the perception arc',
-    defaultLocation: 'Atrium',
+    defaultLocation: 'Gardens',
     portrait: '\u{1F3AD}',
     silhouette: '\u{1F578}\uFE0F',
     activity: 'Creative writing',

@@ -3,10 +3,9 @@ import { useStore } from '../store.jsx';
 import { useToast } from './Toast.jsx';
 
 export default function TaskView() {
-  const { tasks, categories, addTask, completeTask, deleteTask, clearCompletedTasks } = useStore();
+  const { tasks, addTask, completeTask, deleteTask, clearCompletedTasks } = useStore();
   const showToast = useToast();
   const [text, setText] = useState('');
-  const [category, setCategory] = useState(categories[0]?.id || '');
   const [confirmDelete, setConfirmDelete] = useState(null);
 
   const activeTasks = tasks.filter(t => !t.completed);
@@ -14,8 +13,8 @@ export default function TaskView() {
 
   async function handleAdd(e) {
     e.preventDefault();
-    if (!text.trim() || !category) return;
-    await addTask(text.trim(), category);
+    if (!text.trim()) return;
+    await addTask(text.trim());
     setText('');
     showToast('Task added!');
   }
@@ -42,8 +41,6 @@ export default function TaskView() {
     showToast('Cleared completed tasks');
   }
 
-  const getCategoryIcon = (id) => categories.find(c => c.id === id)?.icon || '\u{1F4E6}';
-
   return (
     <div className="tab-view active">
       <div className="section-title">Tasks</div>
@@ -56,15 +53,6 @@ export default function TaskView() {
           value={text}
           onChange={e => setText(e.target.value)}
         />
-        <select
-          className="task-tree-select"
-          value={category}
-          onChange={e => setCategory(e.target.value)}
-        >
-          {categories.map(c => (
-            <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
-          ))}
-        </select>
         <button type="submit" className="btn-primary task-add-btn" disabled={!text.trim()}>
           Add
         </button>
@@ -76,7 +64,6 @@ export default function TaskView() {
             <div key={task.id} className="task-item">
               <button className="task-check" onClick={() => handleComplete(task.id)}>
               </button>
-              <div className="task-icon">{getCategoryIcon(task.category || task.buildingTree)}</div>
               <div className="task-details">
                 <div className="task-text">{task.text}</div>
                 <div className="task-meta">10 {'\u2728'}</div>
@@ -112,7 +99,6 @@ export default function TaskView() {
             {completedTasks.map(task => (
               <div key={task.id} className="task-item completed">
                 <div className="task-check done">{'\u2713'}</div>
-                <div className="task-icon">{getCategoryIcon(task.category || task.buildingTree)}</div>
                 <div className="task-details">
                   <div className="task-text">{task.text}</div>
                   <div className="task-meta">+10 {'\u2728'} earned</div>

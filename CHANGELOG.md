@@ -4,6 +4,14 @@ All notable changes to Brackroot Academy are documented here.
 
 ## 2026-04-19
 
+### Added
+- Heart events now render as a visual-novel-style scene: background image + character portrait layered behind a dialog box that takes up the bottom third of the screen, with a speaker tab carrying the character's name, portrait icon, and level.
+- Asset pipeline at `public/art/` — drop WebP files to populate scenes:
+  - `public/art/characters/<id>.webp` — one portrait per character
+  - `public/art/backgrounds/<key>.webp` — keyed backgrounds, referenced by individual heart events
+- Heart event data can be a plain string (text only) or an object `{ text, background }` to associate a background key. Existing entries stay strings; upgrade per-scene when art lands.
+- Graceful fallbacks throughout: missing character art → circular emoji badge; missing background → cozy gradient; missing text → visible `[to be written]` placeholder.
+
 ### Changed
 - Richard's default location is now The Gardens (was The Atrium).
 - Tasks no longer carry a category. The Add Task form is now just a text input; existing task records keep their orphaned category field but it's ignored.

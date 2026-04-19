@@ -1,23 +1,41 @@
+import { useState } from 'react';
 import { CHARACTER_DEFS } from '../data/characters.js';
 
-// Full-screen visual-novel-style narrative display.
-// Shown on level-up (after the interaction line) and for event replays from Journal.
-// Character art will slot in here once assets land; for now, portrait emoji.
-export default function HeartEventOverlay({ characterId, level, title, text, onClose }) {
+// Visual-novel-style scene for heart events.
+// Three layers:
+//   1. Background — optional image at /art/backgrounds/{key}.webp; falls back to gradient.
+//   2. Character — /art/characters/{id}.webp; falls back to the character's emoji portrait.
+//   3. Dialog box — bottom third of the screen, speaker tab above, scrolling body text.
+export default function HeartEventOverlay({ characterId, level, title, text, background, onClose }) {
   const def = CHARACTER_DEFS[characterId];
 
+  const bgUrl = background
+    ? `${import.meta.env.BASE_URL}art/backgrounds/${background}.webp`
+    : null;
+  const charUrl = characterId
+    ? `${import.meta.env.BASE_URL}art/characters/${characterId}.webp`
+    : null;
+
   return (
-    <div className="heart-event-overlay" onClick={onClose}>
-      <div className="heart-event-frame" onClick={e => e.stopPropagation()}>
-        <div className="heart-event-portrait-wrap">
-          <div className="heart-event-portrait">{def?.portrait || '\u{1F319}'}</div>
+    <div className="scene-overlay">
+      <SceneBackground url={bgUrl} />
+      <SceneCharacter url={charUrl} def={def} />
+
+      <div className="scene-dialog">
+        <div className="scene-speaker-tab">
+          <span className="scene-speaker-badge">{def?.portrait || '\u2728'}</span>
+          <span className="scene-speaker-name">{def?.name || 'Unknown'}</span>
+          <span className="scene-speaker-level">Lv {level}</span>
         </div>
-        <div className="heart-event-level-tag">{def?.name} {'\u00b7'} Lv {level}</div>
-        <div className="heart-event-title">{title}</div>
-        <div className="heart-event-body">
-          {renderNarrative(text, def?.name, level)}
+
+        <div className="scene-body">
+          <div className="scene-title">{title}</div>
+          <div className="scene-text">
+            {renderNarrative(text, def?.name, level)}
+          </div>
         </div>
-        <button className="heart-event-continue" onClick={onClose}>
+
+        <button className="scene-continue" onClick={onClose}>
           Continue {'\u2192'}
         </button>
       </div>
@@ -25,16 +43,59 @@ export default function HeartEventOverlay({ characterId, level, title, text, onC
   );
 }
 
-// Split multi-paragraph text on blank lines. Render null as a visible placeholder.
+function SceneBackground({ url }) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) {
+    return <div className="scene-background scene-background--fallback" />;
+  }
+  return (
+    <>
+      <div
+        className="scene-background"
+        style={{ backgroundImage: `url("${url}")` }}
+      />
+      {/* Hidden img used to detect load failure without flashing a broken image. */}
+      <img
+        src={url}
+        alt=""
+        aria-hidden
+        style={{ display: 'none' }}
+        onError={() => setFailed(true)}
+      />
+    </>
+  );
+}
+
+function SceneCharacter({ url, def }) {
+  const [failed, setFailed] = useState(false);
+  if (!url || failed) {
+    return (
+      <div className="scene-character scene-character--fallback">
+        <div className="scene-character-emoji">{def?.portrait || '\u2728'}</div>
+      </div>
+    );
+  }
+  return (
+    <div className="scene-character">
+      <img
+        src={url}
+        alt={def?.name || ''}
+        className="scene-character-img"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 function renderNarrative(text, charName, level) {
   if (!text) {
     return (
-      <p className="heart-event-paragraph heart-event-placeholder">
+      <p className="scene-paragraph scene-placeholder">
         [{charName} {'\u2014'} Lv {level} heart event {'\u2014'} to be written]
       </p>
     );
   }
   return text.split(/\n\n+/).map((para, i) => (
-    <p key={i} className="heart-event-paragraph">{para}</p>
+    <p key={i} className="scene-paragraph">{para}</p>
   ));
 }

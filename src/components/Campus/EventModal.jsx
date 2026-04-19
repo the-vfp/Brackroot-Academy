@@ -40,11 +40,13 @@ export default function EventModal({ eventId, onClose }) {
   // Replaying a purchased event: character-unlock → heart event; flavor event → flavor.
   function handleReplay() {
     if (ev.unlocks?.type === 'character') {
+      const he = getHeartEvent(ev.unlocks.characterId, 1);
       setPendingHeartEvent({
         characterId: ev.unlocks.characterId,
         level: 1,
         title: getTitle(ev.unlocks.characterId, 1),
-        text: getHeartEvent(ev.unlocks.characterId, 1)
+        text: he?.text ?? null,
+        background: he?.background ?? null
       });
     } else {
       setShowFlavor(true);
@@ -58,6 +60,7 @@ export default function EventModal({ eventId, onClose }) {
         level={pendingHeartEvent.level}
         title={pendingHeartEvent.title}
         text={pendingHeartEvent.text}
+        background={pendingHeartEvent.background}
         onClose={onClose}
       />
     );

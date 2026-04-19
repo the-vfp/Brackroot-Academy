@@ -15,7 +15,7 @@ export default function Journal() {
     getCharacterState,
     getInteractionsForCharacter,
     getHeartEventsForCharacter,
-    getHeartEventText
+    getHeartEventContent
   } = useStore();
 
   const [expandedId, setExpandedId] = useState(null);
@@ -40,12 +40,13 @@ export default function Journal() {
   }
 
   function openReplay(characterId, level) {
-    const def = CHARACTER_DEFS[characterId];
+    const he = getHeartEventContent(characterId, level);
     setReplay({
       characterId,
       level,
       title: getTitle(characterId, level),
-      text: getHeartEventText(characterId, level)
+      text: he?.text ?? null,
+      background: he?.background ?? null
     });
   }
 
@@ -131,6 +132,7 @@ export default function Journal() {
           level={replay.level}
           title={replay.title}
           text={replay.text}
+          background={replay.background}
           onClose={() => setReplay(null)}
         />
       )}

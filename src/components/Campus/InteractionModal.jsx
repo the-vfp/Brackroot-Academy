@@ -55,6 +55,7 @@ export default function InteractionModal({ characterId, onClose }) {
         level={pendingHeartEvent.level}
         title={pendingHeartEvent.title}
         text={pendingHeartEvent.text}
+        background={pendingHeartEvent.background}
         onClose={handleDismissHeartEvent}
       />
     );

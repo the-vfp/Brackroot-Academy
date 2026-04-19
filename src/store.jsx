@@ -509,11 +509,13 @@ export function StoreProvider({ children }) {
           level: newLevel,
           timestamp: Date.now()
         });
+        const he = getHeartEvent(characterId, newLevel);
         heartEvent = {
           characterId,
           level: newLevel,
           title: newTitle,
-          text: getHeartEvent(characterId, newLevel)
+          text: he?.text ?? null,
+          background: he?.background ?? null
         };
       }
     } else {
@@ -613,11 +615,13 @@ export function StoreProvider({ children }) {
         level: 1,
         timestamp: Date.now()
       });
+      const he = getHeartEvent(characterId, 1);
       heartEvent = {
         characterId,
         level: 1,
         title: getTitle(characterId, 1),
-        text: getHeartEvent(characterId, 1)
+        text: he?.text ?? null,
+        background: he?.background ?? null
       };
     }
 
@@ -625,8 +629,8 @@ export function StoreProvider({ children }) {
     return { ok: true, event: ev, heartEvent };
   }, [canPurchaseEvent, loadAll]);
 
-  // Heart event lookup helpers (for Journal replay).
-  const getHeartEventText = useCallback((characterId, level) => {
+  // Heart event lookup for Journal replay — returns normalized { text, background } or null.
+  const getHeartEventContent = useCallback((characterId, level) => {
     return getHeartEvent(characterId, level);
   }, []);
 
@@ -712,7 +716,7 @@ export function StoreProvider({ children }) {
       canPurchaseEvent,
       isEventPurchased,
       purchaseEvent,
-      getHeartEventText,
+      getHeartEventContent,
       getInteractionsForCharacter,
       getHeartEventsForCharacter,
       handleExport,

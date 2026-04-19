@@ -1286,7 +1286,229 @@ html, body, #root {
   border-radius: var(--radius-sm);
 }
 
-/* ====== HEART EVENT OVERLAY ====== */
+/* ====== VN HEART EVENT SCENE ====== */
+.scene-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow: hidden;
+  background: var(--bg-deep);
+  animation: sceneFadeIn 0.4s ease;
+}
+@keyframes sceneFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Layer 1 — background */
+.scene-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  /* Dark vignette so dialog text stays readable over any image. */
+  background-blend-mode: multiply;
+  background-color: rgba(26, 20, 16, 0.35);
+}
+.scene-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 20, 16, 0.35) 0%,
+    rgba(26, 20, 16, 0.1) 35%,
+    rgba(26, 20, 16, 0.55) 65%,
+    rgba(26, 20, 16, 0.95) 100%
+  );
+  pointer-events: none;
+}
+.scene-background--fallback {
+  background: radial-gradient(
+    ellipse at top,
+    rgba(212, 148, 58, 0.12) 0%,
+    var(--bg-warm) 45%,
+    var(--bg-deep) 100%
+  );
+}
+.scene-background--fallback::after {
+  display: none;
+}
+
+/* Layer 2 — character art */
+.scene-character {
+  position: absolute;
+  left: 50%;
+  bottom: 33%;
+  transform: translateX(-50%);
+  max-width: 80%;
+  max-height: 60vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+  animation: sceneRise 0.5s ease;
+}
+@keyframes sceneRise {
+  from { transform: translateX(-50%) translateY(16px); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+.scene-character-img {
+  max-width: 100%;
+  max-height: 60vh;
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.5));
+}
+.scene-character--fallback .scene-character-emoji {
+  font-size: 96px;
+  width: 128px;
+  height: 128px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border: 2px solid var(--accent-copper);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 20px rgba(245, 216, 138, 0.25));
+}
+
+/* Layer 3 — dialog box */
+.scene-dialog {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 35%;
+  min-height: 240px;
+  background: linear-gradient(180deg, var(--bg-warm) 0%, var(--bg-deep) 100%);
+  border-top: 2px solid var(--accent-copper);
+  padding: 28px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.5);
+  animation: sceneSlideUp 0.5s ease;
+}
+@keyframes sceneSlideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Speaker tab — sits on top of the dialog box's top edge */
+.scene-speaker-tab {
+  position: absolute;
+  top: -18px;
+  left: 14px;
+  background: var(--bg-warm);
+  border: 1px solid var(--accent-copper);
+  border-radius: 18px;
+  padding: 4px 14px 4px 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  max-width: calc(100% - 28px);
+}
+.scene-speaker-badge {
+  font-size: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card);
+  border-radius: 50%;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(245, 216, 138, 0.4));
+}
+.scene-speaker-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent-lantern);
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scene-speaker-level {
+  font-size: 10px;
+  color: var(--accent-copper);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.scene-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 10px;
+}
+.scene-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--accent-lantern);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+.scene-text {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-cream);
+  padding-right: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+.scene-text::-webkit-scrollbar { width: 3px; }
+.scene-text::-webkit-scrollbar-thumb {
+  background: var(--border-warm);
+  border-radius: 3px;
+}
+.scene-paragraph {
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}
+.scene-paragraph:last-child { margin-bottom: 0; }
+.scene-paragraph em {
+  color: var(--accent-gold);
+  font-style: italic;
+}
+.scene-placeholder {
+  text-align: center;
+  color: var(--text-warm);
+  font-style: italic;
+}
+
+.scene-continue {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--accent-copper), var(--accent-amber));
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-dark);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.scene-continue:hover { filter: brightness(1.1); }
+.scene-continue:active { transform: scale(0.98); }
+
+/* Short phones — collapse dialog a little to preserve character art space. */
+@media (max-height: 640px) {
+  .scene-dialog { height: 40%; min-height: 220px; }
+  .scene-character { bottom: 40%; max-height: 50vh; }
+}
+
+/* ====== HEART EVENT OVERLAY (legacy; kept for EventModal flavor path) ====== */
 .heart-event-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;

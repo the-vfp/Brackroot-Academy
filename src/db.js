@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import { DEFAULT_CATEGORIES } from './data/categories.js';
 import { CHARACTER_DEFS } from './data/characters.js';
+import { EVENTS } from './data/events.js';
 
 export const db = new Dexie('brackroot-tracker');
 
@@ -241,6 +242,25 @@ export async function initializeCharacters() {
   }
 }
 
+// Heal state where a character-unlock event was purchased but the character
+// row is missing its `unlocked: true` flag. This happens when Firestore data
+// from before the character system gets imported (importAllData clears the
+// characters table, then never repopulates it since the payload has no
+// characters field). Runs during init and after any import.
+export async function reconcileCharactersFromEvents() {
+  const purchased = await db.events.toArray();
+  for (const row of purchased) {
+    const def = EVENTS.find(e => e.id === row.id);
+    if (def?.unlocks?.type === 'character') {
+      const charId = def.unlocks.characterId;
+      const char = await db.characters.get(charId);
+      if (char && !char.unlocked) {
+        await db.characters.update(charId, { unlocked: true });
+      }
+    }
+  }
+}
+
 // Export all data as JSON (v7).
 export async function exportAllData() {
   const appState = await db.state.get('app');
@@ -424,6 +444,11 @@ export async function importAllData(data) {
   if (events && events.length > 0) await db.events.bulkAdd(events);
   if (challenges && challenges.length > 0) await db.challenges.bulkAdd(challenges);
   if (heartEvents && heartEvents.length > 0) await db.heartEvents.bulkAdd(heartEvents);
+
+  // Repair: if the imported payload predates the character system, the table is
+  // empty after clear(). Re-seed defaults and reconcile any purchased unlock events.
+  await initializeCharacters();
+  await reconcileCharactersFromEvents();
 }
 
 // Reset all data

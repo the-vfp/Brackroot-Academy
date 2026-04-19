@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
 import { useFirebaseSync } from './useFirebaseSync.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
@@ -77,6 +77,7 @@ export function StoreProvider({ children }) {
       await initializeHabits();
       await initializeCategories();
       await initializeCharacters();
+      await reconcileCharactersFromEvents();
       await loadAllBase();
       setLoading(false);
     }

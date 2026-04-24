@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 import { DEFAULT_CATEGORIES } from './data/categories.js';
 import { CHARACTER_DEFS } from './data/characters.js';
 import { EVENTS } from './data/events.js';
+import { DEFAULT_TIME_CATEGORIES } from './data/timeBudget.js';
 
 export const db = new Dexie('brackroot-tracker');
 
@@ -112,6 +113,41 @@ db.version(7).stores({
   heartEvents: '[characterId+level], characterId, timestamp'
 });
 
+// v8 — Time Budget feature: weekly cap/floor budgets with Wind RP resolution.
+// - Tags existing `categories` rows with kind: 'spend' so future time
+//   categories can live in a separate table without id collisions.
+// - Adds timeCategories (budget definitions), timeLogs (hours logged per day
+//   per category), and weeklyResolutions (idempotent weekly outcome records,
+//   keyed on weekStart so resolveCompletedWeeks can safely re-run).
+db.version(8).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, timestamp',
+  characters: 'id',
+  interactions: '++id, characterId, date, timestamp',
+  events: 'id, purchasedAt',
+  challenges: '++id, status, startedAt',
+  heartEvents: '[characterId+level], characterId, timestamp',
+  timeCategories: '++id, sortOrder',
+  timeLogs: '++id, date, categoryId, [date+categoryId], timestamp',
+  weeklyResolutions: 'weekStart'
+}).upgrade(async tx => {
+  await tx.table('categories').toCollection().modify(c => {
+    if (!c.kind) c.kind = 'spend';
+  });
+  const state = await tx.table('state').get('app');
+  const patch = {};
+  if (state?.windRp === undefined) patch.windRp = 0;
+  if (state?.lastResolvedWeek === undefined) patch.lastResolvedWeek = null;
+  if (Object.keys(patch).length > 0) {
+    await tx.table('state').update('app', patch);
+  }
+});
+
 // Initialize default state values if they don't exist
 export async function initializeState() {
   const existing = await db.state.get('app');
@@ -124,13 +160,17 @@ export async function initializeState() {
       dayBoundary: 0,
       dayRolloverHour: 0,
       fullDayDates: [],
-      mealStreakWeeks: []
+      mealStreakWeeks: [],
+      windRp: 0,
+      lastResolvedWeek: null
     });
   } else {
     const currentWeek = getWeekStart();
     const patch = {};
     if (existing.weekStart !== currentWeek) patch.weekStart = currentWeek;
     if (existing.dayRolloverHour === undefined) patch.dayRolloverHour = 0;
+    if (existing.windRp === undefined) patch.windRp = 0;
+    if (existing.lastResolvedWeek === undefined) patch.lastResolvedWeek = null;
     if (Object.keys(patch).length > 0) await db.state.update('app', patch);
   }
 }
@@ -239,7 +279,26 @@ export async function initializeCategories() {
         id: c.id,
         name: c.name,
         icon: c.icon,
+        kind: 'spend',
         sortOrder: i
+      }))
+    );
+  }
+}
+
+export async function initializeTimeCategories() {
+  const count = await db.timeCategories.count();
+  if (count === 0) {
+    await db.timeCategories.bulkAdd(
+      DEFAULT_TIME_CATEGORIES.map(c => ({
+        name: c.name,
+        icon: c.icon,
+        kind: c.kind,
+        targetHours: c.targetHours,
+        floorThreshold: c.floorThreshold,
+        sortOrder: c.sortOrder,
+        active: true,
+        archivedAt: null
       }))
     );
   }
@@ -285,7 +344,7 @@ export async function reconcileCharactersFromEvents() {
   }
 }
 
-// Export all data as JSON (v7).
+// Export all data as JSON (v8).
 export async function exportAllData() {
   const appState = await db.state.get('app');
   const expenses = await db.expenses.toArray();
@@ -299,8 +358,11 @@ export async function exportAllData() {
   const events = await db.events.toArray();
   const challenges = await db.challenges.toArray();
   const heartEvents = await db.heartEvents.toArray();
+  const timeCategories = await db.timeCategories.toArray();
+  const timeLogs = await db.timeLogs.toArray();
+  const weeklyResolutions = await db.weeklyResolutions.toArray();
   return {
-    version: 7,
+    version: 8,
     exportedAt: new Date().toISOString(),
     state: {
       stardust: appState.stardust || 0,
@@ -309,7 +371,9 @@ export async function exportAllData() {
       habitDay: appState.habitDay,
       dayBoundary: appState.dayBoundary || 0,
       fullDayDates: appState.fullDayDates || [],
-      mealStreakWeeks: appState.mealStreakWeeks || []
+      mealStreakWeeks: appState.mealStreakWeeks || [],
+      windRp: appState.windRp ?? 0,
+      lastResolvedWeek: appState.lastResolvedWeek ?? null
     },
     expenses,
     habits,
@@ -321,7 +385,10 @@ export async function exportAllData() {
     interactions,
     events,
     challenges,
-    heartEvents
+    heartEvents,
+    timeCategories,
+    timeLogs,
+    weeklyResolutions
   };
 }
 
@@ -372,14 +439,15 @@ function transformCategoriesToV6(list) {
   }));
 }
 
-// Import data from JSON (accepts v1–v7 payloads).
+// Import data from JSON (accepts v1–v8 payloads).
 export async function importAllData(data) {
   let stateData, expenses, habits, habitLogs, meals, categories, tasks;
   let characters = null, interactions = null, events = null, challenges = null, heartEvents = null;
+  let timeCategories = null, timeLogs = null, weeklyResolutions = null;
   const version = data.version;
 
-  if ((version === 7 || version === 6) && data.state) {
-    // v6/v7: round-trip — preserve stardust as stored.
+  if ((version === 8 || version === 7 || version === 6) && data.state) {
+    // v6–v8: round-trip — preserve stardust as stored.
     stateData = {
       stardust: data.state.stardust || 0,
       totalStardustEarned: data.state.totalStardustEarned || 0,
@@ -387,7 +455,9 @@ export async function importAllData(data) {
       habitDay: data.state.habitDay,
       dayBoundary: data.state.dayBoundary || 0,
       fullDayDates: data.state.fullDayDates || [],
-      mealStreakWeeks: data.state.mealStreakWeeks || []
+      mealStreakWeeks: data.state.mealStreakWeeks || [],
+      windRp: data.state.windRp ?? 0,
+      lastResolvedWeek: data.state.lastResolvedWeek ?? null
     };
     expenses = data.expenses;
     habits = data.habits;
@@ -400,6 +470,9 @@ export async function importAllData(data) {
     events = data.events || null;
     challenges = data.challenges || null;
     heartEvents = data.heartEvents || null;
+    timeCategories = data.timeCategories || null;
+    timeLogs = data.timeLogs || null;
+    weeklyResolutions = data.weeklyResolutions || null;
   } else if ((version === 5 || version === 4 || version === 3 || version === 2 || version === 1) && data.state) {
     // Pre-v6: drop silverPerCategory / budgets / unlockedBuildings; reset currency.
     stateData = {
@@ -447,6 +520,9 @@ export async function importAllData(data) {
   await db.events.clear();
   await db.challenges.clear();
   await db.heartEvents.clear();
+  await db.timeCategories.clear();
+  await db.timeLogs.clear();
+  await db.weeklyResolutions.clear();
 
   // Write state
   await db.state.put({ key: 'app', ...stateData });
@@ -468,6 +544,9 @@ export async function importAllData(data) {
   if (events && events.length > 0) await db.events.bulkAdd(events);
   if (challenges && challenges.length > 0) await db.challenges.bulkAdd(challenges);
   if (heartEvents && heartEvents.length > 0) await db.heartEvents.bulkAdd(heartEvents);
+  if (timeCategories && timeCategories.length > 0) await db.timeCategories.bulkAdd(timeCategories);
+  if (timeLogs && timeLogs.length > 0) await db.timeLogs.bulkAdd(timeLogs);
+  if (weeklyResolutions && weeklyResolutions.length > 0) await db.weeklyResolutions.bulkAdd(weeklyResolutions);
 
   // Repair: if the imported payload predates the character system, the table is
   // empty after clear(). Re-seed defaults and reconcile any purchased unlock events.
@@ -488,10 +567,20 @@ export async function resetAllData() {
   await db.events.clear();
   await db.challenges.clear();
   await db.heartEvents.clear();
+  await db.timeCategories.clear();
+  await db.timeLogs.clear();
+  await db.weeklyResolutions.clear();
   await db.habits.bulkAdd(DEFAULT_HABITS);
   await db.categories.bulkAdd(
     DEFAULT_CATEGORIES.map((c, i) => ({
-      id: c.id, name: c.name, icon: c.icon, sortOrder: i
+      id: c.id, name: c.name, icon: c.icon, kind: 'spend', sortOrder: i
+    }))
+  );
+  await db.timeCategories.bulkAdd(
+    DEFAULT_TIME_CATEGORIES.map(c => ({
+      name: c.name, icon: c.icon, kind: c.kind,
+      targetHours: c.targetHours, floorThreshold: c.floorThreshold,
+      sortOrder: c.sortOrder, active: true, archivedAt: null
     }))
   );
   await db.state.put({
@@ -501,6 +590,8 @@ export async function resetAllData() {
     weekStart: getWeekStart(),
     dayBoundary: 0,
     fullDayDates: [],
-    mealStreakWeeks: []
+    mealStreakWeeks: [],
+    windRp: 0,
+    lastResolvedWeek: null
   });
 }

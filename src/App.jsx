@@ -25,6 +25,7 @@ function AppContent() {
     const tab = params.get('tab');
     if (tab === 'log' || tab === 'spend') { setActiveTab('ledger'); setLedgerInitial('spend'); }
     else if (tab === 'eat') { setActiveTab('ledger'); setLedgerInitial('eat'); }
+    else if (tab === 'time') { setActiveTab('ledger'); setLedgerInitial('time'); }
     else if (tab === 'habits' || tab === 'tasks') setActiveTab('tend');
     else if (VALID_TABS.includes(tab)) setActiveTab(tab);
   }, []);

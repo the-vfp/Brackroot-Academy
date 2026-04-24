@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
@@ -43,6 +43,9 @@ export function StoreProvider({ children }) {
   const [interactions, setInteractions] = useState([]);
   const [events, setEvents] = useState([]);
   const [heartEvents, setHeartEvents] = useState([]);
+  const [timeCategories, setTimeCategories] = useState([]);
+  const [timeLogs, setTimeLogs] = useState([]);
+  const [weeklyResolutions, setWeeklyResolutions] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
@@ -60,6 +63,10 @@ export function StoreProvider({ children }) {
     const allInteractions = await db.interactions.orderBy('timestamp').reverse().toArray();
     const allEvents = await db.events.toArray();
     const allHeartEvents = await db.heartEvents.orderBy('timestamp').reverse().toArray();
+    const allTimeCategories = await db.timeCategories.toArray();
+    allTimeCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const allTimeLogs = await db.timeLogs.orderBy('timestamp').reverse().toArray();
+    const allWeeklyResolutions = await db.weeklyResolutions.orderBy('weekStart').reverse().toArray();
     setAppState(state);
     setExpenses(allExpenses);
     setHabits(allHabits);
@@ -71,6 +78,9 @@ export function StoreProvider({ children }) {
     setInteractions(allInteractions);
     setEvents(allEvents);
     setHeartEvents(allHeartEvents);
+    setTimeCategories(allTimeCategories);
+    setTimeLogs(allTimeLogs);
+    setWeeklyResolutions(allWeeklyResolutions);
   }, []);
 
   // Data is local-first (Dexie/IndexedDB). No cloud sync — JSON export/import
@@ -84,6 +94,7 @@ export function StoreProvider({ children }) {
       await initializeState();
       await initializeHabits();
       await initializeCategories();
+      await initializeTimeCategories();
       await initializeCharacters();
       await reconcileCharactersFromEvents();
       await rolloverIfNeeded();
@@ -528,6 +539,114 @@ export function StoreProvider({ children }) {
     return { stardust, fullDayBonus, weeklyStreak };
   }, [expenses, habitLogs, meals, appState, awardStardust, loadAll]);
 
+  // ====== TIME BUDGET OPERATIONS ======
+
+  const addTimeCategory = useCallback(async ({ name, icon, kind, targetHours, floorThreshold }) => {
+    const maxOrder = timeCategories.reduce((max, c) => Math.max(max, c.sortOrder || 0), -1);
+    await db.timeCategories.add({
+      name,
+      icon,
+      kind,
+      targetHours: Number(targetHours) || 0,
+      floorThreshold: kind === 'floor' ? (Number(floorThreshold) || 0) : null,
+      sortOrder: maxOrder + 1,
+      active: true,
+      archivedAt: null
+    });
+    await loadAll();
+  }, [timeCategories, loadAll]);
+
+  const updateTimeCategory = useCallback(async (id, updates) => {
+    const patch = { ...updates };
+    if ('targetHours' in patch) patch.targetHours = Number(patch.targetHours) || 0;
+    if ('floorThreshold' in patch) {
+      patch.floorThreshold = patch.floorThreshold === null ? null : (Number(patch.floorThreshold) || 0);
+    }
+    await db.timeCategories.update(id, patch);
+    await loadAll();
+  }, [loadAll]);
+
+  // Soft-delete: keep the row for historical resolutions to reference, but
+  // mark inactive so it stops counting toward the weekly budget.
+  const archiveTimeCategory = useCallback(async (id) => {
+    await db.timeCategories.update(id, { active: false, archivedAt: Date.now() });
+    await loadAll();
+  }, [loadAll]);
+
+  const unarchiveTimeCategory = useCallback(async (id) => {
+    await db.timeCategories.update(id, { active: true, archivedAt: null });
+    await loadAll();
+  }, [loadAll]);
+
+  // Hard delete — also removes associated time logs. Only use from a category
+  // manager that confirms destructive intent.
+  const deleteTimeCategory = useCallback(async (id) => {
+    await db.timeCategories.delete(id);
+    await db.timeLogs.where('categoryId').equals(id).delete();
+    await loadAll();
+  }, [loadAll]);
+
+  const logTime = useCallback(async (categoryId, hours, date, note = '') => {
+    const h = Number(hours);
+    if (!Number.isFinite(h) || h <= 0) return null;
+    await db.timeLogs.add({
+      categoryId,
+      date: date || localDateString(),
+      hours: h,
+      note,
+      timestamp: Date.now()
+    });
+    await loadAll();
+    return { hours: h };
+  }, [loadAll]);
+
+  const deleteTimeLog = useCallback(async (id) => {
+    await db.timeLogs.delete(id);
+    await loadAll();
+  }, [loadAll]);
+
+  // Selectors
+
+  const getActiveTimeCategories = useCallback(() => {
+    return timeCategories.filter(c => c.active !== false);
+  }, [timeCategories]);
+
+  // Sum hours per category across [fromDate, toDate] (both YYYY-MM-DD,
+  // inclusive). Returns { [categoryId]: totalHours }.
+  const getTimeTotalsInRange = useCallback((fromDate, toDate) => {
+    const totals = {};
+    for (const l of timeLogs) {
+      if (l.date < fromDate || l.date > toDate) continue;
+      totals[l.categoryId] = (totals[l.categoryId] || 0) + (l.hours || 0);
+    }
+    return totals;
+  }, [timeLogs]);
+
+  // Per-night totals for a category within a week. Returns an array of 7
+  // numbers indexed 0..6 starting at weekStart (Monday). Missing nights are 0.
+  const getNightlyTotalsForWeek = useCallback((categoryId, weekStart) => {
+    const totals = [0, 0, 0, 0, 0, 0, 0];
+    const start = new Date(weekStart + 'T12:00:00');
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const ds = localDateString(d);
+      for (const l of timeLogs) {
+        if (l.categoryId === categoryId && l.date === ds) {
+          totals[i] += l.hours || 0;
+        }
+      }
+    }
+    return totals;
+  }, [timeLogs]);
+
+  // Upper bound (exclusive) of the current week — the next Monday.
+  const getWeekEnd = useCallback((weekStart) => {
+    const d = new Date(weekStart + 'T12:00:00');
+    d.setDate(d.getDate() + 6);
+    return localDateString(d);
+  }, []);
+
   // ====== CHARACTER + INTERACTION OPERATIONS ======
 
   const getCharacterState = useCallback((id) => {
@@ -769,6 +888,20 @@ export function StoreProvider({ children }) {
       interactions,
       events,
       heartEvents,
+      timeCategories,
+      timeLogs,
+      weeklyResolutions,
+      addTimeCategory,
+      updateTimeCategory,
+      archiveTimeCategory,
+      unarchiveTimeCategory,
+      deleteTimeCategory,
+      logTime,
+      deleteTimeLog,
+      getActiveTimeCategories,
+      getTimeTotalsInRange,
+      getNightlyTotalsForWeek,
+      getWeekEnd,
       getWeekExpenses,
       getWeekSpentByCategory,
       getMonthSpentByCategory,

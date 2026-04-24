@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useStore } from '../store.jsx';
 import { useToast } from './Toast.jsx';
 import CategoryManager from './CategoryManager.jsx';
+import TimeCategoryManager from './TimeCategoryManager.jsx';
 
 function formatHour(h) {
   if (h === 0) return 'Midnight';
@@ -19,9 +20,13 @@ export default function Settings() {
   const showToast = useToast();
   const fileInputRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
+  const [showTimeCategories, setShowTimeCategories] = useState(false);
 
   if (showCategories) {
     return <CategoryManager onBack={() => setShowCategories(false)} />;
+  }
+  if (showTimeCategories) {
+    return <TimeCategoryManager onBack={() => setShowTimeCategories(false)} />;
   }
 
   async function onImport(e) {
@@ -78,7 +83,10 @@ export default function Settings() {
       <div className="data-actions">
         <div className="section-title">Categories</div>
         <button className="btn-secondary" onClick={() => setShowCategories(true)}>
-          {'\u2699\uFE0F'} Manage Categories
+          {'\u2699\uFE0F'} Manage Spend Categories
+        </button>
+        <button className="btn-secondary" onClick={() => setShowTimeCategories(true)}>
+          {'\u231B'} Manage Time Categories
         </button>
       </div>
 

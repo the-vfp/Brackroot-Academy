@@ -2115,3 +2115,93 @@ html, body, #root {
   font-style: italic;
   opacity: 0.7;
 }
+
+/* ─── Time Budget — weekly cap/floor bars + logging ─── */
+.time-bar-row {
+  padding: 12px;
+  margin-bottom: 10px;
+  background: var(--bg-card);
+  border-radius: var(--r);
+  border: 1px solid var(--border-warm);
+}
+.time-bar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: var(--t-base);
+  color: var(--text-cream);
+}
+.time-bar-icon { font-size: var(--t-lg); }
+.time-bar-name { flex: 1; font-weight: 600; }
+.time-bar-amount {
+  font-size: var(--t-sm);
+  color: var(--text-warm);
+  font-variant-numeric: tabular-nums;
+}
+.time-bar-amount-sep { opacity: 0.5; margin: 0 3px; }
+
+.time-bar-track {
+  position: relative;
+  height: 10px;
+  background: var(--ink-5);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.time-bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent-gold));
+  border-radius: var(--r-sm);
+  transition: width 0.3s ease;
+}
+.time-bar-fill.reserve {
+  background: var(--accent-ruby);
+  opacity: 0.55;
+  filter: saturate(0.6);
+}
+.time-bar-overflow {
+  position: absolute; right: 0; top: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--accent-ruby) 0 5px,
+    rgba(138, 58, 58, 0.3) 5px 10px
+  );
+  border-left: 1px solid rgba(138, 58, 58, 0.8);
+}
+.time-bar-row.reserve {
+  border-color: var(--accent-ruby);
+  background: linear-gradient(to right, var(--bg-card) 60%, rgba(138, 58, 58, 0.08));
+}
+.time-bar-row.reserve .time-bar-amount {
+  color: var(--accent-ruby);
+  font-weight: 600;
+}
+
+.time-pips {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.time-pip {
+  height: 20px;
+  border-radius: var(--r-sm);
+  background: var(--ink-5);
+  border: 1px solid var(--border-warm);
+}
+.time-pip.hit {
+  background: var(--accent-gold);
+  border-color: var(--accent-amber);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+.time-pip.partial {
+  background: var(--ink-4);
+  opacity: 0.7;
+}
+.time-bar-row.floor.met { border-color: var(--accent-gold); }
+
+.habit-meta {
+  font-size: var(--t-xs);
+  color: var(--text-warm);
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}

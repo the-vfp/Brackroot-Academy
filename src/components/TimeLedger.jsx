@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../store.jsx';
 import { useToast } from './Toast.jsx';
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[d.getMonth()]} ${d.getDate()}`;
-}
+import GroupedLedger from './GroupedLedger.jsx';
 
 export default function TimeLedger() {
   const { timeLogs, timeCategories, deleteTimeLog } = useStore();
@@ -15,22 +10,17 @@ export default function TimeLedger() {
 
   const catById = Object.fromEntries(timeCategories.map(c => [c.id, c]));
 
-  if (timeLogs.length === 0) {
-    return (
-      <>
-        <div className="section-title">Time Log</div>
-        <div className="history-empty">No hours logged yet...</div>
-      </>
-    );
-  }
-
   return (
-    <>
-      <div className="section-title">Time Log</div>
-      {timeLogs.slice(0, 100).map(l => {
+    <GroupedLedger
+      items={timeLogs}
+      getDate={l => l.date}
+      getKey={l => l.id ?? l.timestamp}
+      emptyMessage="No hours logged yet..."
+      title="Time Log"
+      renderItem={l => {
         const cat = catById[l.categoryId];
         return (
-          <div key={l.id ?? l.timestamp} className="history-item">
+          <div className="history-item">
             <div className="history-icon">{cat?.icon ?? '\u231B'}</div>
             <div className="history-details">
               <div className="history-cat">
@@ -46,7 +36,6 @@ export default function TimeLedger() {
             </div>
             <div className="history-meta">
               <div className="history-stardust">{l.hours}h</div>
-              <div className="history-date">{formatDate(l.date)}</div>
             </div>
             {confirmId === l.id ? (
               <div className="delete-confirm">
@@ -62,7 +51,7 @@ export default function TimeLedger() {
             )}
           </div>
         );
-      })}
-    </>
+      }}
+    />
   );
 }

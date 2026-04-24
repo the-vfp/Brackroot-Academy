@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useStore } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
-import GroupedLedger from './GroupedLedger.jsx';
 
 const MEAL_TYPES = [
   { id: 'breakfast', label: 'Breakfast', icon: '\u{1F373}' },
@@ -18,14 +17,13 @@ const MEAL_SOURCES = [
   { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', stardust: 8 },
 ];
 
-export default function MealTracker() {
+export default function MealEntry() {
   const { meals, logMeal, deleteMeal } = useStore();
   const showToast = useToast();
   const [description, setDescription] = useState('');
   const [mealType, setMealType] = useState('lunch');
   const [source, setSource] = useState('home_cooked');
   const [date, setDate] = useState(localDateString());
-  const [showHistory, setShowHistory] = useState(false);
   const [confirmId, setConfirmId] = useState(null);
 
   async function handleSubmit(e) {
@@ -51,58 +49,8 @@ export default function MealTracker() {
 
   const selectedSource = MEAL_SOURCES.find(s => s.id === source);
 
-  if (showHistory) {
-    return (
-      <div className="tab-view active">
-        <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span>Meal History</span>
-          <button className="btn-secondary" onClick={() => setShowHistory(false)} style={{ margin: 0, fontSize: 11 }}>
-            {'\u2190'} Back
-          </button>
-        </div>
-
-        <GroupedLedger
-          items={meals}
-          getDate={m => m.date}
-          getKey={m => m.id ?? m.timestamp}
-          emptyMessage="No meals logged yet..."
-          renderItem={m => (
-            <div className="history-item">
-              <div className="history-icon">
-                {MEAL_TYPES.find(t => t.id === m.mealType)?.icon || '\u{1F37D}\uFE0F'}
-              </div>
-              <div className="history-details">
-                <div className="history-cat">
-                  {MEAL_TYPES.find(t => t.id === m.mealType)?.label || m.mealType}
-                  {' \u00B7 '}
-                  {MEAL_SOURCES.find(s => s.id === m.source)?.label || m.source}
-                </div>
-                <div className="history-note">{m.description}</div>
-              </div>
-              <div className="history-meta">
-                <div className="history-stardust">+{m.stardustEarned ?? 0} {'\u2728'}</div>
-              </div>
-              {confirmId === m.id ? (
-                <div className="delete-confirm">
-                  <button className="delete-confirm-btn" onClick={async () => {
-                    await deleteMeal(m.id);
-                    setConfirmId(null);
-                    showToast(`-${m.stardustEarned ?? 0} \u2728 meal removed`);
-                  }}>Delete</button>
-                  <button className="delete-cancel-btn" onClick={() => setConfirmId(null)}>Cancel</button>
-                </div>
-              ) : (
-                <button className="delete-btn" onClick={() => setConfirmId(m.id)}>{'\u00D7'}</button>
-              )}
-            </div>
-          )}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="tab-view active">
+    <>
       <div className="section-title">Log a Meal</div>
 
       <form className="form-card" onSubmit={handleSubmit}>
@@ -209,12 +157,6 @@ export default function MealTracker() {
         </>
       )}
 
-      <button
-        className="btn-secondary habit-manage-btn"
-        onClick={() => setShowHistory(true)}
-      >
-        {'\u{1F4DC}'} View All Meals
-      </button>
-    </div>
+    </>
   );
 }

@@ -215,31 +215,34 @@ export default function HabitChecklist() {
           if (editing === habit.id) {
             return (
               <div key={habit.id} className="habit-item habit-edit-item" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="text"
-                  className="form-input habit-edit-name"
-                  ref={editNameRef}
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Habit name"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') saveEdit(null, habit);
-                    if (e.key === 'Escape') cancelEdit();
-                  }}
-                />
-                <input
-                  type="text"
-                  className="form-input emoji-input"
-                  value={editIcon}
-                  onChange={(e) => setEditIcon(e.target.value)}
-                  placeholder="Tap to open your emoji keyboard"
-                  maxLength={8}
-                  inputMode="text"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                />
+                <div className="habit-add-row">
+                  <input
+                    type="text"
+                    className="form-input habit-add-emoji"
+                    value={editIcon}
+                    onChange={(e) => setEditIcon(e.target.value)}
+                    placeholder={DEFAULT_ICON}
+                    maxLength={8}
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-label="Habit emoji"
+                  />
+                  <input
+                    type="text"
+                    className="form-input habit-edit-name"
+                    ref={editNameRef}
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Habit name"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') saveEdit(null, habit);
+                      if (e.key === 'Escape') cancelEdit();
+                    }}
+                  />
+                </div>
                 <div className="habit-type-picker">
                   <button
                     type="button"

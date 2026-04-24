@@ -642,6 +642,11 @@ html, body, #root {
   font-size: 18px;
   color: rgba(196, 168, 130, 0.5);
 }
+/* The name input within an emoji+name row needs to grow to fill the rest. */
+.habit-add-row .habit-edit-name {
+  flex: 1;
+  min-width: 0;
+}
 
 /* Inline edit on a habit row — full-width stacked form */
 .habit-edit-item {
@@ -710,6 +715,7 @@ html, body, #root {
 .habit-type-picker {
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 .habit-type-option {
   flex: 1;

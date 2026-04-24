@@ -6,7 +6,7 @@ import Navigation from './components/Navigation.jsx';
 import Campus from './components/Campus/Campus.jsx';
 import Journal from './components/Journal.jsx';
 import SpendView from './components/SpendView.jsx';
-import MealTracker from './components/MealTracker.jsx';
+import EatSubView from './components/EatSubView.jsx';
 import TendView from './components/TendView.jsx';
 import Settings from './components/Settings.jsx';
 import './App.css';
@@ -54,7 +54,7 @@ function AppContent() {
               {activeTab === 'campus' && <Campus />}
               {activeTab === 'journal' && <Journal />}
               {activeTab === 'spend' && <SpendView />}
-              {activeTab === 'eat' && <MealTracker />}
+              {activeTab === 'eat' && <EatSubView />}
               {activeTab === 'tend' && <TendView />}
             </>
           )}

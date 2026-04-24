@@ -80,8 +80,9 @@ export default function HabitChecklist() {
   } = useStore();
   const showToast = useToast();
 
-  // Inline add state — name + difficulty (defaults: daily, ✨). Long-press
-  // the new row afterwards to refine emoji or switch to repeatable.
+  // Inline add state — emoji + name + difficulty (defaults: daily, ✨).
+  // Long-press the new row afterwards to switch to repeatable.
+  const [newIcon, setNewIcon] = useState(DEFAULT_ICON);
   const [newName, setNewName] = useState('');
   const [newDifficulty, setNewDifficulty] = useState('medium');
 
@@ -96,8 +97,10 @@ export default function HabitChecklist() {
     e.preventDefault();
     const trimmed = newName.trim();
     if (!trimmed) return;
-    await addHabit(trimmed, DEFAULT_ICON, null, 'daily', newDifficulty);
+    const safeIcon = (newIcon || DEFAULT_ICON).trim() || DEFAULT_ICON;
+    await addHabit(trimmed, safeIcon, null, 'daily', newDifficulty);
     setNewName('');
+    setNewIcon(DEFAULT_ICON);
     showToast('Habit added!');
   }
 
@@ -297,13 +300,28 @@ export default function HabitChecklist() {
       )}
 
       <form className="task-add-form habit-add-form" onSubmit={handleAdd}>
-        <input
-          type="text"
-          className="task-input"
-          placeholder="New habit..."
-          value={newName}
-          onChange={e => setNewName(e.target.value)}
-        />
+        <div className="habit-add-row">
+          <input
+            type="text"
+            className="form-input habit-add-emoji"
+            value={newIcon}
+            onChange={e => setNewIcon(e.target.value)}
+            placeholder={DEFAULT_ICON}
+            maxLength={8}
+            inputMode="text"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label="Habit emoji"
+          />
+          <input
+            type="text"
+            className="task-input"
+            placeholder="New habit..."
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+          />
+        </div>
         <DifficultyPicker
           value={newDifficulty}
           onChange={setNewDifficulty}

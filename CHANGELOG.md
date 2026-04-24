@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-23 — Emoji slot in inline add-habit form
+
+### Added
+- Inline Add Habit form gains a compact emoji input next to the name field. Defaults to ✨ if left empty; tap to pop the system emoji keyboard. Resets to the default after each successful add.
+
 ## 2026-04-23 — Inline add-habit (drop Manage Habits)
 
 ### Added

@@ -2,6 +2,24 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-24 — VN-style sprites + show/hide directives in heart events
+
+### Added
+- Heart event overlay now supports per-line sprite swaps via Obsidian-wikilink syntax:
+  - `[[SpriteName.png]] Speaker: body` — dialog line that swaps the speaker's sprite.
+  - `[[SpriteName.png]]` on its own paragraph — show/change a sprite without a dialog beat.
+  - `[[hide Marlow]]` / `[[hide]]` — hide a specific character or clear both slots.
+  - `Speaker: body` (no wikilink) and narration paragraphs still work as before.
+- MC bust slot — Ellene's sprite appears bottom-left on dialog/show lines that reference an `Ellene*.png` file. Sits flush with the top of the dialog box; speaker tab renders in front of her.
+- Non-speaker dim filter — the slot that isn't speaking dims to ~65% brightness when there's a speaker, both full-bright during narration.
+- Sprites are sticky (Ren'Py semantics) — once set, they persist across paragraphs until changed or hidden.
+- `public/art/characters/*.png` and `public/art/backgrounds/*.png` now use PascalCase filenames to match the authoring vault (e.g. `MarlowSmile.png`, `ElleneThoughtful.png`, `DivinesCommon.png`).
+- Mockup preview at `public/mockups/heart-event.html` for iterating on the layout standalone.
+
+### Changed
+- `.scene-character` sizing — 90% frame width, natural aspect, bottom: 22% (flush with dialog top). Previously capped at 80% width / 60vh height with a gap above the dialog. Pixelated/crunchy scaling removed; default smoothing restored.
+- Back-compat: scripts with no `[[wikilinks]]` still render the emoji portrait fallback like before (existing Marlow Lv 1-7 events unchanged visually).
+
 ## 2026-04-23 — Emoji slot in inline add-habit form
 
 ### Added

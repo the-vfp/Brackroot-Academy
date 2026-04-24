@@ -4,7 +4,9 @@
 // Levels are 1-indexed: event at index N fires when the player levels up to N.
 
 export default {
-  1: `Three students. That's all Divines got this year. Three students in a House that hasn't had a full roster in decades.
+  1: {
+    background: 'DivinesCommon.png',
+    text: `Three students. That's all Divines got this year. Three students in a House that hasn't had a full roster in decades.
 
 You're sitting in the common room — if you can call it that. Dusty furniture, faded banners, the kind of silence that says *nobody's coming.*
 
@@ -22,29 +24,30 @@ You fold your crane. He opens his sketchbook. Neither of you speaks.
 
 Then, without looking up:
 
-Random guy: "You always craft this aggressively, or is this a special occasion?"
+[[MarlowSmile.png]] Random guy: "You always craft this aggressively, or is this a special occasion?"
 
 You glance up. He's not looking at you. But he's smiling — just barely. Like you're the first interesting thing he's seen all day and he hasn't decided what to do about it yet.
 
-Ellene: "It's called *coping,*" you say. "We got sorted into a dead House. I'm processing."
+[[ElleneAnnoyed.png]] Ellene: "It's called *coping,*" you say. "We got sorted into a dead House. I'm processing."
 
-Random guy: "Hm."
+[[MarlowSmile.png]] Random guy: "Hm."
 
 He flips a page.
 
-Random guy: "I was going to nap, but sure. Processing works too."
+[[MarlowSmile.png]] Random guy: "I was going to nap, but sure. Processing works too."
 
 Something in your chest loosens. Not because he's comforting — he's *not.*
 
 He's just... also here. Also unbothered. Also not pretending this is fine.
 
-Ellene: "My name's Ellene."
+[[ElleneThoughtful.png]] Ellene: "My name's Ellene."
 
-Marlow: "Marlow."
+[[MarlowSmile.png]] Marlow: "Marlow."
 
 You go back to your crane. He goes back to his sketch.
 
-It's quiet. But it's not lonely.`,
+It's quiet. But it's not lonely.`
+  },
 
   2: `You don't notice at first. You're sitting cross-legged on the common room floor, journal open, folding a crane out of patterned paper because your hands need something to do while you think. It's a small one — blue and gold, barely bigger than your thumb.
 

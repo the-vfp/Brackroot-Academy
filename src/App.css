@@ -1612,30 +1612,37 @@ html, body, #root {
   display: none;
 }
 
-/* Layer 2 — character art */
+/* Layer 2a — NPC character art (center, flush with dialog top) */
 .scene-character {
   position: absolute;
   left: 50%;
-  bottom: 33%;
+  bottom: 22%;
   transform: translateX(-50%);
-  max-width: 80%;
-  max-height: 60vh;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  width: 90%;
   pointer-events: none;
   z-index: 1;
   animation: sceneRise 0.5s ease;
+  transition: filter 0.3s ease;
 }
 @keyframes sceneRise {
   from { transform: translateX(-50%) translateY(16px); opacity: 0; }
   to { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 .scene-character-img {
-  max-width: 100%;
-  max-height: 60vh;
+  width: 100%;
   height: auto;
+  display: block;
   filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.5));
+}
+.scene-character--dim {
+  filter: brightness(0.65) saturate(0.85);
+}
+.scene-character--fallback {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  bottom: 33%;
+  width: auto;
 }
 .scene-character--fallback .scene-character-emoji {
   font-size: 96px;
@@ -1648,6 +1655,34 @@ html, body, #root {
   border: 2px solid var(--accent-copper);
   border-radius: 50%;
   filter: drop-shadow(0 0 20px rgba(245, 216, 138, 0.25));
+}
+
+/* Layer 2b — MC bust (Ellene), bottom-left, flush with dialog top.
+   z-index sits below the dialog so the speaker tab appears in front of her. */
+.scene-character-mc {
+  position: absolute;
+  left: 12px;
+  bottom: 26%;
+  width: 130px;
+  max-width: 32vw;
+  pointer-events: none;
+  z-index: 1;
+  animation: sceneMcRise 0.3s ease;
+  transition: filter 0.3s ease;
+}
+.scene-character-mc img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+  border-radius: 6px;
+}
+.scene-character-mc--dim {
+  filter: brightness(0.65) saturate(0.85);
+}
+@keyframes sceneMcRise {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Layer 3 — dialog box (ToT-style, bottom quarter) */
@@ -1765,10 +1800,11 @@ html, body, #root {
   font-style: italic;
 }
 
-/* Short phones — keep the character art prominent */
+/* Short phones — nudge NPC upward to make room for the taller dialog */
 @media (max-height: 640px) {
   .scene-dialog { min-height: 32%; }
-  .scene-character { bottom: 35%; max-height: 50vh; }
+  .scene-character { bottom: 28%; width: 80%; }
+  .scene-character-mc { bottom: 32%; width: 110px; }
 }
 
 /* ====== HEART EVENT OVERLAY (legacy; kept for EventModal flavor path) ====== */

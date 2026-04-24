@@ -66,10 +66,7 @@ export default function Settings() {
             className="form-select"
             style={{ width: 'auto', padding: '8px 10px' }}
             value={appState?.dayRolloverHour ?? 0}
-            onChange={async (e) => {
-              await setDayRolloverHour(Number(e.target.value));
-              showToast(`\u2728 Day now restarts at ${formatHour(Number(e.target.value))}`);
-            }}
+            onChange={(e) => setDayRolloverHour(Number(e.target.value))}
           >
             {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>{formatHour(h)}</option>

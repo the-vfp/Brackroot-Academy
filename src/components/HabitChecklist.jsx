@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore, DIFFICULTY_LEVELS, stardustForDifficulty } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
@@ -80,10 +80,10 @@ export default function HabitChecklist() {
   } = useStore();
   const showToast = useToast();
 
-  // Inline add state — emoji + name + difficulty (defaults: daily, ✨).
-  // Long-press the new row afterwards to switch to repeatable.
+  // Inline add state — emoji + name + type + difficulty (defaults: daily, Medium, ✨).
   const [newIcon, setNewIcon] = useState(DEFAULT_ICON);
   const [newName, setNewName] = useState('');
+  const [newType, setNewType] = useState('daily');
   const [newDifficulty, setNewDifficulty] = useState('medium');
 
   // Inline edit state
@@ -93,14 +93,27 @@ export default function HabitChecklist() {
   const [editType, setEditType] = useState('daily');
   const [editDifficulty, setEditDifficulty] = useState('medium');
 
+  // Focus the edit name input when an edit starts. autoFocus alone isn't
+  // reliable on mobile because the long-press handler fires from a
+  // setTimeout, breaking the user-gesture chain; an explicit focus call
+  // gives us a second shot once the input is mounted.
+  const editNameRef = useRef(null);
+  useEffect(() => {
+    if (editing != null) {
+      const id = requestAnimationFrame(() => editNameRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [editing]);
+
   async function handleAdd(e) {
     e.preventDefault();
     const trimmed = newName.trim();
     if (!trimmed) return;
     const safeIcon = (newIcon || DEFAULT_ICON).trim() || DEFAULT_ICON;
-    await addHabit(trimmed, safeIcon, null, 'daily', newDifficulty);
+    await addHabit(trimmed, safeIcon, null, newType, newDifficulty);
     setNewName('');
     setNewIcon(DEFAULT_ICON);
+    setNewType('daily');
     showToast('Habit added!');
   }
 
@@ -205,6 +218,7 @@ export default function HabitChecklist() {
                 <input
                   type="text"
                   className="form-input habit-edit-name"
+                  ref={editNameRef}
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="Habit name"
@@ -321,6 +335,24 @@ export default function HabitChecklist() {
             value={newName}
             onChange={e => setNewName(e.target.value)}
           />
+        </div>
+        <div className="habit-type-picker">
+          <button
+            type="button"
+            className={`habit-type-option ${newType === 'daily' ? 'selected' : ''}`}
+            onClick={() => setNewType('daily')}
+          >
+            <span>{'\u2713'}</span> Daily
+            <span className="habit-type-desc">Once per day</span>
+          </button>
+          <button
+            type="button"
+            className={`habit-type-option ${newType === 'repeatable' ? 'selected' : ''}`}
+            onClick={() => setNewType('repeatable')}
+          >
+            <span>+</span> Repeatable
+            <span className="habit-type-desc">Multiple per day</span>
+          </button>
         </div>
         <DifficultyPicker
           value={newDifficulty}

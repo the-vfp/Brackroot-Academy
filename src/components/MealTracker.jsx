@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
+import GroupedLedger from './GroupedLedger.jsx';
 
 const MEAL_TYPES = [
   { id: 'breakfast', label: 'Breakfast', icon: '\u{1F373}' },
@@ -16,12 +17,6 @@ const MEAL_SOURCES = [
   { id: 'dining_out', label: 'Dining Out', icon: '\u{1F37D}\uFE0F', stardust: 12 },
   { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', stardust: 8 },
 ];
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return `${months[d.getMonth()]} ${d.getDate()}`;
-}
 
 export default function MealTracker() {
   const { meals, logMeal, deleteMeal } = useStore();
@@ -66,11 +61,13 @@ export default function MealTracker() {
           </button>
         </div>
 
-        {meals.length === 0 ? (
-          <div className="history-empty">No meals logged yet...</div>
-        ) : (
-          meals.slice(0, 50).map(m => (
-            <div key={m.id ?? m.timestamp} className="history-item">
+        <GroupedLedger
+          items={meals}
+          getDate={m => m.date}
+          getKey={m => m.id ?? m.timestamp}
+          emptyMessage="No meals logged yet..."
+          renderItem={m => (
+            <div className="history-item">
               <div className="history-icon">
                 {MEAL_TYPES.find(t => t.id === m.mealType)?.icon || '\u{1F37D}\uFE0F'}
               </div>
@@ -84,7 +81,6 @@ export default function MealTracker() {
               </div>
               <div className="history-meta">
                 <div className="history-stardust">+{m.stardustEarned ?? 0} {'\u2728'}</div>
-                <div className="history-date">{formatDate(m.date)}</div>
               </div>
               {confirmId === m.id ? (
                 <div className="delete-confirm">
@@ -99,8 +95,8 @@ export default function MealTracker() {
                 <button className="delete-btn" onClick={() => setConfirmId(m.id)}>{'\u00D7'}</button>
               )}
             </div>
-          ))
-        )}
+          )}
+        />
       </div>
     );
   }

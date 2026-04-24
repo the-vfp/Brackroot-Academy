@@ -2086,3 +2086,26 @@ html, body, #root {
   color: var(--text-warm);
   flex-shrink: 0;
 }
+
+/* ─── Ledger date grouping + infinite-scroll sentinel ─── */
+.ledger-group {
+  margin-bottom: 16px;
+}
+.ledger-group-date {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-warm);
+  padding: 8px 4px 6px;
+  border-bottom: 1px solid var(--ink-5);
+  margin-bottom: 6px;
+}
+.ledger-sentinel {
+  padding: 14px;
+  text-align: center;
+  font-size: var(--t-xs);
+  color: var(--text-warm);
+  font-style: italic;
+  opacity: 0.7;
+}

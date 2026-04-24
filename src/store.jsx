@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
@@ -98,6 +98,7 @@ export function StoreProvider({ children }) {
       await initializeCharacters();
       await reconcileCharactersFromEvents();
       await rolloverIfNeeded();
+      await resolveCompletedWeeks();
       await loadAllBase();
       setLoading(false);
     }
@@ -108,7 +109,11 @@ export function StoreProvider({ children }) {
   // case where the app stays open across the configured rollover hour.
   useEffect(() => {
     if (loading) return;
-    function recheck() { rolloverIfNeeded().then(loadAllBase); }
+    function recheck() {
+      rolloverIfNeeded()
+        .then(resolveCompletedWeeks)
+        .then(loadAllBase);
+    }
     window.addEventListener('focus', recheck);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) recheck(); });
     return () => {

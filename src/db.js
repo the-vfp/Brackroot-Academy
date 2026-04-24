@@ -2,7 +2,11 @@ import Dexie from 'dexie';
 import { DEFAULT_CATEGORIES } from './data/categories.js';
 import { CHARACTER_DEFS } from './data/characters.js';
 import { EVENTS } from './data/events.js';
-import { DEFAULT_TIME_CATEGORIES } from './data/timeBudget.js';
+import {
+  DEFAULT_TIME_CATEGORIES,
+  WIND_RP_FLOOR, WIND_RP_HIT, WIND_RP_MISS,
+  MIN_ACTIVE_CATEGORIES_FOR_GAIN
+} from './data/timeBudget.js';
 
 export const db = new Dexie('brackroot-tracker');
 
@@ -208,6 +212,129 @@ export function getWeekStart() {
 export function getMonthStart() {
   const now = new Date();
   return localDateString(new Date(now.getFullYear(), now.getMonth(), 1));
+}
+
+// Add N days to a YYYY-MM-DD date string, returning the new YYYY-MM-DD.
+// Uses noon so daylight-saving transitions can't flip the day.
+export function addDaysToDate(dateStr, days) {
+  const d = new Date(dateStr + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return localDateString(d);
+}
+
+// Evaluate a single completed week against the time categories that were
+// in play for it, update Wind RP, and idempotently persist the outcome.
+// Categories included in the evaluation: any currently-active category, plus
+// any archived category that had logged hours in the week (so archiving mid-
+// week doesn't erase that week's accountability).
+async function resolveWeek(weekStart) {
+  const weekEnd = addDaysToDate(weekStart, 6);
+  const allCats = await db.timeCategories.toArray();
+  const logs = await db.timeLogs
+    .where('date')
+    .between(weekStart, weekEnd, true, true)
+    .toArray();
+
+  const logCatIds = new Set(logs.map(l => l.categoryId));
+  const evalCats = allCats.filter(
+    c => c.active !== false || logCatIds.has(c.id)
+  );
+
+  const categoryResults = [];
+  let hits = 0, misses = 0;
+
+  for (const cat of evalCats) {
+    const catLogs = logs.filter(l => l.categoryId === cat.id);
+    const actual = catLogs.reduce((s, l) => s + (l.hours || 0), 0);
+
+    let hit;
+    if (cat.kind === 'cap') {
+      hit = actual <= cat.targetHours;
+    } else {
+      const perDay = {};
+      for (const l of catLogs) {
+        perDay[l.date] = (perDay[l.date] || 0) + (l.hours || 0);
+      }
+      const goodNights = Object.values(perDay).filter(h => h >= cat.targetHours).length;
+      hit = goodNights >= (cat.floorThreshold || 5);
+    }
+
+    categoryResults.push({
+      categoryId: cat.id,
+      name: cat.name,
+      icon: cat.icon,
+      kind: cat.kind,
+      target: cat.targetHours,
+      floorThreshold: cat.floorThreshold ?? null,
+      actual: Math.round(actual * 2) / 2,
+      hit
+    });
+
+    if (hit) hits++; else misses++;
+  }
+
+  const activeCount = evalCats.length;
+  const gainsApply = activeCount >= MIN_ACTIVE_CATEGORIES_FOR_GAIN;
+  const rawDelta = (gainsApply ? hits * WIND_RP_HIT : 0) + misses * WIND_RP_MISS;
+
+  const state = await db.state.get('app');
+  const before = state?.windRp ?? 0;
+  const after = Math.max(before + rawDelta, WIND_RP_FLOOR);
+
+  await db.weeklyResolutions.put({
+    weekStart,
+    resolvedAt: Date.now(),
+    categoryResults,
+    activeCategoryCount: activeCount,
+    hits,
+    misses,
+    gainsApplied: gainsApply,
+    windRpDelta: after - before,
+    windRpBefore: before,
+    windRpAfter: after
+  });
+
+  await db.state.update('app', { windRp: after });
+}
+
+// Resolve every week between lastResolvedWeek and currentWeek (exclusive of
+// currentWeek, which is still in progress). Idempotent — a completed week
+// is resolved at most once, because weeklyResolutions is primary-keyed on
+// weekStart.
+//
+// On first-ever run (lastResolvedWeek === null) we seed lastResolvedWeek to
+// the current week without resolving anything retroactively. This is a
+// deliberate choice: Time Budget categories have just been seeded, so there
+// are no logs for past weeks, and we don't want a surprise RP dip from a
+// phantom week.
+export async function resolveCompletedWeeks() {
+  const state = await db.state.get('app');
+  if (!state) return;
+
+  const currentWeek = state.weekStart;
+  if (!currentWeek) return;
+
+  if (state.lastResolvedWeek == null) {
+    await db.state.update('app', { lastResolvedWeek: currentWeek });
+    return;
+  }
+
+  // lastResolvedWeek stores the currentWeek boundary from the previous run —
+  // everything strictly before it has been resolved. So we pick up at exactly
+  // that value and resolve each completed week up to (but not including)
+  // currentWeek, which is still in progress.
+  let weekToResolve = state.lastResolvedWeek;
+  while (weekToResolve < currentWeek) {
+    const already = await db.weeklyResolutions.get(weekToResolve);
+    if (!already) {
+      await resolveWeek(weekToResolve);
+    }
+    weekToResolve = addDaysToDate(weekToResolve, 7);
+  }
+
+  if (state.lastResolvedWeek !== currentWeek) {
+    await db.state.update('app', { lastResolvedWeek: currentWeek });
+  }
 }
 
 // Migrate from localStorage if old prototype data exists (pre-Dexie).

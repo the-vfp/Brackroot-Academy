@@ -18,13 +18,12 @@ const MEAL_SOURCES = [
 ];
 
 export default function MealEntry() {
-  const { meals, logMeal, deleteMeal } = useStore();
+  const { logMeal } = useStore();
   const showToast = useToast();
   const [description, setDescription] = useState('');
   const [mealType, setMealType] = useState('lunch');
   const [source, setSource] = useState('home_cooked');
   const [date, setDate] = useState(localDateString());
-  const [confirmId, setConfirmId] = useState(null);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -42,10 +41,6 @@ export default function MealEntry() {
     if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';
     showToast(msg);
   }
-
-  // Today's meals
-  const today = localDateString();
-  const todayMeals = meals.filter(m => m.date === today);
 
   const selectedSource = MEAL_SOURCES.find(s => s.id === source);
 
@@ -119,44 +114,6 @@ export default function MealEntry() {
           {'\u{1F37D}\uFE0F'} Log Meal
         </button>
       </form>
-
-      {/* Today's meals summary */}
-      {todayMeals.length > 0 && (
-        <>
-          <div className="section-title" style={{ fontSize: 14 }}>
-            Today ({todayMeals.length} meal{todayMeals.length !== 1 ? 's' : ''})
-          </div>
-          {todayMeals.map(m => (
-            <div key={m.id ?? m.timestamp} className="history-item">
-              <div className="history-icon">
-                {MEAL_TYPES.find(t => t.id === m.mealType)?.icon || '\u{1F37D}\uFE0F'}
-              </div>
-              <div className="history-details">
-                <div className="history-cat">
-                  {MEAL_TYPES.find(t => t.id === m.mealType)?.label || m.mealType}
-                </div>
-                <div className="history-note">{m.description}</div>
-              </div>
-              <div className="history-meta">
-                <div className="history-stardust">+{m.stardustEarned ?? 0} {'\u2728'}</div>
-              </div>
-              {confirmId === m.id ? (
-                <div className="delete-confirm">
-                  <button className="delete-confirm-btn" onClick={async () => {
-                    await deleteMeal(m.id);
-                    setConfirmId(null);
-                    showToast(`-${m.stardustEarned ?? 0} \u2728 meal removed`);
-                  }}>Delete</button>
-                  <button className="delete-cancel-btn" onClick={() => setConfirmId(null)}>Cancel</button>
-                </div>
-              ) : (
-                <button className="delete-btn" onClick={() => setConfirmId(m.id)}>{'\u00D7'}</button>
-              )}
-            </div>
-          ))}
-        </>
-      )}
-
     </>
   );
 }

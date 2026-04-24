@@ -1,8 +1,7 @@
 const TABS = [
   { id: 'campus',  icon: '\u{1F3F0}',         label: 'Campus' },
   { id: 'journal', icon: '\u{1F4D6}',         label: 'Journal' },
-  { id: 'spend',   icon: '\u{1FA99}',         label: 'Spend' },
-  { id: 'eat',     icon: '\u{1F37D}\uFE0F',   label: 'Eat' },
+  { id: 'ledger',  icon: '\u{1F4DC}',         label: 'Ledger' },
   { id: 'tend',    icon: '\u2728',            label: 'Tend' },
 ];
 

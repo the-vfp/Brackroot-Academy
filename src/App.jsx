@@ -5,24 +5,26 @@ import FallingLeaves from './components/FallingLeaves.jsx';
 import Navigation from './components/Navigation.jsx';
 import Campus from './components/Campus/Campus.jsx';
 import Journal from './components/Journal.jsx';
-import SpendView from './components/SpendView.jsx';
-import EatSubView from './components/EatSubView.jsx';
+import LedgerView from './components/LedgerView.jsx';
 import TendView from './components/TendView.jsx';
 import Settings from './components/Settings.jsx';
 import './App.css';
 
-const VALID_TABS = ['campus', 'journal', 'spend', 'eat', 'tend'];
+const VALID_TABS = ['campus', 'journal', 'ledger', 'tend'];
 
 function AppContent() {
   const { appState } = useStore();
   const [activeTab, setActiveTab] = useState('tend');
+  const [ledgerInitial, setLedgerInitial] = useState('spend');
   const [showSettings, setShowSettings] = useState(false);
 
-  // Support ?tab= deep links (PWA shortcut aliases "log" → "spend" for backcompat).
+  // Support ?tab= deep links. "log"/"spend"/"eat" all resolve to the Ledger tab
+  // with the appropriate sub-page pre-selected.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
-    if (tab === 'log') setActiveTab('spend');
+    if (tab === 'log' || tab === 'spend') { setActiveTab('ledger'); setLedgerInitial('spend'); }
+    else if (tab === 'eat') { setActiveTab('ledger'); setLedgerInitial('eat'); }
     else if (tab === 'habits' || tab === 'tasks') setActiveTab('tend');
     else if (VALID_TABS.includes(tab)) setActiveTab(tab);
   }, []);
@@ -53,8 +55,7 @@ function AppContent() {
             <>
               {activeTab === 'campus' && <Campus />}
               {activeTab === 'journal' && <Journal />}
-              {activeTab === 'spend' && <SpendView />}
-              {activeTab === 'eat' && <EatSubView />}
+              {activeTab === 'ledger' && <LedgerView initialSubPage={ledgerInitial} />}
               {activeTab === 'tend' && <TendView />}
             </>
           )}

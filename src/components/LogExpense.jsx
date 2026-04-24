@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store.jsx';
+import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
 
 export default function LogExpense() {
@@ -8,7 +9,7 @@ export default function LogExpense() {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
   const [note, setNote] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(localDateString());
 
   const selectedCatId = category || (categories.length > 0 ? categories[0].id : '');
 
@@ -26,7 +27,7 @@ export default function LogExpense() {
 
     setAmount('');
     setNote('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(localDateString());
 
     let msg = `+${result.stardust} \u2728 recorded in the Ledger`;
     if (result.fullDayBonus) msg += ' \u2726 Full Day at Brackroot!';

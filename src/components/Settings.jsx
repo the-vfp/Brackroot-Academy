@@ -3,8 +3,17 @@ import { useStore } from '../store.jsx';
 import { useToast } from './Toast.jsx';
 import CategoryManager from './CategoryManager.jsx';
 
-export default function Settings({ onBack }) {
+function formatHour(h) {
+  if (h === 0) return 'Midnight';
+  if (h === 12) return 'Noon';
+  const period = h < 12 ? 'AM' : 'PM';
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return `${display}:00 ${period}`;
+}
+
+export default function Settings() {
   const {
+    appState, setDayRolloverHour,
     handleExport, handleImport, handleReset,
     currentUser, syncStatus, signIn, signOut, pullFromFirestore
   } = useStore();
@@ -44,11 +53,30 @@ export default function Settings({ onBack }) {
 
   return (
     <div className="tab-view active">
-      <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>{'\u2699\uFE0F'} Settings</span>
-        <button className="btn-secondary" onClick={onBack} style={{ margin: 0, fontSize: 11 }}>
-          {'\u2190'} Back
-        </button>
+      <div className="section-title">{'\u2699\uFE0F'} Settings</div>
+
+      <div className="data-actions">
+        <div className="section-title">Day & Rollover</div>
+        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: '0 0 8px', lineHeight: 1.5 }}>
+          When the day flips over. Anything before this hour still counts as
+          yesterday {'\u2014'} useful if your nights run late.
+        </p>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--ink-2)' }}>
+          <span>Day starts at</span>
+          <select
+            className="form-select"
+            style={{ width: 'auto', padding: '8px 10px' }}
+            value={appState?.dayRolloverHour ?? 0}
+            onChange={async (e) => {
+              await setDayRolloverHour(Number(e.target.value));
+              showToast(`\u2728 Day now restarts at ${formatHour(Number(e.target.value))}`);
+            }}
+          >
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>{formatHour(h)}</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="data-actions">

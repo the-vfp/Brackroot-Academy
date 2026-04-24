@@ -122,15 +122,39 @@ export async function initializeState() {
       totalStardustEarned: 0,
       weekStart: getWeekStart(),
       dayBoundary: 0,
+      dayRolloverHour: 0,
       fullDayDates: [],
       mealStreakWeeks: []
     });
   } else {
     const currentWeek = getWeekStart();
-    if (existing.weekStart !== currentWeek) {
-      await db.state.update('app', { weekStart: currentWeek });
-    }
+    const patch = {};
+    if (existing.weekStart !== currentWeek) patch.weekStart = currentWeek;
+    if (existing.dayRolloverHour === undefined) patch.dayRolloverHour = 0;
+    if (Object.keys(patch).length > 0) await db.state.update('app', patch);
   }
+}
+
+// Formats a Date as YYYY-MM-DD in LOCAL time. Using toISOString() converts
+// to UTC, which flips the date in the evening for negative-offset timezones
+// (e.g. Mountain: 6:49 PM Thu local = 00:49 Fri UTC), so we build the string
+// by hand from local components. Canonical "today" for anywhere in the app
+// that deals with date-stamped records.
+export function localDateString(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// Returns the logical "habit day" (YYYY-MM-DD) given an hour-of-day rollover.
+// rolloverHour=4 means anything before 4am counts as yesterday's day.
+export function getHabitDayFor(rolloverHour = 0) {
+  const now = new Date();
+  if (now.getHours() < rolloverHour) {
+    now.setDate(now.getDate() - 1);
+  }
+  return localDateString(now);
 }
 
 export function getWeekStart() {
@@ -138,12 +162,12 @@ export function getWeekStart() {
   const day = now.getDay();
   const diff = now.getDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(now.getFullYear(), now.getMonth(), diff);
-  return monday.toISOString().split('T')[0];
+  return localDateString(monday);
 }
 
 export function getMonthStart() {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  return localDateString(new Date(now.getFullYear(), now.getMonth(), 1));
 }
 
 // Migrate from localStorage if old prototype data exists (pre-Dexie).

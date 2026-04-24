@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store.jsx';
+import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
 
 const MEAL_TYPES = [
@@ -11,9 +12,9 @@ const MEAL_TYPES = [
 
 const MEAL_SOURCES = [
   { id: 'home_cooked', label: 'Home-cooked', icon: '\u{1F468}\u200D\u{1F373}', stardust: 25 },
-  { id: 'prepped', label: 'Groceries / Prepped', icon: '\u{1F96C}', stardust: 15 },
-  { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', stardust: 15 },
-  { id: 'dining_out', label: 'Dining Out', icon: '\u{1F37D}\uFE0F', stardust: 15 },
+  { id: 'prepped', label: 'Groceries / Prepped', icon: '\u{1F96C}', stardust: 18 },
+  { id: 'dining_out', label: 'Dining Out', icon: '\u{1F37D}\uFE0F', stardust: 12 },
+  { id: 'delivery', label: 'Delivery', icon: '\u{1F989}', stardust: 8 },
 ];
 
 function formatDate(dateStr) {
@@ -28,7 +29,7 @@ export default function MealTracker() {
   const [description, setDescription] = useState('');
   const [mealType, setMealType] = useState('lunch');
   const [source, setSource] = useState('home_cooked');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(localDateString());
   const [showHistory, setShowHistory] = useState(false);
   const [confirmId, setConfirmId] = useState(null);
 
@@ -41,7 +42,7 @@ export default function MealTracker() {
 
     const result = await logMeal(description.trim(), mealType, source, date);
     setDescription('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(localDateString());
 
     let msg = `+${result.stardust} \u2728 logged`;
     if (result.weeklyStreak) msg += ' \u{1F525} Weekly meal streak!';
@@ -50,7 +51,7 @@ export default function MealTracker() {
   }
 
   // Today's meals
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateString();
   const todayMeals = meals.filter(m => m.date === today);
 
   const selectedSource = MEAL_SOURCES.find(s => s.id === source);
@@ -166,7 +167,7 @@ export default function MealTracker() {
         <div className="meal-stardust-preview">
           {selectedSource?.id === 'home_cooked'
             ? `\u{1F373} Home-cooked bonus: +${selectedSource.stardust} \u2728`
-            : `+${selectedSource?.stardust || 15} \u2728`
+            : `+${selectedSource?.stardust ?? 0} \u2728`
           }
         </div>
 

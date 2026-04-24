@@ -6,11 +6,15 @@
 export default {
   1: `Three students. That's all Divines got this year. Three students in a House that hasn't had a full roster in decades.
 
-You're sitting in the common room — if you can call it that. Dusty furniture, faded banners, the kind of silence that says *nobody's coming.* You've already started making it yours: washi tape on your journal, a paper crane half-folded between your fingers, stickers laid out on the table like you're decorating a crime scene.
+You're sitting in the common room — if you can call it that. Dusty furniture, faded banners, the kind of silence that says *nobody's coming.*
+
+You've already started making it yours: washi tape on your journal, a paper crane half-folded between your fingers, stickers laid out on the table like you're decorating a crime scene.
 
 He walks in like he owns the place. Or like he doesn't care who does.
 
-Dark hair, dark eyes, sketchbook tucked under one arm. He scans the room — the dust, the banners, you — with the same half-lidded indifference. Then he drops onto the couch across from you like gravity's just a suggestion.
+Dark hair, dark eyes, sketchbook tucked under one arm. He scans the room — the dust, the banners, you — with the same half-lidded indifference.
+
+Then he drops onto the couch across from you like gravity's just a suggestion.
 
 Silence.
 
@@ -18,15 +22,25 @@ You fold your crane. He opens his sketchbook. Neither of you speaks.
 
 Then, without looking up:
 
-"You always craft this aggressively, or is this a special occasion?"
+Random guy: "You always craft this aggressively, or is this a special occasion?"
 
 You glance up. He's not looking at you. But he's smiling — just barely. Like you're the first interesting thing he's seen all day and he hasn't decided what to do about it yet.
 
-"It's called *coping,*" you say. "We got sorted into a dead House. I'm processing."
+Ellene: "It's called *coping,*" you say. "We got sorted into a dead House. I'm processing."
 
-"Hm." He flips a page. "I was going to nap, but sure. Processing works too."
+Random guy: "Hm."
 
-Something in your chest loosens. Not because he's comforting — he's *not.* He's just... also here. Also unbothered. Also not pretending this is fine.
+He flips a page.
+
+Random guy: "I was going to nap, but sure. Processing works too."
+
+Something in your chest loosens. Not because he's comforting — he's *not.*
+
+He's just... also here. Also unbothered. Also not pretending this is fine.
+
+Ellene: "My name's Ellene."
+
+Marlow: "Marlow."
 
 You go back to your crane. He goes back to his sketch.
 

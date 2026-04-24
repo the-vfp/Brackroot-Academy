@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
 import { useFirebaseSync } from './useFirebaseSync.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
@@ -9,12 +9,28 @@ import { getHeartEvent } from './data/heartEvents/index.js';
 const StoreContext = createContext(null);
 
 const EXPENSE_STARDUST = 10;
-const HABIT_STARDUST = 10;
-const MEAL_STARDUST_BASE = 15;
-const MEAL_STARDUST_HOME_COOKED = 25;
+const MEAL_STARDUST_BY_SOURCE = {
+  home_cooked: 25,
+  prepped: 18,
+  dining_out: 12,
+  delivery: 8,
+};
+const MEAL_STARDUST_FALLBACK = 15;
 const FULL_DAY_BONUS = 20;
 const WEEKLY_STREAK_BONUS = 50;
-const TASK_STARDUST = 10;
+
+// Habits + tasks earn the same Stardust at the same difficulty tier. Default
+// is Medium (10) to preserve the pre-difficulty earning rate.
+export const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'];
+const STARDUST_BY_DIFFICULTY = { easy: 5, medium: 10, hard: 20 };
+
+export function stardustForDifficulty(difficulty) {
+  return STARDUST_BY_DIFFICULTY[difficulty] ?? STARDUST_BY_DIFFICULTY.medium;
+}
+
+export function stardustForMealSource(source) {
+  return MEAL_STARDUST_BY_SOURCE[source] ?? MEAL_STARDUST_FALLBACK;
+}
 
 export function StoreProvider({ children }) {
   const [appState, setAppState] = useState(null);
@@ -79,11 +95,24 @@ export function StoreProvider({ children }) {
       await initializeCategories();
       await initializeCharacters();
       await reconcileCharactersFromEvents();
+      await rolloverIfNeeded();
       await loadAllBase();
       setLoading(false);
     }
     init();
   }, [loadAllBase]);
+
+  // Re-check rollover whenever the tab regains focus/visibility — catches the
+  // case where the app stays open across the configured rollover hour.
+  useEffect(() => {
+    if (loading) return;
+    function recheck() { rolloverIfNeeded().then(loadAllBase); }
+    window.addEventListener('focus', recheck);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) recheck(); });
+    return () => {
+      window.removeEventListener('focus', recheck);
+    };
+  }, [loading, loadAllBase]);
 
   // Get expenses for the current week
   const getWeekExpenses = useCallback(() => {
@@ -140,7 +169,7 @@ export function StoreProvider({ children }) {
       amount: Math.round(amount * 100) / 100,
       category: categoryId,
       note: note,
-      date: customDate || new Date().toISOString().split('T')[0],
+      date: customDate || localDateString(),
       timestamp: Date.now(),
       stardustEarned: stardust
     };
@@ -149,7 +178,7 @@ export function StoreProvider({ children }) {
     await awardStardust(stardust);
 
     // Full Day bonus (habits + expenses logged the same day).
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     const todayHabitLogs = habitLogs.filter(l => l.date === today);
     let fullDayBonus = false;
     if (todayHabitLogs.length > 0) {
@@ -169,15 +198,55 @@ export function StoreProvider({ children }) {
   // ====== HABIT DAY (user-controlled "today") ======
 
   const getHabitDay = useCallback(() => {
-    return appState?.habitDay || new Date().toISOString().split('T')[0];
+    return appState?.habitDay || getHabitDayFor(appState?.dayRolloverHour ?? 0);
   }, [appState]);
 
-  const startNewDay = useCallback(async () => {
-    const calendarToday = new Date().toISOString().split('T')[0];
+  // Roll the day over: stamp new habitDay + dayBoundary, sweep completed
+  // one-off tasks, and re-arm any recurring tasks whose pattern includes the
+  // new day. Filter-based update/delete because Dexie doesn't index booleans
+  // cleanly.
+  async function rolloverTo(newDay) {
     await db.state.update('app', {
-      habitDay: calendarToday,
+      habitDay: newDay,
       dayBoundary: Date.now()
     });
+    // Sweep completed one-off tasks (recurring tasks survive — they get re-armed)
+    await db.tasks.filter(t => t.completed === true && !t.recurrence).delete();
+    // Re-arm recurring tasks whose weekly pattern includes today's day-of-week
+    const dow = new Date(newDay + 'T12:00:00').getDay();
+    await db.tasks
+      .filter(t =>
+        t.completed === true &&
+        t.recurrence?.type === 'weekly' &&
+        Array.isArray(t.recurrence.days) &&
+        t.recurrence.days.includes(dow)
+      )
+      .modify({ completed: false, completedAt: null });
+  }
+
+  // Check whether the configured rollover hour has passed since habitDay was
+  // stamped, and roll if so. Runs on mount + window focus.
+  async function rolloverIfNeeded() {
+    const state = await db.state.get('app');
+    if (!state) return;
+    const hour = state.dayRolloverHour ?? 0;
+    const currentDay = getHabitDayFor(hour);
+    if (state.habitDay !== currentDay) {
+      await rolloverTo(currentDay);
+    }
+  }
+
+  const startNewDay = useCallback(async () => {
+    const hour = appState?.dayRolloverHour ?? 0;
+    await rolloverTo(getHabitDayFor(hour));
+    await loadAll();
+  }, [loadAll, appState]);
+
+  const setDayRolloverHour = useCallback(async (hour) => {
+    const h = Math.max(0, Math.min(23, Number(hour) || 0));
+    await db.state.update('app', { dayRolloverHour: h });
+    // Re-evaluate: the new hour may flip the current day immediately.
+    await rolloverIfNeeded();
     await loadAll();
   }, [loadAll]);
 
@@ -186,6 +255,7 @@ export function StoreProvider({ children }) {
   const toggleHabit = useCallback(async (habitId) => {
     const today = getHabitDay();
     const habit = habits.find(h => h.id === habitId);
+    const earn = stardustForDifficulty(habit?.difficulty);
 
     if (!appState?.habitDay) {
       await db.state.update('app', { habitDay: today });
@@ -200,8 +270,8 @@ export function StoreProvider({ children }) {
         await db.habitLogs.delete(existing.id);
         const state = await db.state.get('app');
         await db.state.update('app', {
-          stardust: Math.max(0, (state.stardust || 0) - HABIT_STARDUST),
-          totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - HABIT_STARDUST)
+          stardust: Math.max(0, (state.stardust || 0) - earn),
+          totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - earn)
         });
         await loadAll();
         return { completed: false, stardust: 0 };
@@ -214,7 +284,7 @@ export function StoreProvider({ children }) {
       timestamp: Date.now()
     });
 
-    await awardStardust(HABIT_STARDUST);
+    await awardStardust(earn);
 
     // Full Day bonus (habits + expenses the same day).
     const todayExpenses = expenses.filter(e => e.date === today);
@@ -241,7 +311,7 @@ export function StoreProvider({ children }) {
     }
 
     await loadAll();
-    return { completed: true, stardust: HABIT_STARDUST, fullDayBonus, weeklyStreak };
+    return { completed: true, stardust: earn, fullDayBonus, weeklyStreak };
   }, [habits, habitLogs, expenses, appState, awardStardust, loadAll, getHabitDay]);
 
   const getTodayCompletedHabits = useCallback(() => {
@@ -269,8 +339,10 @@ export function StoreProvider({ children }) {
     const uniqueDates = [...new Set(logs)].sort().reverse();
     if (uniqueDates.length === 0) return 0;
 
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const today = localDateString();
+    const yd = new Date();
+    yd.setDate(yd.getDate() - 1);
+    const yesterday = localDateString(yd);
 
     if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0;
 
@@ -288,9 +360,9 @@ export function StoreProvider({ children }) {
     return streak;
   }, [habitLogs]);
 
-  const addHabit = useCallback(async (name, icon, category, type = 'daily') => {
+  const addHabit = useCallback(async (name, icon, category, type = 'daily', difficulty = 'medium') => {
     const maxOrder = habits.reduce((max, h) => Math.max(max, h.sortOrder || 0), -1);
-    await db.habits.add({ name, icon, category, type, sortOrder: maxOrder + 1 });
+    await db.habits.add({ name, icon, category, type, difficulty, sortOrder: maxOrder + 1 });
     await loadAll();
   }, [habits, loadAll]);
 
@@ -361,9 +433,15 @@ export function StoreProvider({ children }) {
 
   // ====== TASK OPERATIONS ======
 
-  const addTask = useCallback(async (text) => {
+  const addTask = useCallback(async (text, difficulty = 'medium', schedule = null) => {
+    // schedule is { dueDate?: 'YYYY-MM-DD', recurrence?: {type:'weekly', days:number[]} }
+    // Mutually exclusive — recurrence wins if both set.
+    const { dueDate = null, recurrence = null } = schedule || {};
     await db.tasks.add({
       text,
+      difficulty,
+      dueDate: recurrence ? null : dueDate,
+      recurrence,
       completed: false,
       timestamp: Date.now(),
       completedAt: null
@@ -375,27 +453,43 @@ export function StoreProvider({ children }) {
     const task = await db.tasks.get(id);
     if (!task || task.completed) return null;
 
+    const earn = stardustForDifficulty(task.difficulty);
     await db.tasks.update(id, { completed: true, completedAt: Date.now() });
-    await awardStardust(TASK_STARDUST);
+    await awardStardust(earn);
     await loadAll();
-    return { stardust: TASK_STARDUST };
+    return { stardust: earn };
   }, [awardStardust, loadAll]);
+
+  const uncheckTask = useCallback(async (id) => {
+    const task = await db.tasks.get(id);
+    if (!task || !task.completed) return null;
+
+    const refund = stardustForDifficulty(task.difficulty);
+    await db.tasks.update(id, { completed: false, completedAt: null });
+    const state = await db.state.get('app');
+    await db.state.update('app', {
+      stardust: Math.max(0, (state.stardust || 0) - refund),
+      totalStardustEarned: Math.max(0, (state.totalStardustEarned || 0) - refund)
+    });
+    await loadAll();
+    return { stardust: refund };
+  }, [loadAll]);
 
   const deleteTask = useCallback(async (id) => {
     await db.tasks.delete(id);
     await loadAll();
   }, [loadAll]);
 
-  const clearCompletedTasks = useCallback(async () => {
-    await db.tasks.where('completed').equals(1).delete();
+  const updateTask = useCallback(async (id, updates) => {
+    await db.tasks.update(id, updates);
     await loadAll();
   }, [loadAll]);
 
   // ====== MEAL OPERATIONS ======
 
   const logMeal = useCallback(async (description, mealType, source, customDate) => {
-    const stardust = source === 'home_cooked' ? MEAL_STARDUST_HOME_COOKED : MEAL_STARDUST_BASE;
-    const today = customDate || new Date().toISOString().split('T')[0];
+    const stardust = stardustForMealSource(source);
+    const today = customDate || localDateString();
 
     const meal = {
       description,
@@ -462,7 +556,7 @@ export function StoreProvider({ children }) {
       const unlockLv = INTERACTION_TIERS[tier].unlockLevel;
       return { ok: false, reason: `Unlocks at Level ${unlockLv}.` };
     }
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     if (char.lastInteractionDate === today) {
       return { ok: false, reason: 'You\u2019ve already spent time with them today.' };
     }
@@ -479,7 +573,7 @@ export function StoreProvider({ children }) {
 
     const char = await db.characters.get(characterId);
     const tierDef = INTERACTION_TIERS[tier];
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     const line = drawLine(characterId, tier, char.level);
 
     // Deduct Stardust
@@ -650,7 +744,7 @@ export function StoreProvider({ children }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `brackroot-tracker-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `brackroot-tracker-${localDateString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }, []);
@@ -704,11 +798,13 @@ export function StoreProvider({ children }) {
       deleteCategory,
       getHabitDay,
       startNewDay,
+      setDayRolloverHour,
       logMeal,
       addTask,
       completeTask,
+      uncheckTask,
       deleteTask,
-      clearCompletedTasks,
+      updateTask,
       getCharacterState,
       isCharacterUnlocked,
       canInteract,

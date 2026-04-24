@@ -34,8 +34,8 @@ function AppContent() {
         <header className="header">
           <button
             className="header-settings-btn"
-            onClick={() => setShowSettings(true)}
-            aria-label="Settings"
+            onClick={() => setShowSettings(s => !s)}
+            aria-label={showSettings ? 'Close Settings' : 'Settings'}
           >
             {'\u2699\uFE0F'}
           </button>
@@ -48,7 +48,7 @@ function AppContent() {
 
         <div className="main">
           {showSettings ? (
-            <Settings onBack={() => setShowSettings(false)} />
+            <Settings />
           ) : (
             <>
               {activeTab === 'campus' && <Campus />}

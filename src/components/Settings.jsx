@@ -14,8 +14,7 @@ function formatHour(h) {
 export default function Settings() {
   const {
     appState, setDayRolloverHour,
-    handleExport, handleImport, handleReset,
-    currentUser, syncStatus, signIn, signOut, pullFromFirestore
+    handleExport, handleImport, handleReset
   } = useStore();
   const showToast = useToast();
   const fileInputRef = useRef(null);
@@ -106,34 +105,6 @@ export default function Settings() {
         </button>
       </div>
 
-      <div className="data-actions">
-        <div className="section-title">{'\u2601\uFE0F'} Cloud Sync</div>
-        <p style={{ fontSize: '12px', color: 'var(--text-warm)', margin: '0 0 8px' }}>
-          {currentUser
-            ? `Signed in as ${currentUser.displayName || currentUser.email}`
-            : 'Sign in to sync across devices'}
-        </p>
-        {syncStatus === 'syncing' && (
-          <p style={{ fontSize: '11px', color: 'var(--accent-gold)', margin: '0 0 8px' }}>Syncing...</p>
-        )}
-        {syncStatus === 'error' && (
-          <p style={{ fontSize: '11px', color: 'var(--accent-ruby)', margin: '0 0 8px' }}>Sync error \u2014 data saved locally</p>
-        )}
-        {currentUser ? (
-          <>
-            <button className="btn-secondary" onClick={pullFromFirestore}>
-              {'\u21BB'} Sync Now
-            </button>
-            <button className="btn-secondary" onClick={signOut}>
-              Sign Out
-            </button>
-          </>
-        ) : (
-          <button className="btn-secondary" onClick={signIn}>
-            Sign in with Google
-          </button>
-        )}
-      </div>
     </div>
   );
 }

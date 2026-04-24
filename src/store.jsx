@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, reconcileCharactersFromEvents, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
-import { useFirebaseSync } from './useFirebaseSync.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
@@ -74,17 +73,9 @@ export function StoreProvider({ children }) {
     setHeartEvents(allHeartEvents);
   }, []);
 
-  // Firebase sync hook (uses loadAllBase for cloud → local pulls)
-  const {
-    currentUser, syncStatus, signIn, signOut,
-    syncToFirestore, syncNow, pullFromFirestore
-  } = useFirebaseSync(loadAllBase);
-
-  // Wrapped loadAll: reload from IndexedDB, then queue cloud sync
-  const loadAll = useCallback(async () => {
-    await loadAllBase();
-    syncToFirestore();
-  }, [loadAllBase, syncToFirestore]);
+  // Data is local-first (Dexie/IndexedDB). No cloud sync — JSON export/import
+  // in Settings is the backup path.
+  const loadAll = loadAllBase;
 
   // Initialize on mount
   useEffect(() => {
@@ -754,9 +745,8 @@ export function StoreProvider({ children }) {
     const text = await file.text();
     const data = JSON.parse(text);
     await importAllData(data);
-    if (currentUser) await syncNow();
     await loadAllBase();
-  }, [loadAllBase, currentUser, syncNow]);
+  }, [loadAllBase]);
 
   // Reset
   const handleReset = useCallback(async () => {
@@ -817,12 +807,7 @@ export function StoreProvider({ children }) {
       getHeartEventsForCharacter,
       handleExport,
       handleImport,
-      handleReset,
-      currentUser,
-      syncStatus,
-      signIn,
-      signOut,
-      pullFromFirestore
+      handleReset
     }}>
       {children}
     </StoreContext.Provider>

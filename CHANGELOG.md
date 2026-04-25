@@ -2,6 +2,32 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-25 — Time Budget feature + The Wind in the Journal
+
+### Added
+- **Time Budget**: a new Time sub-tab under Ledger for weekly cap/floor tracking. Caps (e.g. Gaming ≤ 10h/week) deplete a bar left-to-right and cross into a desaturated-red reserve state with a hashed overflow segment when exceeded. Floors (e.g. Sleep ≥ 7h/night, 5/7 nights) use seven per-night pips: gilded when the nightly target is met, faded when there's logged time but it didn't cross.
+- Time entries take a category, hours (0.5h increments), date (back-entry supported), and an optional note. Hours are logged retrospectively — no live timer (Forest handles that side).
+- **The Wind**: new Journal sub-tab (Journal → Characters / The Wind). Card mirrors the NPC layout — portrait, name, arc-label-as-subtitle, RP value + floor reference, progress bar (-10 floor → +20 visual ceiling), and a "this week: N active categories" line.
+- **Weekly resolution**: every Monday, the previous week's caps/floors get tallied. Each hit nudges Wind RP up by 1; each miss pulls it down by 2. Gains require ≥3 active categories that week (losses always count). Wind RP floors at -10. Resolution runs on app init and tab focus, idempotent — `weeklyResolutions` is keyed on weekStart.
+- The Wind page shows the most recent resolution expanded with per-category hit/miss verdicts, plus a collapsed history of older weeks.
+- Settings → **Manage Time Categories**, seeded with Gaming (cap, 10h/wk), Scrolling (cap, 5h/wk), Sleep (floor, 7h/night × 5 nights).
+- **Archive** for both spend and time categories — soft-delete that hides a category from new entries while keeping it attached to its history. Hard delete still wipes both the row and any logs filed under it (with a confirm).
+
+### Changed
+- **Ledger tab**: Spend and Eat are no longer separate top-level tabs; they live under a single **Ledger** tab alongside Time. Each sub-tab has Log / Ledger sub-pages. The 4-tab nav (Campus · Journal · Ledger · Tend) replaces the 5-tab one.
+- **Eat history** moves out of the inline `showHistory` boolean into a proper Ledger sub-page, matching how Spend already worked. The "View All Meals" button at the bottom of the entry view goes away.
+- **Ledger grouping + infinite scroll**: every ledger (Spend, Eat, Time) now groups entries by date with "Today / Yesterday / Thu, Apr 24" headers, and lazy-loads in batches of 50 as you scroll.
+- **Category managers** (both spend and time) use long-press on a row to enter the in-place edit form, matching how habits and tasks already work. The form's action row carries Save / Cancel / Archive / Delete instead of having those scattered as inline buttons.
+- **Free emoji input** in both category managers — same pattern as habit/task forms. The fixed icon-picker grid is gone.
+- **Habit add form**: gains a Daily / Repeatable picker matching the edit form.
+
+### Removed
+- **Cloud sync (Firebase) removed entirely.** Brackroot is local-first now — IndexedDB on the device is the source of truth, JSON export/import in Settings is the backup path. Bundle shrinks ~545KB. Side effect: the day-rollover-hour setting persists correctly on app close (was being stripped on every Firestore push because `dayRolloverHour` wasn't in the export shape).
+- "Cloud Sync" section in Settings, sign-in flow, and the toast on day-rollover-hour change.
+
+### Schema
+- **v8**: tags existing `categories` rows with `kind: 'spend'` and adds `timeCategories`, `timeLogs`, `weeklyResolutions` tables. Extends `state.app` with `windRp` and `lastResolvedWeek`. Migration is additive — no existing data touched. On first install, `lastResolvedWeek` seeds to the current Monday so no phantom retroactive losses fire.
+
 ## 2026-04-24 — VN-style sprites + show/hide directives in heart events
 
 ### Added

@@ -3,3 +3,6 @@ dist
 *.local
 
 .vercel
+
+# Claude Code session metadata
+.claude/

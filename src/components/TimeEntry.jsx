@@ -45,7 +45,7 @@ function FloorRow({ name, icon, target, threshold, nightly }) {
         <span className="time-bar-name">{name}</span>
         <span className="time-bar-amount">
           {hits}/{threshold} nights
-          <span className="time-bar-amount-sep"> \u00B7 </span>
+          <span className="time-bar-amount-sep">{' \u00B7 '}</span>
           {target}h floor
         </span>
       </div>

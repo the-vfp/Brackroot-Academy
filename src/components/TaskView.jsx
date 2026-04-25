@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useStore, DIFFICULTY_LEVELS, stardustForDifficulty } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
@@ -174,17 +174,6 @@ export default function TaskView() {
   const [editDifficulty, setEditDifficulty] = useState('medium');
   const [editSchedule, setEditSchedule] = useState(null);
 
-  // Focus the edit input when a task flips into edit mode. See note in
-  // HabitChecklist — autoFocus alone isn't reliable on mobile after a
-  // long-press.
-  const editInputRef = useRef(null);
-  useEffect(() => {
-    if (editing != null) {
-      const id = requestAnimationFrame(() => editInputRef.current?.focus());
-      return () => cancelAnimationFrame(id);
-    }
-  }, [editing]);
-
   const today = localDateString();
   const todayDow = new Date(today + 'T12:00:00').getDay();
 
@@ -305,10 +294,8 @@ export default function TaskView() {
                 <input
                   type="text"
                   className="task-input task-edit-input"
-                  ref={editInputRef}
                   value={editText}
                   onChange={(e) => setEditText(e.target.value)}
-                  autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') saveEdit(null, task);
                     if (e.key === 'Escape') cancelEdit();

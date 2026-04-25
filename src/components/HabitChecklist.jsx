@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useStore, DIFFICULTY_LEVELS, stardustForDifficulty } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
@@ -92,18 +92,6 @@ export default function HabitChecklist() {
   const [editIcon, setEditIcon] = useState(DEFAULT_ICON);
   const [editType, setEditType] = useState('daily');
   const [editDifficulty, setEditDifficulty] = useState('medium');
-
-  // Focus the edit name input when an edit starts. autoFocus alone isn't
-  // reliable on mobile because the long-press handler fires from a
-  // setTimeout, breaking the user-gesture chain; an explicit focus call
-  // gives us a second shot once the input is mounted.
-  const editNameRef = useRef(null);
-  useEffect(() => {
-    if (editing != null) {
-      const id = requestAnimationFrame(() => editNameRef.current?.focus());
-      return () => cancelAnimationFrame(id);
-    }
-  }, [editing]);
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -232,11 +220,9 @@ export default function HabitChecklist() {
                   <input
                     type="text"
                     className="form-input habit-edit-name"
-                    ref={editNameRef}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     placeholder="Habit name"
-                    autoFocus
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') saveEdit(null, habit);
                       if (e.key === 'Escape') cancelEdit();

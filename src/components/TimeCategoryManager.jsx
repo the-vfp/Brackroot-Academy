@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useStore } from "../store.jsx";
 import { useToast } from "./Toast.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -48,14 +48,6 @@ export default function TimeCategoryManager({ onBack }) {
   const [kind, setKind] = useState("cap");
   const [targetHours, setTargetHours] = useState(10);
   const [floorThreshold, setFloorThreshold] = useState(5);
-
-  const editNameRef = useRef(null);
-  useEffect(() => {
-    if (editing != null) {
-      const id = requestAnimationFrame(() => editNameRef.current?.focus());
-      return () => cancelAnimationFrame(id);
-    }
-  }, [editing]);
 
   function resetForm() {
     setName("");
@@ -163,11 +155,10 @@ export default function TimeCategoryManager({ onBack }) {
           <input
             type="text"
             className="form-input habit-edit-name"
-            ref={editNameRef}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Gaming"
-            autoFocus
+            autoFocus={!showEditingButtons}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSave();
               if (e.key === "Escape") resetForm();

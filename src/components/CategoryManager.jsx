@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useStore } from "../store.jsx";
 import { useToast } from "./Toast.jsx";
 import { useLongPress } from "../hooks/useLongPress.js";
@@ -45,14 +45,6 @@ export default function CategoryManager({ onBack }) {
 
   const [name, setName] = useState("");
   const [icon, setIcon] = useState(DEFAULT_ICON);
-
-  const editNameRef = useRef(null);
-  useEffect(() => {
-    if (editing != null) {
-      const id = requestAnimationFrame(() => editNameRef.current?.focus());
-      return () => cancelAnimationFrame(id);
-    }
-  }, [editing]);
 
   function resetForm() {
     setName("");
@@ -156,11 +148,9 @@ export default function CategoryManager({ onBack }) {
                   <input
                     type="text"
                     className="form-input habit-edit-name"
-                    ref={editNameRef}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Category name"
-                    autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSave();
                       if (e.key === "Escape") resetForm();

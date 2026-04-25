@@ -389,7 +389,15 @@ export function StoreProvider({ children }) {
   const addCategory = useCallback(async (name, icon) => {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
     const maxOrder = categories.reduce((max, c) => Math.max(max, c.sortOrder || 0), -1);
-    await db.categories.add({ id: slug, name, icon, sortOrder: maxOrder + 1 });
+    await db.categories.add({
+      id: slug,
+      name,
+      icon,
+      kind: 'spend',
+      sortOrder: maxOrder + 1,
+      active: true,
+      archivedAt: null
+    });
     await loadAll();
   }, [categories, loadAll]);
 
@@ -398,6 +406,20 @@ export function StoreProvider({ children }) {
     await loadAll();
   }, [loadAll]);
 
+  // Soft-delete: archived categories stay attached to past expenses for
+  // history but no longer show in the new-expense picker.
+  const archiveCategory = useCallback(async (id) => {
+    await db.categories.update(id, { active: false, archivedAt: Date.now() });
+    await loadAll();
+  }, [loadAll]);
+
+  const unarchiveCategory = useCallback(async (id) => {
+    await db.categories.update(id, { active: true, archivedAt: null });
+    await loadAll();
+  }, [loadAll]);
+
+  // Hard delete — also nukes the expenses filed under it. Reserved for
+  // genuine "I never want to see this again."
   const deleteCategory = useCallback(async (id) => {
     await db.categories.delete(id);
     await db.expenses.where('category').equals(id).delete();
@@ -923,6 +945,8 @@ export function StoreProvider({ children }) {
       deleteHabit,
       addCategory,
       updateCategory,
+      archiveCategory,
+      unarchiveCategory,
       deleteCategory,
       getHabitDay,
       startNewDay,

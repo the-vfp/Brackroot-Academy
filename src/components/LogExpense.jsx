@@ -11,7 +11,10 @@ export default function LogExpense() {
   const [note, setNote] = useState('');
   const [date, setDate] = useState(localDateString());
 
-  const selectedCatId = category || (categories.length > 0 ? categories[0].id : '');
+  // Only show active spend categories in the picker. Archived ones still
+  // appear in the Ledger for history but don't accept new entries.
+  const pickable = categories.filter(c => c.active !== false && (!c.kind || c.kind === 'spend'));
+  const selectedCatId = category || (pickable.length > 0 ? pickable[0].id : '');
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -58,7 +61,7 @@ export default function LogExpense() {
             value={selectedCatId}
             onChange={(e) => setCategory(e.target.value)}
           >
-            {categories.map(c => (
+            {pickable.map(c => (
               <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
             ))}
           </select>

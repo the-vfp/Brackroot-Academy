@@ -158,7 +158,7 @@ export default function TimeEntry() {
               <select
                 className="form-select"
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
+                onChange={(e) => setCategoryId(Number(e.target.value))}
               >
                 {activeCats.map(c => (
                   <option key={c.id} value={c.id}>

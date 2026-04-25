@@ -1,26 +1,62 @@
-import { useState } from 'react';
-import { useStore } from '../store.jsx';
-import { useToast } from './Toast.jsx';
+import { useEffect, useRef, useState } from "react";
+import { useStore } from "../store.jsx";
+import { useToast } from "./Toast.jsx";
+import { useLongPress } from "../hooks/useLongPress.js";
 
-const ICON_OPTIONS = [
-  '\u{1F96C}', '\u{1F989}', '\u{1F377}', '\u2615', '\u{1F58B}\uFE0F', '\u{1F6CD}\uFE0F',
-  '\u{1F3B2}', '\u{1F4EE}', '\u{1F6E4}\uFE0F', '\u{1F3AD}', '\u{1F33F}', '\u{1F3DB}\uFE0F',
-  '\u{1F4B0}', '\u{1F381}', '\u{1F3E0}', '\u{1F4DA}', '\u{1F3A8}', '\u{1F6E1}\uFE0F',
-  '\u{1F48E}', '\u{1F3B5}', '\u{1F52C}', '\u{1F4F1}', '\u{1F9F9}', '\u2728'
-];
+const DEFAULT_ICON = "\u{1F4E6}";
+
+function CategoryRow({ cat, onLongPress }) {
+  const handlers = useLongPress(onLongPress);
+  const inactive = cat.active === false;
+  return (
+    <div
+      className="habit-item"
+      role="button"
+      tabIndex={0}
+      style={{ opacity: inactive ? 0.5 : 1 }}
+      {...handlers}
+    >
+      <div className="habit-icon">{cat.icon}</div>
+      <div className="habit-details">
+        <div className="habit-name">
+          {cat.name}
+          {inactive && <span className="habit-meta"> {"\u00B7"} archived</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function CategoryManager({ onBack }) {
-  const { categories, addCategory, updateCategory, deleteCategory } = useStore();
+  const {
+    categories,
+    addCategory, updateCategory,
+    archiveCategory, unarchiveCategory, deleteCategory
+  } = useStore();
   const showToast = useToast();
+
+  // Spend categories live in the same `categories` table as time categories,
+  // distinguished by `kind`. v8 backfilled existing rows to kind: 'spend',
+  // so anything without an explicit kind also counts as spend.
+  const spendCats = categories.filter(c => !c.kind || c.kind === "spend");
+
   const [editing, setEditing] = useState(null);
   const [showAdd, setShowAdd] = useState(false);
 
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState(ICON_OPTIONS[0]);
+  const [name, setName] = useState("");
+  const [icon, setIcon] = useState(DEFAULT_ICON);
+
+  const editNameRef = useRef(null);
+  useEffect(() => {
+    if (editing != null) {
+      const id = requestAnimationFrame(() => editNameRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [editing]);
 
   function resetForm() {
-    setName('');
-    setIcon(ICON_OPTIONS[0]);
+    setName("");
+    setIcon(DEFAULT_ICON);
     setShowAdd(false);
     setEditing(null);
   }
@@ -28,7 +64,7 @@ export default function CategoryManager({ onBack }) {
   function startEdit(cat) {
     setEditing(cat.id);
     setName(cat.name);
-    setIcon(cat.icon);
+    setIcon(cat.icon || DEFAULT_ICON);
     setShowAdd(false);
   }
 
@@ -39,104 +75,161 @@ export default function CategoryManager({ onBack }) {
 
   async function handleSave() {
     if (!name.trim()) {
-      showToast('Give your category a name.');
+      showToast("Give your category a name.");
       return;
     }
+    const safeIcon = (icon || DEFAULT_ICON).trim() || DEFAULT_ICON;
 
     if (editing) {
-      await updateCategory(editing, { name: name.trim(), icon });
-      showToast('Category updated');
+      await updateCategory(editing, { name: name.trim(), icon: safeIcon });
+      showToast("Category updated");
     } else {
-      await addCategory(name.trim(), icon);
-      showToast('Category added!');
+      await addCategory(name.trim(), safeIcon);
+      showToast("Category added!");
     }
     resetForm();
   }
 
-  async function handleDelete(id, catName) {
-    if (confirm(`Remove "${catName}"? All expenses filed under it will also be removed.`)) {
-      await deleteCategory(id);
-      showToast('Category removed');
-      if (editing === id) resetForm();
+  async function handleArchiveToggle(cat) {
+    if (cat.active === false) {
+      await unarchiveCategory(cat.id);
+      showToast("Category restored");
+    } else {
+      await archiveCategory(cat.id);
+      showToast("Category archived");
+    }
+    if (editing === cat.id) resetForm();
+  }
+
+  async function handleDelete(cat) {
+    const confirmed = confirm(
+      `Delete "${cat.name}" permanently? Every expense filed under it will also be removed. Use Archive to hide it from new entries while keeping history.`
+    );
+    if (confirmed) {
+      await deleteCategory(cat.id);
+      showToast("Category removed");
+      if (editing === cat.id) resetForm();
     }
   }
 
-  const showForm = showAdd || editing !== null;
+  // Active first, then archived.
+  const sorted = [...spendCats].sort((a, b) => {
+    const aA = a.active === false ? 1 : 0;
+    const bA = b.active === false ? 1 : 0;
+    if (aA !== bA) return aA - bA;
+    return (a.sortOrder || 0) - (b.sortOrder || 0);
+  });
 
   return (
     <div className="tab-view active">
-      <div className="section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span>Manage Categories</span>
+      <div className="section-title" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <span>Manage Spend Categories</span>
         <button className="btn-secondary" onClick={onBack} style={{ margin: 0, fontSize: 11 }}>
-          {'\u2190'} Back
+          {"\u2190"} Back
         </button>
       </div>
 
+      <p style={{ fontSize: 12, color: "var(--ink-3)", margin: "0 0 12px", lineHeight: 1.5 }}>
+        Long-press a category to edit, archive, or remove it.
+      </p>
+
       <div className="habit-list">
-        {categories.map(cat => (
-          <div key={cat.id} className="habit-item habit-manage-row">
-            <div className="habit-icon">{cat.icon}</div>
-            <div className="habit-details">
-              <div className="habit-name">{cat.name}</div>
-            </div>
-            <button
-              className="btn-secondary"
-              style={{ margin: 0, padding: '4px 10px', fontSize: 11 }}
-              onClick={() => startEdit(cat)}
-            >
-              Edit
-            </button>
-            <button
-              className="btn-secondary btn-danger"
-              style={{ margin: 0, padding: '4px 10px', fontSize: 11 }}
-              onClick={() => handleDelete(cat.id, cat.name)}
-            >
-              {'\u2715'}
-            </button>
-          </div>
-        ))}
+        {sorted.map(cat => {
+          if (editing === cat.id) {
+            const inactive = cat.active === false;
+            return (
+              <div key={cat.id} className="habit-item habit-edit-item" onClick={(e) => e.stopPropagation()}>
+                <div className="habit-add-row">
+                  <input
+                    type="text"
+                    className="form-input habit-add-emoji"
+                    value={icon}
+                    onChange={(e) => setIcon(e.target.value)}
+                    placeholder={DEFAULT_ICON}
+                    maxLength={8}
+                    inputMode="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-label="Category emoji"
+                  />
+                  <input
+                    type="text"
+                    className="form-input habit-edit-name"
+                    ref={editNameRef}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Category name"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleSave();
+                      if (e.key === "Escape") resetForm();
+                    }}
+                  />
+                </div>
+                <div className="habit-edit-actions">
+                  <button className="btn-primary" onClick={handleSave}>Save</button>
+                  <button className="btn-secondary" onClick={resetForm} style={{ margin: 0 }}>Cancel</button>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => handleArchiveToggle(cat)}
+                    style={{ margin: 0 }}
+                    title={inactive ? "Restore" : "Archive"}
+                  >
+                    {inactive ? "\u21BA Restore" : "\u{1F5C3}\uFE0F Archive"}
+                  </button>
+                  <button
+                    className="btn-secondary btn-danger"
+                    onClick={() => handleDelete(cat)}
+                    style={{ margin: 0 }}
+                  >
+                    {"\u{1F5D1}"}
+                  </button>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <CategoryRow key={cat.id} cat={cat} onLongPress={() => startEdit(cat)} />
+          );
+        })}
       </div>
 
-      {showForm && (
+      {showAdd ? (
         <div className="form-card" style={{ marginTop: 12 }}>
-          <div className="form-group">
-            <label className="form-label">Category Name</label>
+          <div className="habit-add-row">
             <input
               type="text"
-              className="form-input"
-              placeholder="e.g., Pets"
+              className="form-input habit-add-emoji"
+              value={icon}
+              onChange={(e) => setIcon(e.target.value)}
+              placeholder={DEFAULT_ICON}
+              maxLength={8}
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              aria-label="Category emoji"
+            />
+            <input
+              type="text"
+              className="form-input habit-edit-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., Pets"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+                if (e.key === "Escape") resetForm();
+              }}
             />
           </div>
-
-          <div className="form-group">
-            <label className="form-label">Icon</label>
-            <div className="icon-picker">
-              {ICON_OPTIONS.map(ic => (
-                <button
-                  key={ic}
-                  className={`icon-option ${icon === ic ? 'selected' : ''}`}
-                  onClick={() => setIcon(ic)}
-                >
-                  {ic}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn-primary" onClick={handleSave} style={{ flex: 1 }}>
-              {editing ? 'Save Changes' : '\u2726 Add Category'}
-            </button>
-            <button className="btn-secondary" onClick={resetForm} style={{ margin: 0 }}>
-              Cancel
-            </button>
+          <div className="habit-edit-actions" style={{ marginTop: 10 }}>
+            <button className="btn-primary" onClick={handleSave}>{"\u2726"} Add Category</button>
+            <button className="btn-secondary" onClick={resetForm} style={{ margin: 0 }}>Cancel</button>
           </div>
         </div>
-      )}
-
-      {!showForm && (
+      ) : (
         <button
           className="btn-primary"
           onClick={startAdd}

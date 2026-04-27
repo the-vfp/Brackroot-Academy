@@ -175,6 +175,11 @@ export async function initializeState() {
     if (existing.dayRolloverHour === undefined) patch.dayRolloverHour = 0;
     if (existing.windRp === undefined) patch.windRp = 0;
     if (existing.lastResolvedWeek === undefined) patch.lastResolvedWeek = null;
+    // Treat existing installs as already-seeded so deleting your last
+    // habit/category/time-category never triggers a defaults reseed.
+    if (existing.habitsSeeded === undefined) patch.habitsSeeded = true;
+    if (existing.categoriesSeeded === undefined) patch.categoriesSeeded = true;
+    if (existing.timeCategoriesSeeded === undefined) patch.timeCategoriesSeeded = true;
     if (Object.keys(patch).length > 0) await db.state.update('app', patch);
   }
 }
@@ -391,14 +396,23 @@ export const DEFAULT_HABITS = [
   { name: 'Went outside', icon: '\u{1F324}', category: 'transport', type: 'daily', sortOrder: 9 },
 ];
 
+// Seed defaults exactly once per install. The state flag is the source of
+// truth — checking only `count === 0` would reseed every time the user
+// deletes their last entry. `initializeState` backfills the flag as `true`
+// for existing installs, so this only ever runs on a true fresh install.
 export async function initializeHabits() {
+  const state = await db.state.get('app');
+  if (state?.habitsSeeded) return;
   const count = await db.habits.count();
   if (count === 0) {
     await db.habits.bulkAdd(DEFAULT_HABITS);
   }
+  await db.state.update('app', { habitsSeeded: true });
 }
 
 export async function initializeCategories() {
+  const state = await db.state.get('app');
+  if (state?.categoriesSeeded) return;
   const count = await db.categories.count();
   if (count === 0) {
     await db.categories.bulkAdd(
@@ -411,9 +425,12 @@ export async function initializeCategories() {
       }))
     );
   }
+  await db.state.update('app', { categoriesSeeded: true });
 }
 
 export async function initializeTimeCategories() {
+  const state = await db.state.get('app');
+  if (state?.timeCategoriesSeeded) return;
   const count = await db.timeCategories.count();
   if (count === 0) {
     await db.timeCategories.bulkAdd(
@@ -429,6 +446,7 @@ export async function initializeTimeCategories() {
       }))
     );
   }
+  await db.state.update('app', { timeCategoriesSeeded: true });
 }
 
 // Seed per-character progression rows on first boot. Idempotent — skips

@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-27 — Deleted defaults stay deleted
+
+### Fixed
+- Deleting your last time category, habit, or spend category no longer reseeds the app's defaults on next open. The boot-time seed now uses a per-table "ever seeded" flag on `state.app` (`habitsSeeded`, `categoriesSeeded`, `timeCategoriesSeeded`) instead of "is the table empty." Existing installs are backfilled as already-seeded, so reseed never fires for current users either.
+
 ## 2026-04-26 — PWA quick-action shortcuts
 
 ### Added

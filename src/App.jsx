@@ -16,17 +16,19 @@ function AppContent() {
   const { appState } = useStore();
   const [activeTab, setActiveTab] = useState('tend');
   const [ledgerInitial, setLedgerInitial] = useState('spend');
+  const [tendInitial, setTendInitial] = useState('habits');
   const [showSettings, setShowSettings] = useState(false);
 
-  // Support ?tab= deep links. "log"/"spend"/"eat" all resolve to the Ledger tab
-  // with the appropriate sub-page pre-selected.
+  // Support ?tab= deep links. "log"/"spend"/"eat"/"time" route to the Ledger tab
+  // with the right sub-page; "habits"/"tasks" route to Tend with the right sub-page.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = params.get('tab');
     if (tab === 'log' || tab === 'spend') { setActiveTab('ledger'); setLedgerInitial('spend'); }
     else if (tab === 'eat') { setActiveTab('ledger'); setLedgerInitial('eat'); }
     else if (tab === 'time') { setActiveTab('ledger'); setLedgerInitial('time'); }
-    else if (tab === 'habits' || tab === 'tasks') setActiveTab('tend');
+    else if (tab === 'habits') { setActiveTab('tend'); setTendInitial('habits'); }
+    else if (tab === 'tasks') { setActiveTab('tend'); setTendInitial('tasks'); }
     else if (VALID_TABS.includes(tab)) setActiveTab(tab);
   }, []);
 
@@ -57,7 +59,7 @@ function AppContent() {
               {activeTab === 'campus' && <Campus />}
               {activeTab === 'journal' && <Journal />}
               {activeTab === 'ledger' && <LedgerView initialSubPage={ledgerInitial} />}
-              {activeTab === 'tend' && <TendView />}
+              {activeTab === 'tend' && <TendView initialSubPage={tendInitial} />}
             </>
           )}
         </div>

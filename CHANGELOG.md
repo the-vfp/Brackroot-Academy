@@ -2,6 +2,16 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-04-26 — PWA quick-action shortcuts
+
+### Added
+- **Long-press shortcuts** on the Android home-screen icon: 📿 Habits, 🖋️ Tasks, 🕯️ Time, plus the existing Quick Log. Each routes via a `?tab=` deep link to the right surface — no native code, pure manifest. (Requires reinstalling the PWA — Android reads the `shortcuts` array at install time, not on update.)
+- Three new themed shortcut icons in `public/icons/` matching the burgundy/bronze app-icon skeleton.
+
+### Changed
+- **TendView** now accepts an `initialSubPage` prop, mirroring the pattern LedgerView already uses. The Tasks shortcut actually opens Tasks now (previously `?tab=tasks` fell back to the default Habits sub-page).
+- Quick Log shortcut URL switches from `?tab=log` to canonical `?tab=spend`. The `log` alias stays in App.jsx so older installs keep working.
+
 ## 2026-04-25 — Time Budget feature + The Wind in the Journal
 
 ### Added

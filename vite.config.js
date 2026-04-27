@@ -38,11 +38,32 @@ export default defineConfig({
         ],
         shortcuts: [
           {
+            name: '\u{1F4FF} Habits',
+            short_name: 'Habits',
+            url: './?tab=habits',
+            description: "Today's habits",
+            icons: [{ src: 'icons/shortcut-habits.svg', sizes: '192x192', type: 'image/svg+xml' }]
+          },
+          {
+            name: '\u{1F58B}️ Tasks',
+            short_name: 'Tasks',
+            url: './?tab=tasks',
+            description: 'Open tasks',
+            icons: [{ src: 'icons/shortcut-tasks.svg', sizes: '192x192', type: 'image/svg+xml' }]
+          },
+          {
+            name: '\u{1F56F}️ Time',
+            short_name: 'Time',
+            url: './?tab=time',
+            description: 'Log time',
+            icons: [{ src: 'icons/shortcut-time.svg', sizes: '192x192', type: 'image/svg+xml' }]
+          },
+          {
             name: 'Quick Log',
             short_name: 'Log',
-            url: './?tab=log',
-            description: 'Log an expense quickly',
-            icons: [{ src: 'icons/icon-192.svg', sizes: '192x192' }]
+            url: './?tab=spend',
+            description: 'Log an expense',
+            icons: [{ src: 'icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml' }]
           }
         ]
       },

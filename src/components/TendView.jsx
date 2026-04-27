@@ -7,8 +7,8 @@ const SUB_PAGES = [
   { id: 'tasks',  label: 'Tasks' },
 ];
 
-export default function TendView() {
-  const [subPage, setSubPage] = useState('habits');
+export default function TendView({ initialSubPage = 'habits' }) {
+  const [subPage, setSubPage] = useState(initialSubPage);
 
   return (
     <>

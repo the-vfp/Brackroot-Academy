@@ -186,10 +186,14 @@ function SceneCharacterMc({ url, dim }) {
 function parsePages(text) {
   if (!text) return [];
 
+  // A "Speaker: body" line only counts as dialogue when the body opens with a
+  // quotation mark (straight or curly). Spoken lines are always quoted, so this
+  // keeps natural narration colons — "A memory unfurls: a student...", "Yours
+  // is decadent: coconut jelly..." — from being misread as a character speaking.
   const hideRe = /^\[\[hide(?:\s+([A-Za-z][A-Za-z0-9_-]*))?\]\]$/;
-  const dialogWithSpriteRe = /^\[\[([^\]]+\.png)\]\]\s+([^:\n]{1,32}):\s+([\s\S]+)$/;
+  const dialogWithSpriteRe = /^\[\[([^\]]+\.png)\]\]\s+([^:\n]{1,32}):\s+(["“][\s\S]+)$/;
   const showRe = /^\[\[([^\]]+\.png)\]\]$/;
-  const speakerRe = /^([^:\n]{1,32}):\s+([\s\S]+)$/;
+  const speakerRe = /^([^:\n]{1,32}):\s+(["“][\s\S]+)$/;
 
   const paragraphs = text.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
   const pages = [];

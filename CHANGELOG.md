@@ -11,6 +11,9 @@ All notable changes to Brackroot Academy are documented here.
 ### Changed
 - **Marlow heart events L2–L7** converted from prose to the VN tap-format (one beat per textbox, `Speaker:` tabs). L1 (which already had sprite directives) and the L8–L10 placeholders are unchanged.
 
+### Fixed
+- The heart-event script parser no longer mistakes a narration line with a mid-sentence colon (e.g. "A memory unfurls: …", "Yours is decadent: …") for a `Speaker:` beat. A line now only renders as spoken dialogue when the text after the colon opens with a quotation mark — which is the authoring convention anyway.
+
 ### Notes
 - Source of truth is Ellene's Obsidian drafts; this just ports the finished VN text into `src/data/heartEvents/`. No new sprite or background art is referenced — these render with the character's emoji portrait fallback (except Marlow L1, whose sprites already shipped).
 - Every line of dialogue carries an explicit `Speaker:` tag, so each spoken beat shows a name on the VN tab; bare-quote lines that previously rendered as nameless narration are all tagged now. Re-synced from the vault after Ellene's tagging + typo pass.

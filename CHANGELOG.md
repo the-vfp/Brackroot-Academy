@@ -13,7 +13,7 @@ All notable changes to Brackroot Academy are documented here.
 
 ### Notes
 - Source of truth is Ellene's Obsidian drafts; this just ports the finished VN text into `src/data/heartEvents/`. No new sprite or background art is referenced — these render with the character's emoji portrait fallback (except Marlow L1, whose sprites already shipped).
-- Fixed three mis-typed speaker tags during the port so the right name shows on the VN tab: Marlow L3 `Marliw:` → `Marlow:`; Brendan L1 and L5 each had a `Brendan:` line in a Marlow-only aside, corrected to `Marlow:`.
+- Every line of dialogue carries an explicit `Speaker:` tag, so each spoken beat shows a name on the VN tab; bare-quote lines that previously rendered as nameless narration are all tagged now. Re-synced from the vault after Ellene's tagging + typo pass.
 
 ## 2026-04-27 — Deleted defaults stay deleted
 

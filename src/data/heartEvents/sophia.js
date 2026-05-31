@@ -27,7 +27,7 @@ Hungry girl: "Hi."
 
 You set the journal down. Set the tape down. Make your way to the bread — there's more of it, a whole loaf wrapped in a cloth, and a little pot of honey open beside it — and you tear off a corner without ceremony.
 
-Ellene: "Are you a ghost Because if you're a ghost, I feel like I should know. Housemate etiquette."
+Ellene: "Are you a ghost? Because if you're a ghost, I feel like I should know. Housemate etiquette."
 
 Hungry girl: "I'm — Divines."
 
@@ -49,7 +49,7 @@ Ellene: "This is *so* good. Do we know whose this is? Is there a sign? Did I jus
 
 Sophia: "I don't think the kitchen cares."
 
-Ellene: "Sweet. Thank you, kitchen!."
+Ellene: "Sweet. Thank you, kitchen!"
 
 Sophia: "Yes."
 
@@ -63,7 +63,7 @@ Ellene: "So... Divines. How do you feel about the washi-tape-aggressive-journali
 
 Sophia: "I thought it was pretty."
 
-Ellene: "Oh. Thank you. I was going for *how did a Kindergartener end up at Brackroot* vibes. "
+Ellene: "Oh. Thank you. I was going for *how did a Kindergartener end up at Brackroot* vibes."
 
 Sophia: "You nailed it."
 
@@ -71,7 +71,7 @@ And there it is — the little dry deflection, the line you almost miss, and you
 
 The kitchen is warm. The honey pot is open. Somewhere in the main building a clock is doing its small honest ticking.
 
-Ellene: "Okay Tell me everything. Is this a you-every-night situation? Because I'm not opposed to *also* being an every night person."
+Ellene: "Okay. Tell me everything. Is this a you-every-night situation? Because I'm not opposed to *also* being an every-night person."
 
 She considers you.
 
@@ -109,7 +109,7 @@ Ellene: "*Sophia.*"
 
 She eats another grape.
 
-Sophia: "It does that sometimes"
+Sophia: "It does that sometimes."
 
 You sit down on the counter beside her — not touching, but close enough that your sleeve brushes hers.
 
@@ -169,9 +169,7 @@ Ellene: "Oh?"
 
 Sophia: "You're *the girl who cares*. That's what people say."
 
-Sophia: "You remember names. You write things down. You show up.
-
-Sophia: "They say you hand out kindness like it doesn't cost you anything."
+Sophia: "You remember names. You write things down. You show up. They say you hand out kindness like it doesn't cost you anything."
 
 You make a small *huh* sound. You hadn't known.
 
@@ -179,7 +177,7 @@ Sophia: "Is it true?"
 
 Ellene: "Yeah, I care. But I have to *try* to care. It's not always easy but it's what most people are looking for. So... it's more a habit, I think."
 
-"I thought so."
+Sophia: "I thought so."
 
 Ellene: "What about Marlow?"
 
@@ -255,7 +253,7 @@ He is a first-year.
 
 You have to remind yourself he is a first-year.
 
-Diana Delawarr a clean half-step back, sleeves rolled precisely to the elbows, and — *okay, is what your brain does, briefly, in passing* — Diana Delawarr looks like somebody dared the weather to produce a girl and the weather *tried*.
+Diana Delawarr a clean half-step back, sleeves rolled precisely to the elbows, and — *okay,* is what your brain does, briefly, in passing — Diana Delawarr looks like somebody dared the weather to produce a girl and the weather *tried*.
 
 A third-year cuts past her and unconsciously angles his shoulder slightly toward her as he goes. She doesn't appear to care that she looks like that. She's watching the courtyard the way someone who already knows everyone's secret watches a room, and when her eyes cross yours you feel, for a courtesy half-second, *catalogued*.
 
@@ -333,7 +331,7 @@ She accepts the mug. She blows on it. She does not look at you.
 
 Sophia: "*Ellene.*"
 
-"What? Game respects game."
+Ellene: "What? Game respects game."
 
 Sophia: "Drink your hot chocolate."
 

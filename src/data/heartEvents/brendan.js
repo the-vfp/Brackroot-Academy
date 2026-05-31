@@ -166,7 +166,7 @@ Ellene: "I hope you don't expect me to infer the timestamp by looking at the gro
 
 Brendan: "It is. Which is why we record levels of certainty. If you can't infer it, mark it as 'Undated.' I don't expect archivists to be botanists."
 
-"So you're a botanist *and* an archivist *and* a duelist *and* a governance enthusiast. And yet you've chosen to focus on the quiet things. I wouldn't have expected it."
+Ellene: "So you're a botanist *and* an archivist *and* a duelist *and* a governance enthusiast. And yet you've chosen to focus on the quiet things. I wouldn't have expected it."
 
 He doesn't smile. But his eyes narrow with something like consideration.
 
@@ -228,7 +228,7 @@ You're not fighting. You don't fight with Brendan — there's nothing to fight a
 
 It's also missing a heart.
 
-"Holy shit, Brendan. You've got a perfect system and it's *so white*. You're so busy asking how to make the system more efficient that you haven't asked who's being represented."
+Ellene: "Holy shit, Brendan. You've got a perfect system and it's *so white*. You're so busy asking how to make the system more efficient that you haven't asked who's being represented."
 
 He goes quiet. Not offended — processing. You can almost hear the gears.
 
@@ -260,7 +260,7 @@ Brendan: "Not *instead* of mine. Combined. Your intent, my framework. We redraft
 
 He looks up. Pen poised. Waiting.
 
-Ellene: "Are you asking me to co-author a funding proposal ?"
+Ellene: "Are you asking me to co-author a funding proposal?"
 
 Brendan: "I'm asking you to help me build something that works."
 
@@ -338,11 +338,11 @@ About how his severity and your warmth aren't opposites — they're complementar
 
 You can survive in wreckage. He can't accept collapse. Between the two of you, things hold.
 
-Ellene: "You know in anime the student council gets armbands Do we get something? Like a badge of office?"
+Ellene: "You know in anime the student council gets armbands? Do we get something? Like a badge of office?"
 
 Brendan: "Brackroot doesn't hand out props. Authority here is quieter."
 
-"Oh, come on. You said you celebrate by writing something down. This could be more permanent. We should get something. Maybe not an armband. But something for the two of us — because we're partners now."
+Ellene: "Oh, come on. You said you celebrate by writing something down. This could be more permanent. We should get something. Maybe not an armband. But something for the two of us — because we're partners now."
 
 He goes quiet in the way that means you've touched something real.
 

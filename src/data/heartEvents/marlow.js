@@ -113,13 +113,13 @@ You tape it into your journal before he can change his mind.`,
 
 Marlow: "It's not locked."
 
-It's which is not the same thing as "we're allowed."
+Which is not the same thing as "we're allowed."
 
 You point this out.
 
 He shrugs. One-shouldered. You're starting to hate that shrug.
 
-Marlow: "The new kid of the Student Governance Council. Sneaking onto a roof. Imagine the scandal."
+Marlow: "The new kid of the Student Governance Council, sneaking onto a roof. Imagine the scandal."
 
 Ellene: "I'm not sneaking. I'm being *led astray*."
 
@@ -145,7 +145,9 @@ That's his bad influence. He makes the world feel like it has fewer walls.
 
 Yours is worse.
 
-Because you sit down next to him and say, "Do you know A Whole New World?"
+Because you sit down next to him and say:
+
+Ellene: "Do you know A Whole New World?"
 
 He stares at you.
 
@@ -183,7 +185,7 @@ Ellene: "You knew all the words."
 
 Marlow: "I *hate* you."
 
-But he's smiling.
+But he's smiling. Then, quieter:
 
 Marlow: "You know we were supposed to be *sneaking*."
 
@@ -217,7 +219,7 @@ Marlow: "I guess I'm asking if that part goes away."
 
 Ellene: "I don't think it gets any better. You just learn to live in it."
 
-Marlow: "Yeah. That's what I figured.
+Marlow: "Yeah. That's what I figured."
 
 Marlow: "Do you live in it well? The aloneness."
 
@@ -231,7 +233,7 @@ Marlow: "But it's nice not being alone in it. Even just for a bit."
 
 You grin at him — not bright. Not the one you use when you're teasing or beaming. Just tired, and smiling with it anyway.
 
-"Alone together."`,
+Ellene: "Alone together."`,
 
   5: `You talk the Cooking Club into making a cake. Dark, dense, not sweet — bitter chocolate and spice. You score a beeswax candle off one of the students, who gives you a look you choose to ignore.
 
@@ -263,7 +265,7 @@ He snorts, but he doesn't argue. You light the candle. The flame catches — sma
 
 Ellene: "To us."
 
-You don't look at him. It's embarrassing — you barely know him and you're already making ceremonies. Already wanting to  But you mean it.
+You don't look at him. It's embarrassing — you barely know him and you're already making ceremonies. Already wanting to. But you mean it.
 
 He's quiet for a second. You think he's going to make a joke.
 
@@ -281,7 +283,7 @@ Ellene: "The gratitude thing. I appreciate you. You sing Disney with me under pr
 
 He chews. Swallows. Doesn't look at you.
 
-Marlow: "People don't usually say stuff like that to me,."
+Marlow: "People don't usually say stuff like that to me."
 
 Ellene: "I'll kill you with kindness, sir. You'll be undone with love and affection."
 
@@ -323,7 +325,7 @@ Marlow: "Having fun?"
 
 Ellene: "Someone thought I was with Brendan."
 
-Marlow:  "What'd you say?"
+Marlow: "What'd you say?"
 
 Ellene: "That I'm with you."
 

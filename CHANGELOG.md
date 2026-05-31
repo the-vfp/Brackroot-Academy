@@ -2,6 +2,19 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-05-30 — VN heart events: Marlow, Brendan, Sophia
+
+### Added
+- **Brendan heart events L1–L6** — the partnership arc through the Masquerade unmasking, in the tap-through VN format. Levels 7–10 stay placeholders (held for interweaving with other character arcs).
+- **Sophia heart events L1–L3** — the kitchen-at-midnight kinship arc, from "are you a ghost?" through the courtyard "she's so cool" beat. Levels 4–10 stay placeholders.
+
+### Changed
+- **Marlow heart events L2–L7** converted from prose to the VN tap-format (one beat per textbox, `Speaker:` tabs). L1 (which already had sprite directives) and the L8–L10 placeholders are unchanged.
+
+### Notes
+- Source of truth is Ellene's Obsidian drafts; this just ports the finished VN text into `src/data/heartEvents/`. No new sprite or background art is referenced — these render with the character's emoji portrait fallback (except Marlow L1, whose sprites already shipped).
+- Fixed three mis-typed speaker tags during the port so the right name shows on the VN tab: Marlow L3 `Marliw:` → `Marlow:`; Brendan L1 and L5 each had a `Brendan:` line in a Marlow-only aside, corrected to `Marlow:`.
+
 ## 2026-04-27 — Deleted defaults stay deleted
 
 ### Fixed

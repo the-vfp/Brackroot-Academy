@@ -1292,21 +1292,23 @@ html, body, #root {
   gap: 10px;
 }
 .location-card {
+  --loc-accent: var(--bk-marlow);
+  --loc-ink: var(--bk-marlow-deep);
   display: flex;
   flex-direction: column;
   width: 100%;
   padding: 14px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--accent-copper);
-  border-radius: var(--radius);
+  background: var(--bk-surface);
+  border: none;
+  box-shadow: inset 5px 0 0 0 var(--loc-accent), 0 0 0 2px var(--bk-ink-strong);
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.25s ease;
   text-align: left;
-  color: var(--text-cream);
-  font-family: var(--font-body);
-  box-shadow: 0 0 12px var(--shadow-warm), inset 0 0 24px rgba(212, 148, 58, 0.04);
+  color: var(--bk-ink);
+  font-family: var(--bk-font-body);
+  image-rendering: pixelated;
 }
-.location-card:hover { border-color: var(--accent-amber); transform: translateY(-1px); }
+.location-card:active { transform: translate(1px, 1px); }
 .location-header {
   display: flex;
   align-items: baseline;
@@ -1317,17 +1319,17 @@ html, body, #root {
   border-bottom: 1px solid var(--border-warm);
 }
 .location-name {
-  font-family: var(--font-display);
+  font-family: var(--bk-font-head);
   font-size: 18px;
   font-weight: 700;
-  color: var(--accent-lantern);
-  letter-spacing: 0.3px;
+  color: var(--loc-ink);
 }
 .location-level {
-  font-size: 10px;
-  color: var(--text-warm);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  color: var(--bk-ink-soft);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: var(--bk-tracking-micro);
   white-space: nowrap;
 }
 .location-body {
@@ -1339,7 +1341,6 @@ html, body, #root {
   font-size: 42px;
   line-height: 1;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 6px rgba(245, 216, 138, 0.3));
 }
 .location-occupant {
   flex: 1;
@@ -1349,16 +1350,18 @@ html, body, #root {
   gap: 2px;
 }
 .location-character-name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-cream);
+  font-family: var(--bk-font-head);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bk-ink-strong);
   line-height: 1.1;
 }
 .location-character-title {
-  font-size: 12px;
-  color: var(--accent-gold);
-  font-style: italic;
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase;
+  color: var(--bk-ink-soft);
 }
 
 .map-hint {
@@ -2632,3 +2635,21 @@ html, body, #root {
   font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
   text-transform: uppercase; color: var(--bk-ink-soft);
 }
+
+/* =====================================================================
+   THEME-AWARE CHARACTER TEXT
+   The per-character -ink hues are tuned for cream (day); on the dark night
+   surface the darker ones go low-contrast. So character-coloured text uses
+   the dark ink on day and the lighter base on night. Cards expose both as
+   --cc-day / --cc-night (Journal) or --loc-ink / --loc-accent (Campus).
+   ===================================================================== */
+.journal-title,
+.journal-subhead,
+.journal-heart-level,
+.journal-interaction-tier { color: var(--cc-day); }
+[data-theme="night"] .journal-title,
+[data-theme="night"] .journal-subhead,
+[data-theme="night"] .journal-heart-level,
+[data-theme="night"] .journal-interaction-tier { color: var(--cc-night); }
+
+[data-theme="night"] .location-name { color: var(--loc-accent); }

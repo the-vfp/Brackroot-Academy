@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../../store.jsx';
 import { CHARACTER_DEFS, MAP_ORDER, PLAYABLE_CHARACTER_IDS, getTitle } from '../../data/characters.js';
+import { colorsFor } from '../../data/characterColors.js';
 import InteractionModal from './InteractionModal.jsx';
 
 export default function Map() {
@@ -34,8 +35,14 @@ export default function Map() {
         <div className="location-list">
           {unlocked.map(({ id, def, state }) => {
             const title = getTitle(id, state.level);
+            const c = colorsFor(id);
             return (
-              <button key={id} className="location-card" onClick={() => setOpenCharId(id)}>
+              <button
+                key={id}
+                className="location-card"
+                style={{ '--loc-accent': c.base, '--loc-ink': c.ink }}
+                onClick={() => setOpenCharId(id)}
+              >
                 <div className="location-header">
                   <div className="location-name">The {def.defaultLocation}</div>
                   <div className="location-level">Lv {state.level}/10</div>

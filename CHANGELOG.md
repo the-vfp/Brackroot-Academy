@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Reskin spot-check: Campus + night-theme readability
+
+### Changed
+- **Campus location cards de-golded.** Every location card was gold-framed with gold titles — gold creep that competed with the Stardust spine. Each card is now banded and titled in **its character's colour** (Marlow rose, Sophia plum, Brendan ink-blue, Diana periwinkle…), matching the Journal; gold is reserved for Stardust again.
+- **Character-coloured text is now theme-aware.** The per-character `-ink` hues are tuned for cream paper, so on the dark night surface the darker ones (Sophia, Brendan) went low-contrast. Character-coloured text — Journal titles/subheads/heart-levels and Campus location names — now uses the dark ink by day and the lighter base hue at night, so it stays readable in both. (Day appearance unchanged.)
+
+### Notes
+- Spot-checked Campus (Map/Events/Challenges), Settings, the category managers, and the Eat/Time/Habits forms. The Settings "Day starts at" select was already correctly styled (it just renders cream on the day surface); no other rough edges found.
+
 ## 2026-06-21 — Softer heart-event backdrop + open letters from the Hearth
 
 ### Changed

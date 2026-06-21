@@ -99,13 +99,13 @@ export default function JournalCharacters() {
           <div
             key={id}
             className={`journal-card bk-frame ${expanded ? 'expanded' : ''}`}
-            style={{ '--bk-frame-band-color': c.base }}
+            style={{ '--bk-frame-band-color': c.base, '--cc-day': c.ink, '--cc-night': c.base }}
           >
             <button className="journal-card-header" onClick={() => setExpandedId(expanded ? null : id)}>
               <CharacterCrest letter={firstName[0]} color={c.base} symbol={def.portrait} size={56} />
               <div className="journal-heading">
                 <div className="journal-name">{firstName}</div>
-                <div className="journal-title" style={{ color: c.ink }}>
+                <div className="journal-title">
                   Lv {state.level} {'·'} {title}
                 </div>
                 <HeartPips level={state.level} color={c.base} />
@@ -135,7 +135,7 @@ export default function JournalCharacters() {
                 </div>
                 {heartEvts.length > 0 && (
                   <>
-                    <div className="journal-subhead" style={{ color: c.ink }}>Heart Events</div>
+                    <div className="journal-subhead">Heart Events</div>
                     <div className="journal-heart-list">
                       {heartEvts.map(h => (
                         <button
@@ -144,7 +144,7 @@ export default function JournalCharacters() {
                           style={{ '--bk-frame-band-color': c.base }}
                           onClick={() => openReplay(id, h.level)}
                         >
-                          <span className="journal-heart-level" style={{ color: c.ink }}>Lv {h.level}</span>
+                          <span className="journal-heart-level">Lv {h.level}</span>
                           <span className="journal-heart-title">{getTitle(id, h.level)}</span>
                           <span className="journal-heart-date">{formatDate(h.timestamp)}</span>
                         </button>
@@ -154,11 +154,11 @@ export default function JournalCharacters() {
                 )}
                 {interactions.length > 0 && (
                   <>
-                    <div className="journal-subhead" style={{ color: c.ink }}>Recent Interactions</div>
+                    <div className="journal-subhead">Recent Interactions</div>
                     <div className="journal-interaction-list">
                       {interactions.slice(0, 20).map(i => (
                         <div key={i.id} className="journal-interaction-item">
-                          <span className="journal-interaction-tier" style={{ color: c.ink }}>
+                          <span className="journal-interaction-tier">
                             {INTERACTION_TIERS[i.tier].icon} {INTERACTION_TIERS[i.tier].label}
                           </span>
                           <span className="journal-interaction-line">{i.line}</span>

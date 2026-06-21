@@ -1,89 +1,149 @@
 :root {
-  /* ─── Brackroot tokens v0.4 — warm academia, dark only ─── */
+  /* ─── Brackroot Academy — cozy pixel-art tokens (Design handoff 2026-06-20) ───
+     The --bk-* layer is the source of truth. The alias block below maps the
+     app's original v0.4 names onto it, so every existing component reskins at
+     once; migrate usages onto --bk-* over time. Radius is 0 everywhere. */
 
-  /* Ink scale — warm cream → deep muted */
-  --ink:          #f3e8d2;
-  --ink-2:        #d8c8a8;
-  --ink-3:        #a89574;
-  --ink-4:        #6b5a42;
-  --ink-5:        rgba(243, 232, 210, 0.12);
+  /* World / base palette — warm cream paper, soft brown ink (never #000) */
+  --bk-paper:        #FBF4E6;
+  --bk-paper-deep:   #F3E8D2;
+  --bk-surface:      #FFFCF5;
+  --bk-surface-edge: #FFFFFF;
+  --bk-ink:          #5A4636;
+  --bk-ink-strong:   #4E3A2C;
+  --bk-ink-soft:     #8A7560;
+  --bk-border:       #C9B79C;
 
-  /* Background scale — deepest → elevated */
-  --bg:           #141009;
-  --bg-2:         #1d1710;
-  --bg-3:         #261f16;
-  --bg-4:         #30281d;
+  /* Stardust spine (currency + Ellene only) */
+  --bk-stardust:         #E9B949;
+  --bk-stardust-shimmer: #F4D58A;
+  --bk-stardust-deep:    #C9952F;
+  --bk-stardust-soft:    #F8E7BC;
 
-  /* Accent — one amber carries hover, active, earn, highlight */
-  --accent:       #d4943a;
-  --accent-2:     #e8b84a;
-  --accent-3:     #b87333;
-  --accent-glow:  rgba(212, 148, 58, 0.25);
-  --accent-wash:  rgba(212, 148, 58, 0.08);
+  /* Indigo — Ellene's wax */
+  --bk-indigo:       #41396E;
+  --bk-indigo-soft:  #5A5190;
+
+  /* Per-character triads (fill · deep outline/text · soft tint) */
+  --bk-ellene:#E9B949; --bk-ellene-alt:#EE9F5E; --bk-ellene-deep:#C9952F; --bk-ellene-soft:#F8E7BC;
+  --bk-marlow:#CE8A92; --bk-marlow-deep:#A85A65; --bk-marlow-soft:#F1DCDE;
+  --bk-brendan:#4E6A9B; --bk-brendan-deep:#3A4F77; --bk-brendan-soft:#D5DEEC; --bk-brendan-rel:#41396E;
+  --bk-diana:#9AA0D4; --bk-diana-deep:#6E74AE; --bk-diana-soft:#E2E3F3; --bk-diana-ink:#585D90;
+  --bk-peter:#E8893A; --bk-peter-deep:#C06A22; --bk-peter-soft:#F8DEC4;
+  --bk-richard:#9AA0A6; --bk-richard-deep:#6E747A; --bk-richard-soft:#E3E5E7; --bk-richard-thread:#9E3B3B; --bk-richard-ink:#5C6167;
+  --bk-sophia:#6E4A6B; --bk-sophia-deep:#543551; --bk-sophia-soft:#E5D8E4; --bk-sophia-glow:#E7B86A;
+
+  /* Heart-event location washes (asset-free VN backdrops) */
+  --bk-loc-library:#34304E; --bk-loc-courtyard:#3C4A52; --bk-loc-kitchens:#4A3328;
+  --bk-loc-gardens:#354A36; --bk-loc-office:#3E3A5C; --bk-loc-grounds:#4E3B2E;
+  --bk-loc-dither:rgba(255,255,255,.05);
+
+  /* Semantic / state */
+  --bk-good:#6E8A4E; --bk-warn:#C9952F; --bk-shadow:rgba(78,58,44,.20);
+
+  /* Typography — pixel faces */
+  --bk-font-body:    'Pixelify Sans','VT323',ui-monospace,monospace;
+  --bk-font-head:    'Pixelify Sans','VT323',ui-monospace,monospace;
+  --bk-font-micro:   'Silkscreen','Pixelify Sans',ui-monospace,monospace;
+  --bk-font-wordmark:'Jersey 10','Silkscreen',ui-monospace,monospace; /* open C */
+
+  --bk-text-micro:8px; --bk-text-micro-lg:16px; --bk-text-caption:12px;
+  --bk-text-body:16px; --bk-text-prose:20px; --bk-text-h2:24px;
+  --bk-text-h1:32px;   --bk-text-display:40px;
+  --bk-leading-prose:1.6; --bk-leading-ui:1.5; --bk-leading-micro:1.5; --bk-tracking-micro:0.12em;
+
+  /* Spacing (4px base, pixel-grid friendly) */
+  --bk-space-1:2px; --bk-space-2:4px; --bk-space-3:8px; --bk-space-4:12px; --bk-space-5:16px;
+  --bk-space-6:20px; --bk-space-7:24px; --bk-space-8:32px; --bk-space-9:40px; --bk-space-10:48px;
+
+  /* Radius / pixel frame tiers / layout */
+  --bk-radius:0px; --bk-px:2px; --bk-frame-band:5px; --bk-frame-ink:7px; --bk-col-max:480px;
+  --bk-time-accent:#C9952F; /* the day "DAY · 14:20" chip ink */
+
+  /* ─── Alias layer: original v0.4 names → pixel tokens ─── */
+  /* Ink (was cream-on-dark; now brown-on-cream) */
+  --ink:    var(--bk-ink);
+  --ink-2:  var(--bk-ink);
+  --ink-3:  var(--bk-ink-soft);
+  --ink-4:  var(--bk-ink-soft);
+  --ink-5:  var(--bk-border);
+
+  /* Background (was dark→elevated; now cream→near-white surface) */
+  --bg:     var(--bk-paper);
+  --bg-2:   var(--bk-paper-deep);
+  --bg-3:   var(--bk-surface);
+  --bg-4:   var(--bk-surface);
+
+  /* Accent → the gold spine */
+  --accent:       var(--bk-stardust);
+  --accent-2:     var(--bk-stardust-shimmer);
+  --accent-3:     var(--bk-stardust-deep);
+  --accent-glow:  var(--bk-stardust-soft);
+  --accent-wash:  var(--bk-stardust-soft);
 
   /* Status */
-  --danger:       #c74b4b;
-  --danger-2:     #8a3a3a;
-  --success:      #7a9a5a;
-  --success-2:    #5a7a4a;
+  --danger:    #B23B3B;
+  --danger-2:  #9E3B3B;
+  --success:   var(--bk-good);
+  --success-2: #5A7340;
 
-  /* Typography */
-  --font-display: 'IM Fell English', 'EB Garamond', Georgia, serif;
-  --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-hand:    'Kalam', system-ui, cursive;
-  --font-mono:    ui-monospace, 'JetBrains Mono', monospace;
+  /* Typography aliases */
+  --font-display: var(--bk-font-head);
+  --font-body:    var(--bk-font-body);
+  --font-hand:    var(--bk-font-body);
+  --font-mono:    var(--bk-font-body);
 
-  /* Type scale */
-  --t-xs:   10px;
-  --t-sm:   11px;
-  --t-base: 13px;
-  --t-md:   15px;
-  --t-lg:   18px;
-  --t-xl:   22px;
-  --t-2xl:  28px;
+  /* Type scale — kept at original px so component sizing stays stable */
+  --t-xs:10px; --t-sm:11px; --t-base:13px; --t-md:15px; --t-lg:18px; --t-xl:22px; --t-2xl:28px;
 
-  /* Spacing scale */
-  --s-1: 4px;  --s-2: 8px;   --s-3: 12px;  --s-4: 16px;
-  --s-5: 20px; --s-6: 24px;  --s-7: 32px;
+  /* Spacing aliases */
+  --s-1:4px; --s-2:8px; --s-3:12px; --s-4:16px; --s-5:20px; --s-6:24px; --s-7:32px;
 
-  /* Radius */
-  --r-sm:   6px;
-  --r:      10px;
-  --r-lg:   14px;
-  --r-pill: 999px;
+  /* Radius — locked to 0 (hard pixel edges, no exceptions) */
+  --r-sm:0; --r:0; --r-lg:0; --r-pill:0;
+  --radius:0; --radius-sm:0;
 
-  /* Shadows */
-  --shadow-card:   0 2px 10px rgba(0, 0, 0, 0.3);
-  --shadow-glow:   0 0 16px var(--accent-glow);
-  --shadow-modal:  0 20px 50px rgba(0, 0, 0, 0.6);
+  /* Shadows → hard pixel drops */
+  --shadow-card:  3px 3px 0 0 var(--bk-shadow);
+  --shadow-glow:  0 0 0 2px var(--bk-stardust-soft);
+  --shadow-modal: 6px 7px 0 0 var(--bk-shadow);
 
-  /* Hero surface paper grain — used sparingly on heart scene bg, journal
-     spread, campus featured card. Not a background; a spice. */
-  --paper:       radial-gradient(rgba(243,232,210,0.025) 1px, transparent 1.2px) 0 0 / 6px 6px;
-  --paper-hero:  radial-gradient(rgba(243,232,210,0.04) 1px, transparent 1.3px) 0 0 / 7px 7px,
-                 repeating-linear-gradient(112deg, rgba(243,232,210,0.02) 0 1px, transparent 1px 11px);
+  /* Paper grain retired in the pixel system */
+  --paper: none;
+  --paper-hero: none;
 
   /* ─── Legacy aliases — existing component CSS continues to resolve ─── */
-  --bg-deep:             var(--bg);
-  --bg-warm:             var(--bg-2);
-  --bg-card:             var(--bg-3);
-  --bg-parchment:        #e8dcc8;
-  --bg-parchment-dark:   #d4c4a8;
-  --text-cream:          var(--ink);
-  --text-warm:           var(--ink-3);
-  --text-dark:           #1a0f05;
-  --accent-amber:        var(--accent);
-  --accent-copper:       var(--accent-3);
-  --accent-gold:         var(--accent-2);
-  --accent-lantern:      var(--accent-2);
-  --accent-green:        var(--success-2);
-  --accent-green-light:  var(--success);
-  --accent-ruby:         var(--danger-2);
-  --shadow-warm:         var(--accent-wash);
-  --shadow-deep:         rgba(0, 0, 0, 0.4);
-  --border-warm:         var(--ink-5);
-  --radius:              var(--r);
-  --radius-sm:           var(--r-sm);
+  --bg-deep:             var(--bk-paper);
+  --bg-warm:             var(--bk-paper-deep);
+  --bg-card:             var(--bk-surface);
+  --bg-parchment:        var(--bk-surface);
+  --bg-parchment-dark:   var(--bk-paper-deep);
+  --text-cream:          var(--bk-ink);
+  --text-warm:           var(--bk-ink-soft);
+  --text-dark:           var(--bk-ink-strong);
+  --accent-amber:        var(--bk-stardust);
+  --accent-copper:       var(--bk-stardust-deep);
+  --accent-gold:         var(--bk-stardust-shimmer);
+  --accent-lantern:      var(--bk-stardust-shimmer);
+  --accent-green:        #5A7340;
+  --accent-green-light:  var(--bk-good);
+  --accent-ruby:         #9E3B3B;
+  --shadow-warm:         var(--bk-stardust-soft);
+  --shadow-deep:         var(--bk-shadow);
+  --border-warm:         var(--bk-border);
+}
+
+/* ─── Time-of-day themes — only the WORLD palette shifts; the gold spine and
+   the six character hues stay constant. Toggle <html data-theme="…">. ─── */
+[data-theme="dusk"] {
+  --bk-paper:#E7CFB0; --bk-paper-deep:#D8BD96; --bk-surface:#F1DEBE; --bk-surface-edge:#FBEFD6;
+  --bk-ink:#4A3526; --bk-ink-strong:#3A2A1E; --bk-ink-soft:#7A5C40; --bk-border:#BF9E72;
+  --bk-shadow:rgba(58,42,30,.26); --bk-time-accent:#B5651F;
+}
+[data-theme="night"] {
+  --bk-paper:#2A2438; --bk-paper-deep:#1F1A2B; --bk-surface:#352E47; --bk-surface-edge:#4A4062;
+  --bk-ink:#EDE2CE; --bk-ink-strong:#FBF4E6; --bk-ink-soft:#B4A488; --bk-border:#564B6E;
+  --bk-shadow:rgba(0,0,0,.45); --bk-time-accent:#C7C1E4;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -119,47 +179,47 @@ html, body, #root {
   position: relative; z-index: 1;
 }
 
-/* ====== HEADER ====== */
+/* ====== HEADER — pixel top bar (time chip · spine) ====== */
 .header {
-  padding: 14px 18px 12px;
-  background: transparent;
-  text-align: center; flex-shrink: 0;
-  position: relative;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 12px 16px 10px;
+  background: transparent; flex-shrink: 0;
 }
-.header::after {
-  content: ''; position: absolute;
-  left: 18px; right: 18px; bottom: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ink-5) 20%, var(--ink-5) 80%, transparent);
-  pointer-events: none;
+.header-right { display: inline-flex; align-items: center; gap: 8px; }
+
+/* time-of-day chip — "✦ DAY · 14:20" */
+.time-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 9px;
+  background: var(--bk-surface);
+  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-time-accent);
+  image-rendering: pixelated;
 }
-.header h1 {
-  font-family: var(--font-display);
-  font-size: var(--t-lg); font-weight: 600;
-  color: var(--ink);
-  letter-spacing: 0.4px;
-}
+.time-chip .star { color: var(--bk-time-accent); }
+
+/* the Stardust counter — dark boxed pill, gold star + count */
 .header .stardust-display {
-  display: inline-flex; align-items: center; gap: 5px;
-  margin-top: 8px; padding: 4px 11px 4px 8px;
-  background: var(--accent-wash);
-  border-radius: var(--r-pill);
-  font-family: var(--font-body);
-  font-size: var(--t-sm); font-weight: 600;
-  color: var(--accent-2);
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 10px;
+  background: #33271D;
+  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  font-family: var(--bk-font-body);
+  font-size: 16px; font-weight: 700;
+  color: var(--bk-stardust-shimmer);
   letter-spacing: 0.3px;
-  border: 1px solid rgba(212, 148, 58, 0.3);
+  image-rendering: pixelated;
 }
-.header .stardust-display .sparkle {
-  font-size: 11px;
-  text-shadow: 0 0 6px var(--accent-glow);
-}
+[data-theme="night"] .header .stardust-display { background: #1B1526; }
+.header .stardust-display .sparkle { display: inline-flex; }
+
 .header-settings-btn {
-  position: absolute;
-  top: 16px; right: 14px;
   background: none; border: none;
-  color: var(--text-warm);
+  color: var(--bk-ink-soft);
   font-size: 18px; padding: 4px 6px;
-  cursor: pointer; opacity: 0.6;
+  cursor: pointer; opacity: 0.7;
   transition: opacity 0.2s;
   font-family: inherit;
 }
@@ -367,30 +427,37 @@ html, body, #root {
 }
 
 /* ====== NAV BAR ====== */
+/* ====== BOTTOM NAV — the five-place pixel-emoji tab bar ====== */
 .nav {
   display: flex; flex-shrink: 0;
-  background: var(--bg-2);
-  border-top: 1px solid var(--ink-5);
-  padding: 7px 0 env(safe-area-inset-bottom, 10px);
+  background: var(--bk-surface);
+  box-shadow: 0 -2px 0 0 var(--bk-ink-strong), 0 0 0 2px var(--bk-ink-strong);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  image-rendering: pixelated;
 }
 .nav-btn {
   flex: 1; display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
-  padding: 4px 2px;
-  background: none; border: none;
-  color: var(--ink-3); font-size: 9px;
-  font-family: var(--font-body); font-weight: 600;
-  cursor: pointer; transition: color 0.15s;
-  text-transform: uppercase; letter-spacing: 1px;
+  align-items: center; gap: 2px;
+  padding: 9px 2px 7px;
+  background: transparent; border: none;
+  border-top: 4px solid transparent;
+  color: var(--bk-ink-soft);
+  font-family: var(--bk-font-micro); font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
+  cursor: pointer; transition: none;
+  text-transform: uppercase;
+  opacity: 0.5; filter: saturate(0.55);
 }
 .nav-btn .nav-icon {
-  font-size: 18px;
-  transition: transform 0.15s, filter 0.15s;
+  display: block; width: 26px; height: 26px;
+  image-rendering: pixelated;
 }
-.nav-btn.active { color: var(--accent-2); }
-.nav-btn.active .nav-icon {
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 6px var(--accent-glow));
+.nav-btn .nav-icon svg { display: block; width: 100%; height: 100%; shape-rendering: crispEdges; }
+.nav-btn.active {
+  color: var(--bk-ink-strong);
+  background: var(--bk-paper-deep);
+  border-top-color: var(--bk-ink-strong);
+  opacity: 1; filter: none;
 }
 
 /* ====== TOAST ====== */
@@ -1162,30 +1229,28 @@ html, body, #root {
 /* ====== SUB-NAV (segmented) ====== */
 .subnav, .campus-subnav {
   display: flex;
-  gap: 4px;
+  gap: 0;
   margin-bottom: 12px;
-  background: var(--bg-card);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  border: 1px solid var(--border-warm);
+  background: var(--bk-paper-deep);
+  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  padding: 0;
+  image-rendering: pixelated;
 }
 .subnav-btn, .campus-subnav-btn {
   flex: 1;
-  padding: 8px;
+  padding: 9px 6px;
   background: transparent;
   border: none;
-  border-radius: 6px;
-  color: var(--text-warm);
-  font-family: var(--font-display);
-  font-size: 14px; font-weight: 600;
+  color: var(--bk-ink-soft);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.3px;
+  transition: none;
 }
 .subnav-btn.active, .campus-subnav-btn.active {
-  background: var(--bg-warm);
-  color: var(--accent-lantern);
-  box-shadow: inset 0 0 0 1px rgba(212,148,58,0.2);
+  background: var(--bk-stardust);
+  color: var(--bk-ink-strong);
 }
 
 /* ====== CAMPUS MAP (locations) ====== */
@@ -2353,3 +2418,134 @@ html, body, #root {
 }
 .wind-cat-verdict.hit { color: var(--accent-gold); }
 .wind-cat-verdict.miss { color: var(--accent-ruby); }
+
+/* =====================================================================
+   HEARTH — the daily home screen (greeting · Today's Tally · the letter)
+   ===================================================================== */
+.hearth { padding-top: 4px; }
+
+.hearth-greeting {
+  font-family: var(--bk-font-head);
+  font-size: var(--bk-text-h1);
+  line-height: 1.15;
+  color: var(--bk-ink-strong);
+  margin: 8px 0 6px;
+}
+.hearth-subtitle {
+  font-family: var(--bk-font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--bk-ink-soft);
+  margin-bottom: 18px;
+}
+
+/* the cozy-book frame, generic */
+.bk-frame {
+  background: var(--bk-surface);
+  box-shadow:
+    inset 0 0 0 2px var(--bk-paper),
+    0 0 0 2px var(--bk-surface-edge),
+    0 0 0 5px var(--bk-frame-band-color, var(--bk-stardust)),
+    0 0 0 7px var(--bk-ink-strong),
+    6px 7px 0 7px var(--bk-shadow);
+  image-rendering: pixelated;
+}
+
+/* Today's Tally — gold-framed daily summary */
+.tally-card {
+  --bk-frame-band-color: var(--bk-stardust);
+  padding: 16px 18px;
+  margin: 0 7px 26px;
+}
+.tally-label {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-stardust-deep);
+  margin-bottom: 12px;
+}
+.tally-row {
+  display: flex; align-items: center;
+  font-family: var(--bk-font-body); font-size: 16px;
+  color: var(--bk-ink); padding: 6px 0;
+}
+.tally-row .tally-icon { width: 22px; margin-right: 4px; display: inline-flex; }
+.tally-row .tally-name { flex: 1; }
+.tally-row .tally-count { font-weight: 700; color: var(--bk-good); }
+.tally-divider { height: 2px; background: var(--bk-border); margin: 10px 0; }
+.tally-earned {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--bk-font-micro); font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro); text-transform: uppercase;
+  color: var(--bk-ink-soft);
+}
+.tally-earned .tally-earned-value {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--bk-font-body); font-size: 18px; font-weight: 700;
+  letter-spacing: 0; text-transform: none; color: var(--bk-stardust-deep);
+}
+
+/* The letter that's waiting — a heart event ready to open */
+.letter-card {
+  --bk-frame-band-color: var(--bk-marlow);
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; margin: 0 7px 16px;
+}
+.letter-portrait {
+  width: 48px; height: 48px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bk-marlow-soft);
+  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  font-size: 26px; image-rendering: pixelated;
+}
+.letter-text { min-width: 0; }
+.letter-label {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-marlow-deep);
+  margin-bottom: 4px;
+}
+.letter-title {
+  font-family: var(--bk-font-body); font-size: 18px;
+  color: var(--bk-ink-strong); line-height: 1.25;
+}
+.hearth-letter-actions { display: flex; justify-content: flex-end; padding: 0 7px; }
+
+/* a raised pixel "key" button (gold by default) */
+.bk-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--bk-font-body); font-weight: 700; font-size: 16px;
+  background: var(--bk-stardust); color: var(--bk-ink-strong);
+  border: none; padding: 11px 20px; cursor: pointer;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 2px 2px 0 0 rgba(255,255,255,.6),
+    inset -2px -2px 0 0 rgba(78,58,44,.35),
+    0 0 0 2px var(--bk-ink-strong),
+    3px 3px 0 2px var(--bk-shadow);
+}
+.bk-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 2px 2px 0 0 rgba(78,58,44,.25), 0 0 0 2px var(--bk-ink-strong);
+}
+.bk-btn--indigo { background: var(--bk-indigo); color: var(--bk-stardust-shimmer); }
+
+/* empty state — nothing waiting */
+.hearth-quiet {
+  margin: 0 7px; padding: 18px 16px; text-align: center;
+  font-family: var(--bk-font-body); font-size: 15px;
+  color: var(--bk-ink-soft);
+  box-shadow: 0 0 0 2px var(--bk-border);
+  background: var(--bk-paper-deep);
+}
+
+/* the small pixel Stardust star (inline SVG sizing) */
+.star-sprite { display: inline-flex; image-rendering: pixelated; }
+.star-sprite svg { display: block; shape-rendering: crispEdges; }
+
+@keyframes bkShimmer {
+  0%,100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
+/* pixel-crisp scaling utility */
+.bk-pixel { image-rendering: pixelated; image-rendering: crisp-edges; }

@@ -2,6 +2,25 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-20 — Cozy pixel-art reskin, phase 1: tokens, nav IA, Hearth
+
+The first slice of the Design-handoff overhaul — away from dark academia, toward a warm cozy pixel-art storybook (Fields of Mistria / Little Goody Two Shoes). No new art assets; the look rides on tokens + pixel fonts + CSS-drawn chrome.
+
+### Added
+- **Hearth** — a new home screen and the app's default tab. A time-of-day greeting ("Good afternoon, Ellene."), an in-world flavor line, a gold-framed **Today's Tally** (meals / habits / tasks + Stardust earned today), and a "letter is waiting" card surfacing your most recently unlocked heart event (taps through to the Journal). Falls back to a quiet empty state when nothing's waiting.
+- **Time-of-day theming** — the world palette now tracks the real clock: **day** (cream) → **dusk** (golden-hour) → **night** (deep indigo), set via `data-theme` and refreshed each minute. A "DAY · 14:20" chip sits in the header. The gold Stardust spine and the six character hues stay constant across all three.
+- **`StardustStar`** shared pixel-star sprite; **pixel-emoji nav sprites** (cottage, scroll, daisy, flag-tower, seedling) drawn inline on a 16px grid.
+
+### Changed
+- **Navigation IA → 5 tabs: Hearth · Ledger · Journal · Campus · Tend.** Added Hearth as the home/default. Tend stays its own tab (habits + tasks); the Ledger stays Spend/Eat/Time; **Wind stays a Journal sub-page** — i.e. we adopted the handoff's Hearth but not its Tend→Ledger merge or its Wind-as-tab promotion (decided 2026-06-20).
+- **Design tokens** — `src/App.css` `:root` swapped from the v0.4 dark-academia set to the handoff's `--bk-*` cozy-pixel layer (warm cream paper, soft brown ink, reserved gold, six character triads, location washes). A thin alias layer maps the app's original `--bg/--ink/--accent/…` names onto the new tokens, so every existing screen reskins at once; usages migrate onto `--bk-*` over time. **Radius is now 0 everywhere.**
+- **Fonts** → Pixelify Sans (body/headings), Silkscreen (micro-labels), Jersey 10 (wordmark), replacing IM Fell English / Inter / Kalam.
+- **Header** reskinned to a pixel top bar (time chip · boxed Stardust counter · settings); **bottom nav** and **segmented sub-tabs** redrawn as hard-edged pixel chrome.
+
+### Notes
+- Phase 1 is the foundation + IA + Hearth. The per-component polish (flower meter, character crests, the VN dialog box, wax seals) and font self-hosting are still ahead. Inherited screens inherit the new palette via aliases but haven't each been hand-tuned yet.
+- The "letter" button currently routes to the Journal rather than opening the heart event in place — full open-in-place wiring is a follow-up.
+
 ## 2026-05-30 — VN heart events: Marlow, Brendan, Sophia
 
 ### Added

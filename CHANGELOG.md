@@ -2,6 +2,18 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Cozy pixel-art reskin, phase 3: the heart-event VN overlay
+
+### Changed
+- **The DialogBox** — the heart-event scene is reskinned to the pixel system: a cream (theme-aware) dialog box with hard ink edges, **heart-event prose at 20px/1.6** (the most legible thing on screen), a section-header title, a micro page counter, and a **blinking caret** on the tap-to-continue hint.
+- **Speaker tab** — now a cream plate banded in the speaker's colour (the character's hue, or Ellene's gold when she's talking), replacing the amber pill.
+- **Asset-free backdrop** — events with no background art now render the design's recipe: a flat per-location **colour wash** (mapped from the character's home location) under a low-contrast **pixel dither**, with a **location name-card** plate top-left. The no-sprite character bust is the portrait emoji on a character-tinted pixel tile (was a glowing round disc).
+- Character busts and the MC bust now use hard pixel drop-shadows and `image-rendering: pixelated`; radius 0 throughout.
+
+### Added
+- **Close button** — an `✕` plate (top-right) to leave a scene early; previously you could only tap all the way through to exit.
+- Shared `src/data/characterColors.js` — the per-character colour triads + per-location washes, now used by both the Journal and the overlay.
+
 ## 2026-06-21 — Cozy pixel-art reskin, phase 2: the Journal (Flower + Crest)
 
 ### Added

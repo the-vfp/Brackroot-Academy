@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CHARACTER_DEFS } from '../data/characters.js';
+import { colorsFor, washFor } from '../data/characterColors.js';
 
 // Visual-novel-style scene for heart events, Tears of Themis-flavored.
 // Four layers + paged dialog:
@@ -55,6 +56,12 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
   const npcDim = isMcSpeaking;
   const mcDim = isNpcSpeaking;
 
+  // Pixel-system colour + the asset-free location backdrop for this character.
+  const colors = colorsFor(characterId);
+  const speakerAccent = isMcSpeaking ? 'var(--bk-ellene)' : colors.base;
+  const location = def?.defaultLocation;
+  const wash = washFor(location);
+
   function advance() {
     if (isLast) {
       onClose();
@@ -65,12 +72,23 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
 
   return (
     <div className="scene-overlay" onClick={advance} role="button" tabIndex={0}>
-      <SceneBackground url={bgUrl} />
+      <SceneBackground url={bgUrl} wash={wash} />
+
+      {location && <div className="scene-namecard">{location}</div>}
+
+      <button
+        className="scene-close"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+        aria-label="Close"
+      >
+        {'✕'}
+      </button>
 
       {(npcUrl || emojiFallback) && (
         <SceneCharacter
           url={npcUrl}
           def={emojiFallback ? def : null}
+          softColor={colors.soft}
           dim={npcDim}
         />
       )}
@@ -79,7 +97,7 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
 
       <div className="scene-dialog">
         {page?.speaker && (
-          <div className="scene-speaker-tab">
+          <div className="scene-speaker-tab" style={{ '--scene-accent': speakerAccent }}>
             <span className="scene-speaker-name">{page.speaker}</span>
           </div>
         )}
@@ -104,17 +122,19 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
         </div>
 
         <div className="scene-advance-hint">
-          {isLast ? `Tap to close \u2713` : `Tap to continue \u203A`}
+          {isLast ? 'Tap to close' : 'Tap to continue'}
+          <span className="scene-caret">{isLast ? ` \u2713` : ` \u203A`}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function SceneBackground({ url }) {
+function SceneBackground({ url, wash }) {
   const [failed, setFailed] = useState(false);
   if (!url || failed) {
-    return <div className="scene-background scene-background--fallback" />;
+    // Asset-free VN backdrop: a flat per-location colour wash + pixel dither.
+    return <div className="scene-background scene-background--fallback" style={{ background: wash }} />;
   }
   return (
     <>
@@ -133,14 +153,16 @@ function SceneBackground({ url }) {
   );
 }
 
-function SceneCharacter({ url, def, dim }) {
+function SceneCharacter({ url, def, softColor, dim }) {
   const [failed, setFailed] = useState(false);
   const cls = 'scene-character' + (dim ? ' scene-character--dim' : '');
   if (!url || failed) {
     if (!def) return null;
     return (
       <div className={cls + ' scene-character--fallback'}>
-        <div className="scene-character-emoji">{def.portrait || '\u2728'}</div>
+        <div className="scene-character-emoji bk-pixel" style={{ background: softColor }}>
+          {def.portrait || '\u2728'}
+        </div>
       </div>
     );
   }

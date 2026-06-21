@@ -7,7 +7,7 @@ export const CHARACTER_DEFS = {
     name: 'Marlow Quillan',
     arcLabel: 'the romance arc',
     defaultLocation: 'Courtyard',
-    portrait: '\u{1F58C}\uFE0F',
+    portrait: '\u{1F5DD}\uFE0F', // \uD83D\uDDDD\uFE0F key
     silhouette: '\u{1F319}',
     activity: 'Journal',
     activityHabitName: 'Journal',
@@ -31,7 +31,7 @@ export const CHARACTER_DEFS = {
     name: 'Brendan Selma',
     arcLabel: 'the partnership arc',
     defaultLocation: 'SGC Office',
-    portrait: '\u{1F4DC}',
+    portrait: '\u{1F451}', // crown
     silhouette: '\u{1F3DB}\uFE0F',
     activity: 'Tidy up',
     activityHabitName: 'Tidied up',
@@ -55,7 +55,7 @@ export const CHARACTER_DEFS = {
     name: 'Diana Delawarr',
     arcLabel: 'the mentor arc',
     defaultLocation: 'Library',
-    portrait: '\u{1F4DA}',
+    portrait: '\u{1F319}', // crescent moon
     silhouette: '\u2744\uFE0F',
     activity: 'Read',
     activityHabitName: 'Read',
@@ -79,7 +79,7 @@ export const CHARACTER_DEFS = {
     name: 'Peter Adair',
     arcLabel: 'the warmth arc',
     defaultLocation: 'Dueling Grounds',
-    portrait: '\u2694\uFE0F',
+    portrait: '\u{1FA78}', // blood
     silhouette: '\u{1F31E}',
     activity: 'Walk',
     activityHabitName: 'Walk / steps',
@@ -103,7 +103,7 @@ export const CHARACTER_DEFS = {
     name: 'Richard Devereaux',
     arcLabel: 'the perception arc',
     defaultLocation: 'Gardens',
-    portrait: '\u{1F3AD}',
+    portrait: '\u{1FA9E}', // mirror
     silhouette: '\u{1F578}\uFE0F',
     activity: 'Creative writing',
     activityHabitName: 'Creative writing',
@@ -127,7 +127,7 @@ export const CHARACTER_DEFS = {
     name: 'Sophia Barnes',
     arcLabel: 'the kinship arc',
     defaultLocation: 'Kitchens',
-    portrait: '\u{1F373}',
+    portrait: '\u{1F56F}️', // candle
     silhouette: '\u{1F33E}',
     activity: 'Cook a meal',
     activityHabitName: 'Cooked a meal',

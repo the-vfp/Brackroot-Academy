@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Character symbols
+
+### Changed
+- **Updated each character's symbol** to their canonical personal emblem: Marlow 🗝️ key, Brendan 👑 crown, Sophia 🕯️ candle, Richard 🪞 mirror, Peter 🩸 blood, Diana 🌙 crescent moon. These flow through everywhere the symbol shows — the Journal crests, the Campus map, the Hearth letter card, and the heart-event bust. (The wax seals are unchanged: they keep using each pairing's *relational* symbol, so Brendan's seal stays the north star ✦.)
+
 ## 2026-06-21 — Reskin spot-check: Campus + night-theme readability
 
 ### Changed

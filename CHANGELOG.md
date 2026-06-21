@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Cozy pixel-art reskin, phase 4: the wax Seal
+
+### Added
+- **`Seal`** — the per-relationship wax seal: **Ellene's 🐘 + the character's symbol**, pressed into wax in the pairing's relational colour (Brendan's is indigo with the **north star ✦** — his relational mark, not his crown; the others use their own hue + personal symbol 🗝️🌙🩸🪞🕯️). It renders **earned** (vivid wax, embossed) once the relationship is at full bloom (10 heart events), or a **faint impression** before then. Appears as a "Your Seal" block atop each expanded Journal card with a "Seals / Sealed at full bloom" caption.
+- The seal symbols + relational wax colours live in `src/data/characterColors.js` (`sealSymbolFor`, `sealWaxFor`, `ELLENE_SYMBOL`).
+
+### Fixed
+- The Hearth "letter is waiting" card now wears the **actual** character's colour (band, portrait tile, label) instead of always Marlow's rose — it was surfacing e.g. Brendan's letter in pink.
+
 ## 2026-06-21 — Cozy pixel-art reskin, phase 3: the heart-event VN overlay
 
 ### Changed

@@ -1,5 +1,6 @@
 import { useStore, stardustForDifficulty } from '../store.jsx';
 import { CHARACTER_DEFS, getTitle } from '../data/characters.js';
+import { colorsFor } from '../data/characterColors.js';
 import StardustStar from './StardustStar.jsx';
 
 // In-world flavor lines for under the greeting, chosen by time of day.
@@ -69,6 +70,7 @@ export default function Hearth({ onNavigate }) {
   const letterDef = latestLetter ? CHARACTER_DEFS[latestLetter.characterId] : null;
   const letterFirstName = letterDef ? letterDef.name.split(' ')[0] : '';
   const letterTitle = latestLetter ? getTitle(latestLetter.characterId, latestLetter.level) : '';
+  const letterColors = latestLetter ? colorsFor(latestLetter.characterId) : null;
 
   return (
     <div className="tab-view active hearth">
@@ -103,10 +105,10 @@ export default function Hearth({ onNavigate }) {
 
       {latestLetter ? (
         <>
-          <div className="bk-frame letter-card">
-            <span className="letter-portrait bk-pixel">{letterDef.portrait}</span>
+          <div className="bk-frame letter-card" style={{ '--bk-frame-band-color': letterColors.base }}>
+            <span className="letter-portrait bk-pixel" style={{ background: letterColors.soft }}>{letterDef.portrait}</span>
             <span className="letter-text">
-              <span className="letter-label">A letter is waiting</span>
+              <span className="letter-label" style={{ color: letterColors.ink }}>A letter is waiting</span>
               <span className="letter-title">{letterFirstName} {'·'} {letterTitle}</span>
             </span>
           </div>

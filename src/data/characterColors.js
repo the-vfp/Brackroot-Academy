@@ -30,3 +30,29 @@ export const LOCATION_WASH = {
 export function washFor(location) {
   return LOCATION_WASH[location] || 'var(--bk-loc-office)';
 }
+
+// ── Wax seals ──────────────────────────────────────────────────────────────
+// Each relationship's seal = Ellene's symbol + the character's *relational*
+// symbol (what they are to her). Brendan's is the north star, not his crown;
+// the others currently default to their personal symbol.
+export const ELLENE_SYMBOL = '\u{1F418}'; // 🐘 Elefante
+
+export const SEAL_SYMBOL = {
+  marlow:  '\u{1F5DD}️', // 🗝️ key — the Keeper
+  brendan: '✦',          // ✦ north star — relational, not the crown
+  diana:   '\u{1F319}',       // 🌙 crescent — Dreamstride
+  peter:   '\u{1FA78}',       // 🩸 drop of blood
+  richard: '\u{1FA9E}',       // 🪞 mirror — the mythmaker
+  sophia:  '\u{1F56F}️', // 🕯️ candle
+};
+
+export function sealSymbolFor(characterId) {
+  return SEAL_SYMBOL[characterId] || '✦';
+}
+
+// Seal-wax colour (brief, option b): Brendan's pairing = Ellene's indigo wax;
+// every other pairing takes that character's own hue.
+export function sealWaxFor(characterId) {
+  if (characterId === 'brendan') return 'var(--bk-indigo)';
+  return CHARACTER_COLORS[characterId]?.base || 'var(--bk-marlow)';
+}

@@ -2557,3 +2557,48 @@ html, body, #root {
 
 /* pixel-crisp scaling utility */
 .bk-pixel { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* =====================================================================
+   WAX SEAL — the per-relationship emblem (Ellene's symbol + character's)
+   ===================================================================== */
+.wax-seal {
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wax-seal--sealed {
+  background: var(--wax);
+  box-shadow:
+    inset 3px 3px 0 rgba(255, 255, 255, .22),
+    inset -3px -3px 0 rgba(0, 0, 0, .30),
+    0 0 0 2px var(--bk-ink-strong),
+    2px 3px 0 0 var(--bk-shadow);
+}
+.wax-seal--unsealed {
+  background: var(--bk-paper-deep);
+  box-shadow:
+    inset 2px 2px 0 rgba(0, 0, 0, .06),
+    inset -2px -2px 0 rgba(255, 255, 255, .40),
+    0 0 0 2px var(--bk-border);
+}
+.wax-seal-glyphs { display: inline-flex; align-items: center; line-height: 1; }
+.wax-seal-glyph { display: inline-block; }
+.wax-seal-glyph + .wax-seal-glyph { margin-left: -2px; }
+.wax-seal--sealed .wax-seal-glyph { filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .35)); }
+.wax-seal--unsealed .wax-seal-glyph { opacity: 0.30; filter: grayscale(1); }
+
+/* "Your Seal" block at the top of an expanded Journal card */
+.journal-bloom { display: flex; justify-content: center; margin: 14px 0 6px; }
+.journal-seal-block {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 14px 28px;
+  background: var(--bk-paper-deep);
+  box-shadow: inset 0 0 0 2px var(--bk-border);
+  image-rendering: pixelated;
+}
+.journal-seal-label,
+.journal-seal-caption {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-ink-soft);
+}

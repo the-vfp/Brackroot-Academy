@@ -5,6 +5,7 @@ import { INTERACTION_TIERS } from '../data/interactions.js';
 import HeartEventOverlay from './HeartEventOverlay.jsx';
 import CharacterCrest from './CharacterCrest.jsx';
 import Flower from './Flower.jsx';
+import Seal from './Seal.jsx';
 import { colorsFor } from '../data/characterColors.js';
 
 function formatDate(ts) {
@@ -91,6 +92,7 @@ export default function JournalCharacters() {
         const expanded = expandedId === id;
         const interactions = getInteractionsForCharacter(id);
         const heartEvts = getHeartEventsForCharacter(id);
+        const sealed = heartEvts.length >= MAX_LEVEL;
         const firstName = def.name.split(' ')[0];
 
         return (
@@ -122,6 +124,15 @@ export default function JournalCharacters() {
 
             {expanded && (
               <div className="journal-card-body">
+                <div className="journal-bloom">
+                  <div className="journal-seal-block">
+                    <div className="journal-seal-label">Your Seal</div>
+                    <Seal characterId={id} sealed={sealed} size={62} />
+                    <div className="journal-seal-caption">
+                      {sealed ? 'Sealed at full bloom' : 'Seals at full bloom'}
+                    </div>
+                  </div>
+                </div>
                 {heartEvts.length > 0 && (
                   <>
                     <div className="journal-subhead" style={{ color: c.ink }}>Heart Events</div>

@@ -1987,139 +1987,123 @@ html, body, #root {
    a markdown pass lands later if desired. */
 
 /* ====== JOURNAL ====== */
+/* ── Journal header band ── */
+.journal-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin: 4px 7px 18px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--bk-border);
+}
+.journal-header-title {
+  font-family: var(--bk-font-head);
+  font-size: var(--bk-text-h2); color: var(--bk-ink-strong);
+}
+.journal-header-count {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-ink-soft);
+}
+
+/* ── Character cards — cozy-book frame, banded per character ── */
 .journal-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-warm);
-  border-radius: var(--radius);
-  margin-bottom: 10px;
-  overflow: hidden;
-  transition: border-color 0.2s;
+  --bk-frame-band-color: var(--bk-marlow);
+  margin: 0 7px 24px;
+  padding: 0;
 }
-.journal-card.expanded { border-color: var(--accent-copper); }
 .journal-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--text-cream);
-  font-family: var(--font-body);
-  text-align: left;
-  cursor: pointer;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px; width: 100%;
+  background: none; border: none;
+  color: var(--bk-ink);
+  font-family: var(--bk-font-body);
+  text-align: left; cursor: pointer;
 }
-.journal-portrait {
-  font-size: 32px;
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-warm);
-  border: 1px solid var(--accent-copper);
-  border-radius: 50%;
-  filter: drop-shadow(0 0 6px rgba(245, 216, 138, 0.2));
-}
-.journal-heading {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.journal-heading { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .journal-name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-cream);
-  line-height: 1.1;
+  font-family: var(--bk-font-head);
+  font-size: 20px; font-weight: 700;
+  color: var(--bk-ink-strong); line-height: 1.05;
 }
 .journal-title {
-  font-size: 12px;
-  color: var(--accent-gold);
-  font-style: italic;
-}
-.journal-level {
-  font-size: 10px;
-  color: var(--text-warm);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 2px;
 }
+.journal-hearts { display: flex; gap: 2px; margin: 1px 0; }
+.journal-hearts svg { display: block; image-rendering: pixelated; }
 .journal-progress-bar {
-  height: 4px;
-  background: rgba(255,255,255,0.08);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 4px;
+  height: 6px; background: var(--bk-paper-deep);
+  box-shadow: inset 0 0 0 1px var(--bk-border);
+  overflow: hidden; margin-top: 2px;
 }
-.journal-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent-copper), var(--accent-gold));
-  border-radius: 2px;
-  transition: width 0.5s ease;
+.journal-progress-fill { height: 100%; transition: width 0.5s ease; }
+.journal-rp-label {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-ink-soft);
 }
-.journal-chevron {
-  font-size: 18px;
-  color: var(--text-warm);
-  flex-shrink: 0;
+.journal-flower-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  flex-shrink: 0; align-self: flex-start; padding-top: 2px;
+}
+.journal-flower-caption {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  color: var(--bk-ink-soft);
 }
 .journal-card-body {
   padding: 0 14px 14px;
-  border-top: 1px solid var(--border-warm);
+  border-top: 2px solid var(--bk-border);
+  margin-top: 2px;
 }
 .journal-subhead {
-  font-size: 11px;
-  color: var(--accent-copper);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 12px 0 6px;
-  font-weight: 600;
+  margin: 14px 0 8px;
 }
 .journal-heart-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .journal-heart-item {
   display: grid;
-  grid-template-columns: 52px 1fr auto;
+  grid-template-columns: 48px 1fr auto;
   gap: 8px;
   align-items: center;
-  padding: 8px 10px;
-  background: var(--bg-warm);
-  border: 1px solid var(--border-warm);
-  border-radius: 6px;
-  color: var(--text-cream);
-  font-family: var(--font-body);
+  padding: 9px 11px;
+  background: var(--bk-surface);
+  box-shadow: inset 4px 0 0 0 var(--bk-frame-band-color, var(--bk-marlow)), 0 0 0 2px var(--bk-ink-strong);
+  color: var(--bk-ink);
+  font-family: var(--bk-font-body);
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.2s;
 }
-.journal-heart-item:hover { border-color: var(--accent-amber); }
+.journal-heart-item:active { transform: translate(1px, 1px); }
 .journal-heart-level {
-  font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--accent-gold);
-  font-weight: 600;
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase;
 }
 .journal-heart-title {
-  font-size: 12px;
-  color: var(--text-cream);
+  font-size: 16px;
+  color: var(--bk-ink-strong);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .journal-heart-date {
-  font-size: 10px;
-  color: var(--text-warm);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
+  color: var(--bk-ink-soft);
 }
 .journal-interaction-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   max-height: 280px;
   overflow-y: auto;
 }
@@ -2128,21 +2112,19 @@ html, body, #root {
   grid-template-columns: 90px 1fr auto;
   gap: 8px;
   align-items: start;
-  padding: 8px 10px;
-  background: var(--bg-warm);
-  border: 1px solid var(--border-warm);
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 9px 11px;
+  background: var(--bk-paper-deep);
+  box-shadow: 0 0 0 2px var(--bk-border);
+  font-size: 14px;
 }
 .journal-interaction-tier {
-  font-family: var(--font-display);
-  color: var(--accent-copper);
-  font-size: 11px;
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--bk-tracking-micro);
 }
 .journal-interaction-line {
-  color: var(--text-cream);
+  color: var(--bk-ink);
   font-style: italic;
   line-height: 1.4;
   overflow: hidden;
@@ -2153,8 +2135,10 @@ html, body, #root {
   -webkit-box-orient: vertical;
 }
 .journal-interaction-date {
-  font-size: 10px;
-  color: var(--text-warm);
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro);
+  letter-spacing: var(--bk-tracking-micro);
+  color: var(--bk-ink-soft);
   flex-shrink: 0;
 }
 
@@ -2497,14 +2481,15 @@ html, body, #root {
   box-shadow: 0 0 0 2px var(--bk-ink-strong);
   font-size: 26px; image-rendering: pixelated;
 }
-.letter-text { min-width: 0; }
+.letter-text { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .letter-label {
+  display: block;
   font-family: var(--bk-font-micro);
   font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
   text-transform: uppercase; color: var(--bk-marlow-deep);
-  margin-bottom: 4px;
 }
 .letter-title {
+  display: block;
   font-family: var(--bk-font-body); font-size: 18px;
   color: var(--bk-ink-strong); line-height: 1.25;
 }

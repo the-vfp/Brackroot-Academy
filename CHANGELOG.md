@@ -2,6 +2,19 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Cozy pixel-art reskin, phase 2: the Journal (Flower + Crest)
+
+### Added
+- **`Flower`** — the pressed-flower relationship meter. Petals fill in the character's colour as heart events are collected (goal = 10 per character) around a constant gold center; uncollected petals sit faint behind. Each Journal card shows its flower + an `N/10` caption.
+- **`CharacterCrest`** — an asset-free identity tile: the character's colour with a monogram + their symbol, drawn with the pixel bevel. Includes the veiled (not-yet-met) silhouette variant for future use. Replaces the round emoji portrait.
+- **Level hearts** — a row of pixel-heart pips under each name showing relationship level out of 10.
+
+### Changed
+- **Journal characters** redrawn as cozy-book frames **banded in each character's colour**, with a header band ("The Journal · N/6 blooms"). Heart-event and interaction rows are now hard-edged pixel cards (heart-event rows carry the character's colour as a left band). Pale leads (Diana, Richard) use their `-ink` token so titles stay AA-readable on cream.
+
+### Fixed
+- The Hearth "letter is waiting" card no longer collides its label and title on one line (they were inline spans) — now a clean two-line stack.
+
 ## 2026-06-20 — Cozy pixel-art reskin, phase 1: tokens, nav IA, Hearth
 
 The first slice of the Design-handoff overhaul — away from dark academia, toward a warm cozy pixel-art storybook (Fields of Mistria / Little Goody Two Shoes). No new art assets; the look rides on tokens + pixel fonts + CSS-drawn chrome.

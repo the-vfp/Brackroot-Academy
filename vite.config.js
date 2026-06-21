@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: '/Brackroot-Academy/',
+  // GitHub Pages serves from /Brackroot-Academy/; Vercel serves from the root
+  // domain. Vercel sets VERCEL=1 in its build env, so resolve the base per host.
+  base: process.env.VERCEL ? '/' : '/Brackroot-Academy/',
   plugins: [
     react(),
     VitePWA({

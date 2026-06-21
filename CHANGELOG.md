@@ -2,6 +2,12 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Self-hosted fonts (offline-ready PWA)
+
+### Changed
+- **Pixelify Sans and Silkscreen are now self-hosted** (latin-subset `woff2`, ~28 KB total) instead of loaded from the Google Fonts CDN. They're bundled by Vite and **precached by the service worker**, so the PWA renders with the right type **offline** and no longer flashes the system fallback on cached loads.
+- Dropped the Google Fonts `<link>`/`preconnect` from `index.html` and the now-dead Google-Fonts runtime-caching rules from the Workbox config. (Jersey 10 wasn't self-hosted — it's only referenced by the unused wordmark token; we'll bundle it if/when a wordmark ships.)
+
 ## 2026-06-21 — Cozy pixel-art reskin, phase 4: the wax Seal
 
 ### Added

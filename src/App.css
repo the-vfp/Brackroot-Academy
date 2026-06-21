@@ -1,3 +1,28 @@
+/* ─── Self-hosted pixel fonts (latin subset, woff2) ───
+   Bundled so the PWA renders correctly offline and never falls back to VT323.
+   Vite hashes these and rewrites the url() with the right base per host. */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-weight: 400 700; /* variable */
+  font-display: swap;
+  src: url('./assets/fonts/PixelifySans-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Silkscreen-400-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Silkscreen-700-latin.woff2') format('woff2');
+}
+
 :root {
   /* ─── Brackroot Academy — cozy pixel-art tokens (Design handoff 2026-06-20) ───
      The --bk-* layer is the source of truth. The alias block below maps the

@@ -59,12 +59,13 @@ function NavSprite({ name }) {
   }
 }
 
+// Order by most-used (Ellene's daily flow): Hearth · Ledger · Tend · Campus · Journal.
 const TABS = [
   { id: 'hearth',  label: 'Hearth' },
   { id: 'ledger',  label: 'Ledger' },
-  { id: 'journal', label: 'Journal' },
-  { id: 'campus',  label: 'Campus' },
   { id: 'tend',    label: 'Tend' },
+  { id: 'campus',  label: 'Campus' },
+  { id: 'journal', label: 'Journal' },
 ];
 
 export default function Navigation({ activeTab, onTabChange }) {

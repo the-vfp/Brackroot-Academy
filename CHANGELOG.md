@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Reorder the nav
+
+### Changed
+- **Bottom-nav order is now Hearth · Ledger · Tend · Campus · Journal** (was Hearth · Ledger · Journal · Campus · Tend) — ordered by Ellene's most-used pages.
+
 ## 2026-06-21 — Character symbols
 
 ### Changed

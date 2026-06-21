@@ -2,6 +2,17 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Softer heart-event backdrop + open letters from the Hearth
+
+### Changed
+- **Softer default heart-event backdrop.** The asset-free VN scene no longer uses the dark, saturated per-location colour washes + dither (they read as harsh). It now defaults to a single gentle gradient — warm parchment by day/dusk, a soft muted indigo at night. The location name-card still names the place.
+
+### Added
+- **The Hearth "letter" opens the heart event in place.** Tapping **Read** on the waiting-letter card now plays the VN overlay right there, instead of routing you to the Journal to find it.
+
+### Fixed
+- An unwritten (placeholder) heart event opened from the Hearth showed "1/0" in the page counter; it now reads "1/1".
+
 ## 2026-06-21 — Form input contrast (Ledger + Tasks)
 
 ### Changed

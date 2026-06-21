@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CHARACTER_DEFS } from '../data/characters.js';
-import { colorsFor, washFor } from '../data/characterColors.js';
+import { colorsFor } from '../data/characterColors.js';
 
 // Visual-novel-style scene for heart events, Tears of Themis-flavored.
 // Four layers + paged dialog:
@@ -56,11 +56,11 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
   const npcDim = isMcSpeaking;
   const mcDim = isNpcSpeaking;
 
-  // Pixel-system colour + the asset-free location backdrop for this character.
+  // Pixel-system colour for this character. The asset-free backdrop is a soft
+  // default (see .scene-background--fallback); we still name the location.
   const colors = colorsFor(characterId);
   const speakerAccent = isMcSpeaking ? 'var(--bk-ellene)' : colors.base;
   const location = def?.defaultLocation;
-  const wash = washFor(location);
 
   function advance() {
     if (isLast) {
@@ -72,7 +72,7 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
 
   return (
     <div className="scene-overlay" onClick={advance} role="button" tabIndex={0}>
-      <SceneBackground url={bgUrl} wash={wash} />
+      <SceneBackground url={bgUrl} />
 
       {location && <div className="scene-namecard">{location}</div>}
 
@@ -103,7 +103,7 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
         )}
 
         <div className="scene-page-counter">
-          {pageIdx + 1}/{pages.length}
+          {pageIdx + 1}/{Math.max(pages.length, 1)}
         </div>
 
         <div className="scene-body">
@@ -130,11 +130,11 @@ export default function HeartEventOverlay({ characterId, level, title, text, bac
   );
 }
 
-function SceneBackground({ url, wash }) {
+function SceneBackground({ url }) {
   const [failed, setFailed] = useState(false);
   if (!url || failed) {
-    // Asset-free VN backdrop: a flat per-location colour wash + pixel dither.
-    return <div className="scene-background scene-background--fallback" style={{ background: wash }} />;
+    // Asset-free VN backdrop: a soft default wash (styled in CSS).
+    return <div className="scene-background scene-background--fallback" />;
   }
   return (
     <>

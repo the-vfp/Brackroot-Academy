@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useStore, stardustForDifficulty } from '../store.jsx';
 import { CHARACTER_DEFS, getTitle } from '../data/characters.js';
 import { colorsFor } from '../data/characterColors.js';
 import StardustStar from './StardustStar.jsx';
+import HeartEventOverlay from './HeartEventOverlay.jsx';
 
 // In-world flavor lines for under the greeting, chosen by time of day.
 const FLAVOR = {
@@ -33,8 +35,10 @@ function greetingFor(phase) {
 export default function Hearth({ onNavigate }) {
   const {
     appState, meals, habits, habitLogs, tasks, expenses, heartEvents,
-    getHabitDay, getTodayCompletedHabits,
+    getHabitDay, getTodayCompletedHabits, getHeartEventContent,
   } = useStore();
+
+  const [replay, setReplay] = useState(null);
 
   const now = new Date();
   const phase = phaseOf(now.getHours());
@@ -113,7 +117,19 @@ export default function Hearth({ onNavigate }) {
             </span>
           </div>
           <div className="hearth-letter-actions">
-            <button className="bk-btn bk-btn--indigo" onClick={() => onNavigate && onNavigate('journal')}>
+            <button
+              className="bk-btn bk-btn--indigo"
+              onClick={() => {
+                const he = getHeartEventContent(latestLetter.characterId, latestLetter.level);
+                setReplay({
+                  characterId: latestLetter.characterId,
+                  level: latestLetter.level,
+                  title: letterTitle,
+                  text: he?.text ?? null,
+                  background: he?.background ?? null,
+                });
+              }}
+            >
               Read <StardustStar size={15} fill="var(--bk-stardust-shimmer)" />
             </button>
           </div>
@@ -122,6 +138,17 @@ export default function Hearth({ onNavigate }) {
         <div className="hearth-quiet">
           No letters waiting. Spend time with someone on Campus, and a memory will find its way here.
         </div>
+      )}
+
+      {replay && (
+        <HeartEventOverlay
+          characterId={replay.characterId}
+          level={replay.level}
+          title={replay.title}
+          text={replay.text}
+          background={replay.background}
+          onClose={() => setReplay(null)}
+        />
       )}
     </div>
   );

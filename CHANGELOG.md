@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Form input contrast (Ledger + Tasks)
+
+### Changed
+- **Form fields are now readable.** Inputs/selects/textareas across the Ledger (expense/meal/time) and Tasks forms were near-invisible after the reskin — pale cream on a near-white card with a faint 1px border and a barely-there placeholder. They now render as proper recessed wells: a clear **2px ink outline** (radius 0), a subtle inset top-left shadow, **legible placeholders** (`ink-soft`), and a **gold focus ring**. Font bumped to 16px (also stops iOS zoom-on-focus). Native date/select chrome follows the day/dusk/night `color-scheme`.
+
 ## 2026-06-21 — Self-hosted fonts (offline-ready PWA)
 
 ### Changed

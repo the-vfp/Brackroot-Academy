@@ -5,17 +5,7 @@ import { INTERACTION_TIERS } from '../data/interactions.js';
 import HeartEventOverlay from './HeartEventOverlay.jsx';
 import CharacterCrest from './CharacterCrest.jsx';
 import Flower from './Flower.jsx';
-
-// Per-character colour triads (fill · deep outline/text · soft tint · AA ink).
-// Pale leads (Diana, Richard) carry an -ink so their type stays readable on cream.
-const CHAR_COLORS = {
-  marlow:  { base: 'var(--bk-marlow)',  soft: 'var(--bk-marlow-soft)',  ink: 'var(--bk-marlow-deep)' },
-  brendan: { base: 'var(--bk-brendan)', soft: 'var(--bk-brendan-soft)', ink: 'var(--bk-brendan-deep)' },
-  diana:   { base: 'var(--bk-diana)',   soft: 'var(--bk-diana-soft)',   ink: 'var(--bk-diana-ink)' },
-  peter:   { base: 'var(--bk-peter)',   soft: 'var(--bk-peter-soft)',   ink: 'var(--bk-peter-deep)' },
-  richard: { base: 'var(--bk-richard)', soft: 'var(--bk-richard-soft)', ink: 'var(--bk-richard-ink)' },
-  sophia:  { base: 'var(--bk-sophia)',  soft: 'var(--bk-sophia-soft)',  ink: 'var(--bk-sophia-deep)' },
-};
+import { colorsFor } from '../data/characterColors.js';
 
 function formatDate(ts) {
   const d = new Date(ts);
@@ -94,7 +84,7 @@ export default function JournalCharacters() {
       </div>
 
       {roster.map(({ id, def, state }) => {
-        const c = CHAR_COLORS[id] || CHAR_COLORS.marlow;
+        const c = colorsFor(id);
         const title = getTitle(id, state.level);
         const threshold = state.level < MAX_LEVEL ? RP_THRESHOLDS[state.level] : null;
         const rpPct = threshold ? Math.min(100, (state.rpTowardNext / threshold) * 100) : 100;

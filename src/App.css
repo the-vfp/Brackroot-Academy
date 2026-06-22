@@ -2,13 +2,6 @@
    Bundled so the PWA renders correctly offline and never falls back to a system font.
    Vite hashes these and rewrites the url() with the right base per host. */
 @font-face {
-  font-family: 'Pixelify Sans';
-  font-style: normal;
-  font-weight: 400 700; /* variable */
-  font-display: swap;
-  src: url('./assets/fonts/PixelifySans-latin.woff2') format('woff2');
-}
-@font-face {
   font-family: 'Silkscreen';
   font-style: normal;
   font-weight: 400;
@@ -74,9 +67,9 @@
   --bk-good:#6E8A4E; --bk-warn:#C9952F; --bk-shadow:rgba(78,58,44,.20);
 
   /* Typography — pixel faces */
-  --bk-font-body:    'VT323','Pixelify Sans',ui-monospace,monospace;
-  --bk-font-head:    'VT323','Pixelify Sans',ui-monospace,monospace;
-  --bk-font-micro:   'Silkscreen','Pixelify Sans',ui-monospace,monospace;
+  --bk-font-body:    'VT323',ui-monospace,monospace;
+  --bk-font-head:    'VT323',ui-monospace,monospace;
+  --bk-font-micro:   'Silkscreen',ui-monospace,monospace;
   --bk-font-wordmark:'Jersey 10','Silkscreen',ui-monospace,monospace; /* open C */
 
   --bk-text-micro:8px; --bk-text-micro-lg:16px; --bk-text-caption:12px;

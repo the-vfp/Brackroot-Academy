@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Habit history
+
+### Added
+- **New "History" sub-page under Tend** (Habits · History · Tasks). Answers "how am I doing with this habit?" at a glance. A range toggle (**Week · 2 weeks · Month · All**, defaulting to Month) drives a card per habit showing:
+  - a **day-by-day heatmap** for the window — filled = done; for repeatable habits (water, meals) the cell darkens with the number of taps, so you see intensity, not just yes/no;
+  - **X / N days hit** plus **done rate** (daily) or **avg per day** (repeatable);
+  - the current streak and an all-time **best streak**.
+- No new data is stored — this reads the existing timestamped `habitLogs`, so history reaches back to whenever a habit was first logged.
+
 ## 2026-06-21 — Reorder the nav
 
 ### Changed

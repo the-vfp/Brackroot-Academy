@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, addDaysToDate, exportAllData, importAllData, resetAllData } from './db.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
@@ -366,6 +366,48 @@ export function StoreProvider({ children }) {
     }
     return streak;
   }, [habitLogs]);
+
+  // History/stats for a single habit over a trailing window.
+  // rangeDays = number of days back (inclusive of today), or null for all-time.
+  // Returns a per-day series (oldest -> newest) plus aggregate stats. `count`
+  // is taps per day: 0/1 for daily habits, 0..N for repeatable ones.
+  const getHabitStats = useCallback((habitId, rangeDays) => {
+    const counts = {};
+    for (const l of habitLogs) {
+      if (l.habitId === habitId) counts[l.date] = (counts[l.date] || 0) + 1;
+    }
+
+    const today = getHabitDay();
+    let startDate;
+    if (rangeDays == null) {
+      const logged = Object.keys(counts).sort();
+      startDate = logged.length ? logged[0] : today;
+    } else {
+      startDate = addDaysToDate(today, -(rangeDays - 1));
+    }
+
+    const days = [];
+    for (let d = startDate; d <= today; d = addDaysToDate(d, 1)) {
+      days.push({ date: d, count: counts[d] || 0 });
+    }
+
+    const daysTotal = days.length;
+    const daysHit = days.filter(x => x.count > 0).length;
+    const totalTaps = days.reduce((s, x) => s + x.count, 0);
+    const avgPerDay = daysTotal ? totalTaps / daysTotal : 0;
+    const maxCount = days.reduce((m, x) => Math.max(m, x.count), 0);
+
+    // Best streak is all-time, not windowed — a personal record worth keeping.
+    const allDates = Object.keys(counts).sort();
+    let bestStreak = 0, run = 0, prev = null;
+    for (const ds of allDates) {
+      run = prev && addDaysToDate(prev, 1) === ds ? run + 1 : 1;
+      if (run > bestStreak) bestStreak = run;
+      prev = ds;
+    }
+
+    return { days, daysTotal, daysHit, totalTaps, avgPerDay, maxCount, bestStreak };
+  }, [habitLogs, getHabitDay]);
 
   const addHabit = useCallback(async (name, icon, category, type = 'daily', difficulty = 'medium') => {
     const maxOrder = habits.reduce((max, h) => Math.max(max, h.sortOrder || 0), -1);
@@ -940,6 +982,7 @@ export function StoreProvider({ children }) {
       getTodayCompletedHabits,
       getTodayHabitCounts,
       getHabitStreak,
+      getHabitStats,
       addHabit,
       updateHabit,
       deleteHabit,

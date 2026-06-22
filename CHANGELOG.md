@@ -8,8 +8,8 @@ All notable changes to Brackroot Academy are documented here.
 - **Reskinned the app icon + PWA install assets** from the old dark-academia castle (🏰 + serif "BRACKROOT" on near-black) to a cozy pixel **Stardust star** — a gold north-star on brand indigo, echoing the ✦ currency mark. Covers the favicon, the 192/512 PWA icons (incl. the maskable one, with extra safe-zone padding so the circle mask doesn't clip it), and the three home-screen shortcut glyphs (Habits = check, Tasks = list, Time = hourglass), all on the cream/gold/indigo system.
 - **Manifest cleanup** — `theme_color`/`background_color` moved off `#1a1410` to paper cream `#FBF4E6` (matching the day theme + `index.html`), and the stale "cozy dark academia spending tracker" description is now "cozy pixel-art life tracker".
 
-### Notes
-- The iOS `apple-touch-icon` in `index.html` still points at a non-existent `icons/icon-192.png` (pre-existing) — iOS ignores SVG for that slot, so the new star needs a PNG raster to show on an iPhone home screen. Tracked as a follow-up.
+### Removed
+- The dead iOS `apple-touch-icon` link in `index.html` — it pointed at a non-existent `icons/icon-192.png` (a guaranteed 404). Android, the target platform, uses the manifest's maskable icon, so the new star already shows correctly there; the iOS-only tag was just dead weight.
 
 ## 2026-06-21 — Switch the UI font to DotGothic16
 

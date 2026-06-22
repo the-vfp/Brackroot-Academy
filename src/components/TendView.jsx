@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import HabitChecklist from './HabitChecklist.jsx';
-import HabitHistory from './HabitHistory.jsx';
 import TaskView from './TaskView.jsx';
 
 const SUB_PAGES = [
-  { id: 'habits',  label: 'Habits' },
-  { id: 'history', label: 'Almanac' },
-  { id: 'tasks',   label: 'Tasks' },
+  { id: 'habits', label: 'Habits' },
+  { id: 'tasks',  label: 'Tasks' },
 ];
 
 export default function TendView({ initialSubPage = 'habits' }) {
@@ -26,7 +24,6 @@ export default function TendView({ initialSubPage = 'habits' }) {
         ))}
       </div>
       {subPage === 'habits' && <HabitChecklist />}
-      {subPage === 'history' && <HabitHistory />}
       {subPage === 'tasks' && <TaskView />}
     </>
   );

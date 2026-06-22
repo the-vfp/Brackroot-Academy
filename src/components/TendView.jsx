@@ -5,7 +5,7 @@ import TaskView from './TaskView.jsx';
 
 const SUB_PAGES = [
   { id: 'habits',  label: 'Habits' },
-  { id: 'history', label: 'History' },
+  { id: 'history', label: 'Almanac' },
   { id: 'tasks',   label: 'Tasks' },
 ];
 

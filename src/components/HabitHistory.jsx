@@ -80,7 +80,7 @@ export default function HabitHistory() {
 
   return (
     <div className="tab-view active">
-      <div className="section-title">Habit History</div>
+      <div className="section-title">Almanac</div>
 
       <div className="hist-range">
         {RANGES.map(r => (

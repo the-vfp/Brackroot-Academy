@@ -1,11 +1,16 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { db, initializeState, initializeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, addDaysToDate, exportAllData, importAllData, resetAllData } from './db.js';
+import { db, initializeState, initializeHabits, dedupeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, addDaysToDate, exportAllData, importAllData, resetAllData } from './db.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
 import { getHeartEvent } from './data/heartEvents/index.js';
 
 const StoreContext = createContext(null);
+
+// StrictMode double-invokes the mount effect in dev; share one boot promise so
+// the one-time seed/migration sequence runs exactly once instead of racing
+// itself (which is what double-seeded the default habits in the first place).
+let bootPromise = null;
 
 const EXPENSE_STARDUST = 10;
 const MEAL_STARDUST_BY_SOURCE = {
@@ -89,20 +94,22 @@ export function StoreProvider({ children }) {
 
   // Initialize on mount
   useEffect(() => {
-    async function init() {
+    // The seed/migration steps must run exactly once (see bootPromise); loading
+    // the data into state and clearing the spinner happen on every mount.
+    async function boot() {
       await migrateFromLocalStorage();
       await initializeState();
       await initializeHabits();
+      await dedupeHabits();
       await initializeCategories();
       await initializeTimeCategories();
       await initializeCharacters();
       await reconcileCharactersFromEvents();
       await rolloverIfNeeded();
       await resolveCompletedWeeks();
-      await loadAllBase();
-      setLoading(false);
     }
-    init();
+    bootPromise = bootPromise || boot();
+    bootPromise.then(loadAllBase).then(() => setLoading(false));
   }, [loadAllBase]);
 
   // Re-check rollover whenever the tab regains focus/visibility — catches the

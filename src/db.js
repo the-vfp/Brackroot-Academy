@@ -410,6 +410,45 @@ export async function initializeHabits() {
   await db.state.update('app', { habitsSeeded: true });
 }
 
+// Self-healing cleanup for installs that double-seeded the default habits.
+// A StrictMode-driven race could run initializeHabits() twice on a fresh
+// install, bulk-adding DEFAULT_HABITS a second time before the first commit —
+// leaving two of every habit. Duplicate seeds share the same sortOrder (a
+// value that is otherwise unique per habit), so we group by it, keep the
+// lowest-id copy in each group, move the duplicates' logs onto the keeper so
+// no history is lost, and delete the extras. A no-op once habits are unique.
+export async function dedupeHabits() {
+  const habits = await db.habits.toArray();
+  const bySortOrder = new Map();
+  for (const h of habits) {
+    const key = h.sortOrder ?? 0;
+    if (!bySortOrder.has(key)) bySortOrder.set(key, []);
+    bySortOrder.get(key).push(h);
+  }
+
+  for (const group of bySortOrder.values()) {
+    if (group.length < 2) continue;
+    group.sort((a, b) => a.id - b.id);
+    const keeper = group[0];
+    const isDaily = keeper.type !== 'repeatable';
+
+    for (const dup of group.slice(1)) {
+      const logs = await db.habitLogs.where('habitId').equals(dup.id).toArray();
+      for (const log of logs) {
+        // Daily habits hold at most one log per day. If the keeper already has
+        // that day, drop the duplicate rather than doubling it up; repeatable
+        // habits keep every tap (the union is the honest count).
+        if (isDaily) {
+          const existing = await db.habitLogs.where({ date: log.date, habitId: keeper.id }).first();
+          if (existing) { await db.habitLogs.delete(log.id); continue; }
+        }
+        await db.habitLogs.update(log.id, { habitId: keeper.id });
+      }
+      await db.habits.delete(dup.id);
+    }
+  }
+}
+
 export async function initializeCategories() {
   const state = await db.state.get('app');
   if (state?.categoriesSeeded) return;

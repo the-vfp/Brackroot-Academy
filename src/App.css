@@ -71,6 +71,7 @@
   --bk-font-head:    'Pixelify Sans','VT323',ui-monospace,monospace;
   --bk-font-micro:   'Silkscreen','Pixelify Sans',ui-monospace,monospace;
   --bk-font-wordmark:'Jersey 10','Silkscreen',ui-monospace,monospace; /* open C */
+  --bk-font-num:     'Silkscreen','Pixelify Sans',ui-monospace,monospace; /* legible numerals + straight-bar H */
 
   --bk-text-micro:8px; --bk-text-micro-lg:16px; --bk-text-caption:12px;
   --bk-text-body:16px; --bk-text-prose:20px; --bk-text-h2:24px;
@@ -231,8 +232,8 @@ html, body, #root {
   padding: 5px 10px;
   background: #33271D;
   box-shadow: 0 0 0 2px var(--bk-ink-strong);
-  font-family: var(--bk-font-body);
-  font-size: 16px; font-weight: 700;
+  font-family: var(--bk-font-num);
+  font-size: 13px; font-weight: 700;
   color: var(--bk-stardust-shimmer);
   letter-spacing: 0.3px;
   image-rendering: pixelated;
@@ -984,12 +985,13 @@ html, body, #root {
   color: var(--text-cream);
 }
 .difficulty-label {
-  font-family: var(--font-display);
-  font-size: 13px;
+  font-family: var(--bk-font-num);
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
 .difficulty-value {
+  font-family: var(--bk-font-num);
   font-size: 10px;
   color: var(--accent-gold);
   font-weight: 600;

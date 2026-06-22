@@ -2,14 +2,17 @@
 
 All notable changes to Brackroot Academy are documented here.
 
-## 2026-06-21 — Habit history
+## 2026-06-21 — The Almanac (habit history)
 
 ### Added
-- **New "History" sub-page under Tend** (Habits · History · Tasks). Answers "how am I doing with this habit?" at a glance. A range toggle (**Week · 2 weeks · Month · All**, defaulting to Month) drives a card per habit showing:
+- **New "Almanac" sub-page under Tend** (Habits · Almanac · Tasks). Answers "how am I doing with this habit?" at a glance. A range toggle (**Week · 2 weeks · Month · All**, defaulting to Month) drives a card per habit showing:
   - a **day-by-day heatmap** for the window — filled = done; for repeatable habits (water, meals) the cell darkens with the number of taps, so you see intensity, not just yes/no;
   - **X / N days hit** plus **done rate** (daily) or **avg per day** (repeatable);
   - the current streak and an all-time **best streak**.
 - No new data is stored — this reads the existing timestamped `habitLogs`, so history reaches back to whenever a habit was first logged.
+
+### Fixed
+- **Duplicate default habits cleaned up.** A StrictMode-driven race on first launch could seed the default habits twice, leaving two of every habit ("Drink water" ×2, etc.). The seed now runs exactly once (a shared boot lock), and a self-healing migration merges any existing duplicates on launch — keeping one copy and moving the other's check-off history onto it, so no streaks are lost.
 
 ## 2026-06-21 — Reorder the nav
 

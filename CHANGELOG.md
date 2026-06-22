@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Readable numbers + a cleaner H (VT323 everywhere)
+
+### Changed
+- **Swapped the app's primary font from Pixelify Sans to VT323.** Two long-standing readability gripes, one fix: Pixelify's numerals were cramped — Stardust counts worst of all, where `88` read like two filled-in `0`s — and its capital **H** had a triangular crossbar. VT323 (already the fallback face) has clean, distinct numerals with a wide-open `8`, and a plain straight-bar **H**, while still reading comfortably across long heart-event prose. It's bundled as a self-hosted woff2 (`VT323-latin.woff2`) so the offline PWA never drops to a system font. The narrow micro/eyebrow labels keep Silkscreen, and the wordmark keeps Jersey 10.
+
 ## 2026-06-21 — Habit detail page (edit + history)
 
 ### Added

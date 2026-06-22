@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Switch the UI font to DotGothic16
+
+### Changed
+- **Swapped the primary font from VT323 to DotGothic16.** VT323 fixed the readability gripes but read small and narrow — noticeably so on buttons. DotGothic16 keeps the clean straight-bar **H** and distinct numerals (the `88` stays legible), but reads at a fuller, more comfortable size with a softer, cozier pixel texture. Bundled as a latin-subset woff2 (`DotGothic16-latin.woff2`, ~10 KB); the now-unused `VT323-latin.woff2` is removed. Micro/eyebrow labels still keep Silkscreen, wordmark still Jersey 10.
+
 ## 2026-06-21 — Tappable "Back" on the habit detail page
 
 ### Fixed

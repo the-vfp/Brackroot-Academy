@@ -16,11 +16,11 @@
   src: url('./assets/fonts/Silkscreen-700-latin.woff2') format('woff2');
 }
 @font-face {
-  font-family: 'VT323';
+  font-family: 'DotGothic16';
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('./assets/fonts/VT323-latin.woff2') format('woff2');
+  src: url('./assets/fonts/DotGothic16-latin.woff2') format('woff2');
 }
 
 :root {
@@ -67,8 +67,8 @@
   --bk-good:#6E8A4E; --bk-warn:#C9952F; --bk-shadow:rgba(78,58,44,.20);
 
   /* Typography — pixel faces */
-  --bk-font-body:    'VT323',ui-monospace,monospace;
-  --bk-font-head:    'VT323',ui-monospace,monospace;
+  --bk-font-body:    'DotGothic16',ui-monospace,monospace;
+  --bk-font-head:    'DotGothic16',ui-monospace,monospace;
   --bk-font-micro:   'Silkscreen',ui-monospace,monospace;
   --bk-font-wordmark:'Jersey 10','Silkscreen',ui-monospace,monospace; /* open C */
 

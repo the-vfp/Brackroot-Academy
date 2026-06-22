@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-21 — Tappable "Back" on the habit detail page
+
+### Fixed
+- **The habit detail page's "Back" button was tiny** — it used the 8px Silkscreen micro-label style (meant for eyebrow captions), so it was hard to read and barely tappable. It's now a normal `.btn-secondary` button, matching the "Back" control on the category managers.
+
 ## 2026-06-21 — Readable numbers + a cleaner H (VT323 everywhere)
 
 ### Changed

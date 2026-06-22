@@ -683,17 +683,7 @@ html, body, #root {
 
 /* ====== HABIT DETAIL (edit + history) ====== */
 .habit-detail-bar {
-  margin-bottom: 4px;
-}
-.habit-detail-back {
-  background: transparent;
-  border: none;
-  padding: 4px 0;
-  color: var(--accent-copper);
-  font-family: var(--bk-font-micro);
-  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
-  text-transform: uppercase;
-  cursor: pointer;
+  margin-bottom: 8px;
 }
 .habit-detail-edit {
   display: flex;

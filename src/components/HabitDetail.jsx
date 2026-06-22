@@ -74,7 +74,7 @@ export default function HabitDetail({ habitId, onClose }) {
   return (
     <div className="tab-view active habit-detail">
       <div className="habit-detail-bar">
-        <button className="habit-detail-back" onClick={onClose}>{'←'} Back</button>
+        <button className="btn-secondary" onClick={onClose} style={{ margin: 0 }}>{'←'} Back</button>
       </div>
 
       <div className="section-title">Edit Habit</div>

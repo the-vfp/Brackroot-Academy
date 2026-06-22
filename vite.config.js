@@ -14,9 +14,9 @@ export default defineConfig({
       manifest: {
         name: 'Brackroot Academy — Life Tracker',
         short_name: 'Brackroot',
-        description: 'A cozy dark academia spending tracker',
-        theme_color: '#1a1410',
-        background_color: '#1a1410',
+        description: 'A cozy pixel-art life tracker',
+        theme_color: '#FBF4E6',
+        background_color: '#FBF4E6',
         display: 'standalone',
         orientation: 'portrait',
         start_url: './',

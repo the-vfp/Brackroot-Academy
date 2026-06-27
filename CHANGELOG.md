@@ -2,7 +2,14 @@
 
 All notable changes to Brackroot Academy are documented here.
 
-## 2026-06-26 — Task tags: project menus with their own reward rules
+## 2026-06-26 — Tasks page redesign: collapsible capture + a calmer control bar
+
+### Changed
+- **The add form is capture-first now.** It opens collapsed to just the title field + **Add**, with **summary pills** beneath (e.g. `Medium · No tag · Anytime`) showing what's currently set. Tap a pill or the **Details ▾** toggle to reveal the full controls (difficulty, project tag, schedule) under labelled sections. The common path is type → Add; the secondary controls stay out of the way until you want them. Selections are sticky between adds, so logging several tasks in a row keeps your difficulty/tag.
+- **The filter + sort controls moved into one tidy panel** ("Viewing" / "Sort"), with the larger, easier-to-tap chip size. The difficulty sort is relabelled **Energy** (Easy→Hard, tap to flip) to match how it's actually used — "what can I take on right now?"
+- **The tag filter row is a single swipeable line** with the native scrollbar hidden. Instead of an ugly grey scrollbar, a soft edge-fade + chevron appears on the right only while there's more to scroll toward, and disappears once you reach the end. Scales cleanly to many (or long, emoji-laden) tag names without wrapping or shoving the list down.
+- Chips and pills now follow the pixel system's squared, ink-outlined treatment (selected = filled ink), and the whole add form sits in its own framed card.
+
 
 ### Added
 - **Project tags for tasks.** Tasks can now carry a single project tag (e.g. `Brackroot`, `Errands`), created and managed in **Settings → Manage Task Tags**. The intent: make Brackroot the quick-capture home for project ideas/to-dos — tag + difficulty assigned right at capture, no separate "organize later" step.

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useStore, DIFFICULTY_LEVELS, stardustForDifficulty, stardustForTask } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
@@ -220,9 +220,28 @@ export default function TaskView() {
   // Sort: 'added' (newest first), 'alpha', or 'difficulty' (with a direction).
   const [sort, setSort] = useState('added');
   const [difficultyAsc, setDifficultyAsc] = useState(true); // Easy → Hard by default
+  // Add-form secondary controls (difficulty/tag/schedule) collapse by default —
+  // the common path is type → Add. Summary pills show what's currently set.
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const hasTags = tags.length > 0;
   const tagById = Object.fromEntries(tags.map(t => [t.id, t]));
+
+  // The filter row scrolls horizontally with its native scrollbar hidden; show
+  // a soft edge-fade only while there's more to scroll toward (overflow + not
+  // yet at the end), so it never fades over nothing.
+  const filterRowRef = useRef(null);
+  const [showFilterFade, setShowFilterFade] = useState(false);
+  const measureFilter = useCallback(() => {
+    const el = filterRowRef.current;
+    if (!el) { setShowFilterFade(false); return; }
+    setShowFilterFade(el.scrollWidth - el.clientWidth - el.scrollLeft > 2);
+  }, []);
+  useEffect(() => {
+    measureFilter();
+    window.addEventListener('resize', measureFilter);
+    return () => window.removeEventListener('resize', measureFilter);
+  }, [measureFilter, tags, hasTags, filter]);
 
   const today = localDateString();
   const todayDow = new Date(today + 'T12:00:00').getDay();
@@ -430,86 +449,135 @@ export default function TaskView() {
     overdueTasks.length === 0 && sortedTodayTasks.length === 0 &&
     upcomingTasks.length === 0 && completedTasks.length === 0;
 
+  // Compact label for the schedule summary pill.
+  const scheduleSummary = schedule?.recurrence
+    ? (formatRecurrence(schedule.recurrence) || 'Weekly')
+    : schedule?.dueDate
+    ? (formatDueDate(schedule.dueDate) || 'Date')
+    : 'Anytime';
+
   return (
     <div className="tab-view active">
       <div className="section-title">Tasks</div>
 
       <form className="task-add-form" onSubmit={handleAdd}>
-        <input
-          type="text"
-          className="task-input"
-          placeholder="What needs doing?"
-          value={text}
-          onChange={e => setText(e.target.value)}
-        />
-        <DifficultyPicker
-          value={difficulty}
-          onChange={setDifficulty}
-          className="task-difficulty-picker"
-        />
-        {hasTags && (
-          <TagPicker tags={tags} value={tagId} onChange={setTagId} className="task-add-tags" />
+        <div className="task-add-top">
+          <input
+            type="text"
+            className="task-input"
+            placeholder="What needs doing?"
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <button type="submit" className="btn-primary task-add-btn" disabled={!text.trim()}>
+            Add
+          </button>
+        </div>
+
+        <div className="task-add-summary">
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {DIFFICULTY_LABELS[difficulty]}
+          </button>
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {tagId
+              ? `${tagById[tagId]?.icon ? tagById[tagId].icon + ' ' : ''}${tagById[tagId]?.name ?? 'Tag'}`
+              : 'No tag'}
+          </button>
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {scheduleSummary}
+          </button>
+          <button
+            type="button"
+            className="task-details-toggle"
+            onClick={() => setDetailsOpen(o => !o)}
+            aria-expanded={detailsOpen}
+          >
+            {detailsOpen ? `Hide ▴` : `Details ▾`}
+          </button>
+        </div>
+
+        {detailsOpen && (
+          <div className="task-add-details">
+            <div className="task-eyebrow">Difficulty {'·'} energy {'&'} reward</div>
+            <DifficultyPicker
+              value={difficulty}
+              onChange={setDifficulty}
+              className="task-difficulty-picker"
+            />
+            {hasTags && (
+              <>
+                <div className="task-eyebrow">Project tag</div>
+                <TagPicker tags={tags} value={tagId} onChange={setTagId} className="task-add-tags" />
+              </>
+            )}
+            <div className="task-eyebrow">Schedule</div>
+            <SchedulePicker value={schedule} onChange={setSchedule} />
+          </div>
         )}
-        <SchedulePicker value={schedule} onChange={setSchedule} />
-        <button type="submit" className="btn-primary task-add-btn" disabled={!text.trim()}>
-          Add
-        </button>
       </form>
 
       {hasTags && (
         <div className="task-controls">
-          <div className="task-filter-row">
-            <button
-              type="button"
-              className={`task-filter-chip ${activeFilter === 'untagged' ? 'selected' : ''}`}
-              onClick={() => setFilter('untagged')}
-            >
-              Untagged
-            </button>
-            {tags.map(tag => (
+          <div className="task-controls-head">
+            <span className="task-eyebrow">Viewing</span>
+            <div className="task-sort">
+              <span className="task-eyebrow">Sort</span>
               <button
-                key={tag.id}
                 type="button"
-                className={`task-filter-chip ${activeFilter === tag.id ? 'selected' : ''}`}
-                onClick={() => setFilter(tag.id)}
+                className={`task-sort-chip ${sort === 'added' ? 'selected' : ''}`}
+                onClick={() => setSort('added')}
               >
-                {tag.icon && `${tag.icon} `}{tag.name}
+                Added
               </button>
-            ))}
-            <button
-              type="button"
-              className={`task-filter-chip ${activeFilter === 'all' ? 'selected' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
+              <button
+                type="button"
+                className={`task-sort-chip ${sort === 'alpha' ? 'selected' : ''}`}
+                onClick={() => setSort('alpha')}
+              >
+                A{'–'}Z
+              </button>
+              <button
+                type="button"
+                className={`task-sort-chip ${sort === 'difficulty' ? 'selected' : ''}`}
+                onClick={() => {
+                  if (sort === 'difficulty') setDifficultyAsc(v => !v);
+                  else setSort('difficulty');
+                }}
+              >
+                Energy {sort === 'difficulty' ? (difficultyAsc ? '↑' : '↓') : ''}
+              </button>
+            </div>
           </div>
-          <div className="task-sort-row">
-            <span className="task-sort-label">Sort</span>
-            <button
-              type="button"
-              className={`task-sort-chip ${sort === 'added' ? 'selected' : ''}`}
-              onClick={() => setSort('added')}
-            >
-              Added
-            </button>
-            <button
-              type="button"
-              className={`task-sort-chip ${sort === 'alpha' ? 'selected' : ''}`}
-              onClick={() => setSort('alpha')}
-            >
-              A{'–'}Z
-            </button>
-            <button
-              type="button"
-              className={`task-sort-chip ${sort === 'difficulty' ? 'selected' : ''}`}
-              onClick={() => {
-                if (sort === 'difficulty') setDifficultyAsc(v => !v);
-                else setSort('difficulty');
-              }}
-            >
-              Difficulty {sort === 'difficulty' ? (difficultyAsc ? '↑' : '↓') : ''}
-            </button>
+          <div className="task-filter-scroll">
+            <div className="task-filter-row" ref={filterRowRef} onScroll={measureFilter}>
+              <button
+                type="button"
+                className={`task-filter-chip ${activeFilter === 'untagged' ? 'selected' : ''}`}
+                onClick={() => setFilter('untagged')}
+              >
+                Untagged
+              </button>
+              {tags.map(tag => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className={`task-filter-chip ${activeFilter === tag.id ? 'selected' : ''}`}
+                  onClick={() => setFilter(tag.id)}
+                >
+                  {tag.icon && `${tag.icon} `}{tag.name}
+                </button>
+              ))}
+              <button
+                type="button"
+                className={`task-filter-chip ${activeFilter === 'all' ? 'selected' : ''}`}
+                onClick={() => setFilter('all')}
+              >
+                All
+              </button>
+            </div>
+            {showFilterFade && (
+              <div className="task-filter-fade" aria-hidden="true">{'›'}</div>
+            )}
           </div>
         </div>
       )}

@@ -1128,9 +1128,12 @@ html, body, #root {
 /* ====== TASK VIEW ====== */
 .task-add-form {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  background: var(--bg-card);
+  box-shadow: 0 0 0 2px var(--text-cream);
+  padding: 12px;
 }
 .task-input {
   flex: 1;
@@ -1317,6 +1320,63 @@ html, body, #root {
   color: var(--danger);
 }
 
+/* ====== TASK ADD FORM (collapsible details) ====== */
+/* Micro eyebrow labels — Difficulty / Project tag / Schedule / Viewing / Sort */
+.task-eyebrow {
+  font-family: var(--bk-font-micro);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-3);
+  line-height: 1.4;
+}
+
+.task-add-top {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.task-add-top .task-input { flex: 1; min-width: 0; }
+/* Base .btn-primary is full-width; in this row it sizes to its label. */
+.task-add-top .task-add-btn { width: auto; flex: 0 0 auto; margin: 0; }
+
+/* Summary pills under the title — show what's set without opening details */
+.task-add-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.task-summary-pill {
+  background: var(--bg-warm);
+  box-shadow: 0 0 0 1.5px var(--border-warm);
+  color: var(--text-warm);
+  font-family: var(--font-body);
+  font-size: 11px;
+  padding: 5px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: box-shadow 0.15s, color 0.15s;
+}
+.task-summary-pill:hover { box-shadow: 0 0 0 1.5px var(--accent-3); color: var(--text-cream); }
+.task-details-toggle {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--accent-3);
+  font-family: var(--font-body);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px 2px;
+  white-space: nowrap;
+}
+.task-add-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
 /* ====== TASK TAGS ====== */
 /* Tag chips in the add/edit forms (single-select: None + each tag) */
 .tag-picker {
@@ -1325,87 +1385,114 @@ html, body, #root {
   gap: 6px;
   width: 100%;
 }
-.task-add-tags { margin-top: 4px; }
+.task-add-tags { margin-top: 2px; }
 .tag-option {
   padding: 7px 12px;
   background: var(--bg-warm);
-  border: 1px solid var(--border-warm);
-  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 1.5px var(--border-warm);
   color: var(--text-warm);
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
-.tag-option:hover { border-color: var(--accent-amber); }
+.tag-option:hover { box-shadow: 0 0 0 1.5px var(--accent-amber); }
 .tag-option.selected {
-  border-color: var(--accent-gold);
-  background: rgba(232, 184, 74, 0.1);
+  box-shadow: 0 0 0 2px var(--accent-3);
+  background: var(--bk-stardust-soft);
   color: var(--text-cream);
 }
 .tag-option-icon { margin-right: 4px; }
 
-/* Filter + sort control bar (only shown once tags exist) */
+/* ====== VIEWING / SORT CONTROL PANEL ====== */
 .task-controls {
+  background: var(--bg-warm);
+  padding: 10px 12px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 14px;
 }
-.task-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.task-filter-chip {
-  padding: 6px 12px;
-  background: var(--bg-warm);
-  border: 1px solid var(--border-warm);
-  border-radius: 999px;
-  color: var(--text-warm);
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.task-filter-chip:hover { border-color: var(--accent-amber); }
-.task-filter-chip.selected {
-  border-color: var(--accent-gold);
-  background: rgba(232, 184, 74, 0.14);
-  color: var(--text-cream);
-}
-.task-sort-row {
+.task-controls-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px 12px;
 }
-.task-sort-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--accent-3);
-  font-weight: 600;
-  margin-right: 2px;
+.task-sort {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .task-sort-chip {
   padding: 5px 10px;
-  background: transparent;
-  border: 1px solid var(--border-warm);
-  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 1.5px var(--text-cream);
   color: var(--text-warm);
   font-family: var(--font-body);
   font-size: 11px;
-  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.task-sort-chip:hover { box-shadow: 0 0 0 1.5px var(--accent-3); }
+.task-sort-chip.selected {
+  background: var(--text-cream);
+  box-shadow: 0 0 0 1.5px var(--text-cream);
+  color: var(--bg-card);
+}
+
+/* Filter pills — one swipeable line; native scrollbar hidden, soft edge fade */
+.task-filter-scroll { position: relative; }
+.task-filter-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scroll-behavior: smooth;
+}
+.task-filter-row::-webkit-scrollbar { display: none; }
+.task-filter-chip {
+  flex: none;
+  white-space: nowrap;
+  padding: 7px 13px;
+  background: var(--bg-card);
+  box-shadow: 0 0 0 1.5px var(--text-cream);
+  color: var(--text-cream);
+  font-family: var(--font-body);
+  font-size: 12px;
   cursor: pointer;
   transition: all 0.15s;
 }
-.task-sort-chip:hover { border-color: var(--accent-amber); }
-.task-sort-chip.selected {
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
+.task-filter-chip:hover { box-shadow: 0 0 0 1.5px var(--accent-3); }
+.task-filter-chip.selected {
+  background: var(--text-cream);
+  box-shadow: 0 0 0 1.5px var(--text-cream);
+  color: var(--bg-card);
+}
+.task-filter-fade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 38px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 2px;
+  color: var(--accent-3);
+  font-size: 16px;
+  /* color-mix keeps the transparent end in the panel's own hue, so the fade
+     stays clean in both day and night themes (no grey/warm haze mid-fade). */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--bg-warm) 0%, transparent),
+    var(--bg-warm) 72%
+  );
 }
 
 /* Tag chip on a task row + muted reward label for no-Stardust tasks */
@@ -1413,7 +1500,7 @@ html, body, #root {
   display: inline-block;
   margin-left: 8px;
   font-size: 10px;
-  color: var(--accent-gold);
+  color: var(--accent-3);
   letter-spacing: 0.3px;
 }
 .task-meta-muted {
@@ -1435,7 +1522,7 @@ html, body, #root {
 .tag-reward-toggle input {
   width: 16px;
   height: 16px;
-  accent-color: var(--accent-gold);
+  accent-color: var(--accent-3);
   cursor: pointer;
 }
 

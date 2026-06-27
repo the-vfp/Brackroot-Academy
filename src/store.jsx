@@ -430,7 +430,7 @@ export function StoreProvider({ children }) {
 
   const addHabit = useCallback(async (name, icon, category, type = 'daily', difficulty = 'medium') => {
     const maxOrder = habits.reduce((max, h) => Math.max(max, h.sortOrder || 0), -1);
-    await db.habits.add({ name, icon, category, type, difficulty, sortOrder: maxOrder + 1 });
+    await db.habits.add({ name, icon, category, type, difficulty, sortOrder: maxOrder + 1, active: true, archivedAt: null });
     await loadAll();
   }, [habits, loadAll]);
 
@@ -439,6 +439,22 @@ export function StoreProvider({ children }) {
     await loadAll();
   }, [loadAll]);
 
+  // Soft-delete: keep the habit and all its logs (so past days stay truthful in
+  // history / Insights), but drop it from the daily checklist. The preferred
+  // way to retire a habit — mirrors archiveCategory / archiveTimeCategory.
+  const archiveHabit = useCallback(async (id) => {
+    await db.habits.update(id, { active: false, archivedAt: Date.now() });
+    await loadAll();
+  }, [loadAll]);
+
+  const unarchiveHabit = useCallback(async (id) => {
+    await db.habits.update(id, { active: true, archivedAt: null });
+    await loadAll();
+  }, [loadAll]);
+
+  // Hard delete — also nukes every completion log, erasing the habit from past
+  // days. Reserved for genuine "I never want to see this again." Use archive to
+  // retire a habit while keeping its history.
   const deleteHabit = useCallback(async (id) => {
     await db.habits.delete(id);
     await db.habitLogs.where('habitId').equals(id).delete();
@@ -1041,6 +1057,8 @@ export function StoreProvider({ children }) {
       getHabitStats,
       addHabit,
       updateHabit,
+      archiveHabit,
+      unarchiveHabit,
       deleteHabit,
       addCategory,
       updateCategory,

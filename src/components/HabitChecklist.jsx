@@ -69,6 +69,8 @@ export default function HabitChecklist() {
 
   // When set, the per-habit detail page (edit + history) replaces the list.
   const [detailId, setDetailId] = useState(null);
+  // Archived habits are hidden behind a disclosure so the daily list stays clean.
+  const [showArchived, setShowArchived] = useState(false);
 
   async function handleAdd(e) {
     e.preventDefault();
@@ -89,9 +91,14 @@ export default function HabitChecklist() {
   const completedToday = getTodayCompletedHabits();
   const todayCounts = getTodayHabitCounts();
 
-  const dailyHabits = habits.filter(h => h.type !== 'repeatable');
+  // Only active (non-archived) habits show in the daily list. Archived habits
+  // keep their history but drop out of the day-to-day checklist.
+  const activeHabits = habits.filter(h => h.active !== false);
+  const archivedHabits = habits.filter(h => h.active === false);
+
+  const dailyHabits = activeHabits.filter(h => h.type !== 'repeatable');
   const dailyDone = dailyHabits.filter(h => completedToday.includes(h.id)).length;
-  const repeatableTaps = habits
+  const repeatableTaps = activeHabits
     .filter(h => h.type === 'repeatable')
     .reduce((sum, h) => sum + (todayCounts[h.id] || 0), 0);
 
@@ -137,12 +144,12 @@ export default function HabitChecklist() {
         </span>
       </div>
 
-      {habits.length > 0 && (
+      {activeHabits.length > 0 && (
         <div className="habit-hint">Hold a habit to edit it & see its history</div>
       )}
 
       <div className="habit-list">
-        {habits.map(habit => {
+        {activeHabits.map(habit => {
           const isRepeatable = habit.type === 'repeatable';
           const isDone = !isRepeatable && completedToday.includes(habit.id);
           const count = todayCounts[habit.id] || 0;
@@ -176,9 +183,41 @@ export default function HabitChecklist() {
         })}
       </div>
 
-      {habits.length === 0 && (
+      {activeHabits.length === 0 && (
         <div className="history-empty">
           No habits yet. Add one below!
+        </div>
+      )}
+
+      {archivedHabits.length > 0 && (
+        <div className="habit-archived">
+          <button
+            type="button"
+            className="habit-archived-toggle"
+            onClick={() => setShowArchived(s => !s)}
+          >
+            {showArchived ? '▾' : '▸'} Archived ({archivedHabits.length})
+          </button>
+          {showArchived && (
+            <div className="habit-list habit-list-archived">
+              {archivedHabits.map(habit => (
+                <div
+                  key={habit.id}
+                  className="habit-item habit-item-archived"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setDetailId(habit.id)}
+                  style={{ opacity: 0.55 }}
+                >
+                  <div className="habit-icon">{habit.icon}</div>
+                  <div className="habit-details">
+                    <div className="habit-name">{habit.name}</div>
+                    <div className="habit-streak">Tap to restore or view history</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

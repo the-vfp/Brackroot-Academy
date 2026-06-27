@@ -2,6 +2,17 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-27 — Archive habits (keep their history)
+
+### Added
+- **Habits can now be archived instead of deleted.** Open a habit (hold it in the list) and tap **🗃️ Archive** to retire it: it drops out of the daily checklist but keeps every completion log, so past days stay truthful (and the upcoming **Insights** day-recap will be able to show it). Archived habits live behind a collapsible **Archived (N)** shelf below the list — tap one to view its history or **↺ Restore** it.
+
+### Changed
+- **Deleting a habit is now clearly the destructive option.** It still erases the habit *and its entire history* from past days, and the confirm dialog now says so and points to Archive as the non-destructive choice. Previously archive didn't exist, so deleting was the only way to retire a habit — which silently destroyed its history. This mirrors how Spend and Time categories already work (archive keeps history; delete cascades).
+
+### Notes
+- No schema bump — habits gain non-indexed `active` / `archivedAt` fields (same shape as categories). Existing habits with neither field are treated as active, so nothing changes on upgrade. The fields ride along in JSON export/import automatically.
+
 ## 2026-06-27 — Stable habit keys (groundwork for Challenges)
 
 ### Added

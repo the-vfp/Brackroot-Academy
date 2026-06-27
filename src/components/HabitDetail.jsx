@@ -24,7 +24,7 @@ function intensity(count, maxCount) {
 
 export default function HabitDetail({ habitId, onClose }) {
   const {
-    habits, updateHabit, deleteHabit,
+    habits, updateHabit, archiveHabit, unarchiveHabit, deleteHabit,
     getHabitStats, getHabitStreak, getHabitDay,
   } = useStore();
   const showToast = useToast();
@@ -44,6 +44,7 @@ export default function HabitDetail({ habitId, onClose }) {
   }
 
   const isRepeatable = type === 'repeatable';
+  const isArchived = habit.active === false;
   const range = RANGES.find(r => r.id === rangeId) || RANGES[2];
   const stats = getHabitStats(habit.id, range.days);
   const streak = getHabitStreak(habit.id);
@@ -63,8 +64,19 @@ export default function HabitDetail({ habitId, onClose }) {
     onClose();
   }
 
+  async function handleArchiveToggle() {
+    if (isArchived) {
+      await unarchiveHabit(habit.id);
+      showToast('Habit restored');
+    } else {
+      await archiveHabit(habit.id);
+      showToast('Habit archived');
+    }
+    onClose();
+  }
+
   async function handleDelete() {
-    if (confirm(`Remove "${habit.name}"? Its streak history will also be deleted.`)) {
+    if (confirm(`Delete "${habit.name}" permanently? Its entire history will be erased from past days too. Use Archive to retire it while keeping its history.`)) {
       await deleteHabit(habit.id);
       showToast('Habit removed');
       onClose();
@@ -106,6 +118,9 @@ export default function HabitDetail({ habitId, onClose }) {
         <DifficultyPicker value={difficulty} onChange={setDifficulty} />
         <div className="habit-edit-actions">
           <button className="btn-primary" onClick={handleSave}>Save</button>
+          <button className="btn-secondary" onClick={handleArchiveToggle} style={{ margin: 0 }}>
+            {isArchived ? '↺ Restore' : '\u{1F5C3}️ Archive'}
+          </button>
           <button className="btn-secondary btn-danger" onClick={handleDelete} style={{ margin: 0 }}>
             {'\u{1F5D1}'} Delete
           </button>

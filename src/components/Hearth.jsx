@@ -51,7 +51,7 @@ export default function Hearth({ onNavigate }) {
 
   // ── Today's Tally ──
   const mealsToday = meals.filter(m => m.date === today);
-  const dailyHabits = habits.filter(h => h.type !== 'repeatable');
+  const dailyHabits = habits.filter(h => h.type !== 'repeatable' && h.active !== false);
   const completedIds = new Set(getTodayCompletedHabits());
   const habitsKept = dailyHabits.filter(h => completedIds.has(h.id)).length;
   const tasksDone = tasks.filter(t => t.completed).length;

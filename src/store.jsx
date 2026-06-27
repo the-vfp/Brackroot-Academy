@@ -32,6 +32,14 @@ export function stardustForDifficulty(difficulty) {
   return STARDUST_BY_DIFFICULTY[difficulty] ?? STARDUST_BY_DIFFICULTY.medium;
 }
 
+// Stardust a task is worth, accounting for its tag's reward toggle. A tag with
+// reward:false zeroes the payout — the task keeps its difficulty purely as an
+// energy label for sorting. Pass the resolved tag (or null/undefined).
+export function stardustForTask(task, tag) {
+  if (tag && tag.reward === false) return 0;
+  return stardustForDifficulty(task?.difficulty);
+}
+
 export function stardustForMealSource(source) {
   return MEAL_STARDUST_BY_SOURCE[source] ?? MEAL_STARDUST_FALLBACK;
 }
@@ -51,6 +59,7 @@ export function StoreProvider({ children }) {
   const [timeCategories, setTimeCategories] = useState([]);
   const [timeLogs, setTimeLogs] = useState([]);
   const [weeklyResolutions, setWeeklyResolutions] = useState([]);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
@@ -72,6 +81,8 @@ export function StoreProvider({ children }) {
     allTimeCategories.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     const allTimeLogs = await db.timeLogs.orderBy('timestamp').reverse().toArray();
     const allWeeklyResolutions = await db.weeklyResolutions.orderBy('weekStart').reverse().toArray();
+    const allTags = await db.tags.toArray();
+    allTags.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
     setAppState(state);
     setExpenses(allExpenses);
     setHabits(allHabits);
@@ -86,6 +97,7 @@ export function StoreProvider({ children }) {
     setTimeCategories(allTimeCategories);
     setTimeLogs(allTimeLogs);
     setWeeklyResolutions(allWeeklyResolutions);
+    setTags(allTags);
   }, []);
 
   // Data is local-first (Dexie/IndexedDB). No cloud sync — JSON export/import
@@ -511,13 +523,14 @@ export function StoreProvider({ children }) {
 
   // ====== TASK OPERATIONS ======
 
-  const addTask = useCallback(async (text, difficulty = 'medium', schedule = null) => {
+  const addTask = useCallback(async (text, difficulty = 'medium', schedule = null, tagId = null) => {
     // schedule is { dueDate?: 'YYYY-MM-DD', recurrence?: {type:'weekly', days:number[]} }
     // Mutually exclusive — recurrence wins if both set.
     const { dueDate = null, recurrence = null } = schedule || {};
     await db.tasks.add({
       text,
       difficulty,
+      tagId: tagId || null,
       dueDate: recurrence ? null : dueDate,
       recurrence,
       completed: false,
@@ -531,9 +544,11 @@ export function StoreProvider({ children }) {
     const task = await db.tasks.get(id);
     if (!task || task.completed) return null;
 
-    const earn = stardustForDifficulty(task.difficulty);
+    // Reward respects the task's tag toggle — a reward:false tag pays nothing.
+    const tag = task.tagId ? await db.tags.get(task.tagId) : null;
+    const earn = stardustForTask(task, tag);
     await db.tasks.update(id, { completed: true, completedAt: Date.now() });
-    await awardStardust(earn);
+    if (earn > 0) await awardStardust(earn);
     await loadAll();
     return { stardust: earn };
   }, [awardStardust, loadAll]);
@@ -542,7 +557,8 @@ export function StoreProvider({ children }) {
     const task = await db.tasks.get(id);
     if (!task || !task.completed) return null;
 
-    const refund = stardustForDifficulty(task.difficulty);
+    const tag = task.tagId ? await db.tags.get(task.tagId) : null;
+    const refund = stardustForTask(task, tag);
     await db.tasks.update(id, { completed: false, completedAt: null });
     const state = await db.state.get('app');
     await db.state.update('app', {
@@ -560,6 +576,38 @@ export function StoreProvider({ children }) {
 
   const updateTask = useCallback(async (id, updates) => {
     await db.tasks.update(id, updates);
+    await loadAll();
+  }, [loadAll]);
+
+  // ====== TASK TAG OPERATIONS ======
+
+  const addTag = useCallback(async (name, icon, reward = true) => {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    // Guard against a slug that already exists (collision or re-add).
+    let id = slug || 'tag';
+    const existingIds = new Set(tags.map(t => t.id));
+    if (existingIds.has(id)) {
+      let n = 2;
+      while (existingIds.has(`${id}_${n}`)) n++;
+      id = `${id}_${n}`;
+    }
+    const maxOrder = tags.reduce((max, t) => Math.max(max, t.sortOrder || 0), -1);
+    await db.tags.add({ id, name, icon, reward: reward !== false, sortOrder: maxOrder + 1 });
+    await loadAll();
+    return id;
+  }, [tags, loadAll]);
+
+  const updateTag = useCallback(async (id, updates) => {
+    await db.tags.update(id, updates);
+    await loadAll();
+  }, [loadAll]);
+
+  // Hard delete a tag. Tasks filed under it aren't deleted — they're just
+  // untagged (tagId cleared), which drops them back into the default view.
+  const deleteTag = useCallback(async (id) => {
+    await db.tags.delete(id);
+    // tagId isn't indexed — filter in memory rather than where('tagId').
+    await db.tasks.filter(t => t.tagId === id).modify({ tagId: null });
     await loadAll();
   }, [loadAll]);
 
@@ -967,6 +1015,7 @@ export function StoreProvider({ children }) {
       timeCategories,
       timeLogs,
       weeklyResolutions,
+      tags,
       addTimeCategory,
       updateTimeCategory,
       archiveTimeCategory,
@@ -1007,6 +1056,9 @@ export function StoreProvider({ children }) {
       uncheckTask,
       deleteTask,
       updateTask,
+      addTag,
+      updateTag,
+      deleteTag,
       getCharacterState,
       isCharacterUnlocked,
       canInteract,

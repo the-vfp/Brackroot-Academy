@@ -2,6 +2,19 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-26 — Task tags: project menus with their own reward rules
+
+### Added
+- **Project tags for tasks.** Tasks can now carry a single project tag (e.g. `Brackroot`, `Errands`), created and managed in **Settings → Manage Task Tags**. The intent: make Brackroot the quick-capture home for project ideas/to-dos — tag + difficulty assigned right at capture, no separate "organize later" step.
+- **Per-tag reward toggle.** Each tag has an **Earns Stardust** switch. Turn it **off** and tasks under that tag keep their difficulty purely as an *energy label* (still set, still sorts) but pay **no Stardust** when completed. This is for "menu" projects — the idea is to reward yourself once for a whole work block (a recurring "vibe code day" task), not per small item, so the menu items don't dilute the economy or feel like obligations.
+- **Filter bar.** `Untagged` (the default view — your real-life to-dos), one chip per tag, and `All`. The untagged-default keeps the daily list honest: project menus stay hidden until you deliberately filter into them. **Overdue tasks always show regardless of the filter** — overdue is a safety surface and shouldn't be hideable.
+- **Sort control.** `Added` (newest first), `A–Z`, and `Difficulty` (Easy→Hard by default, tap again to flip). The difficulty sort pairs with the energy framing — "I'm low on energy, what's easy?" Sorting applies to the Today bucket (the shoppable menu); Overdue and Upcoming stay in date order.
+- A tag chip now shows on each task row, and reward-off tasks display their difficulty tier (e.g. *Easy*) in muted text instead of a Stardust value.
+
+### Notes
+- The tag picker, filter, and sort controls only appear once you've created at least one tag — until then the Tasks view is unchanged.
+- Schema bumped to **v9** (new `tags` table; tasks gain a nullable `tagId`). Deleting a tag untags its tasks rather than deleting them. Tags are included in JSON export/import.
+
 ## 2026-06-21 — New app icon: cozy pixel Stardust star
 
 ### Changed

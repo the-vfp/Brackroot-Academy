@@ -1317,6 +1317,128 @@ html, body, #root {
   color: var(--danger);
 }
 
+/* ====== TASK TAGS ====== */
+/* Tag chips in the add/edit forms (single-select: None + each tag) */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+.task-add-tags { margin-top: 4px; }
+.tag-option {
+  padding: 7px 12px;
+  background: var(--bg-warm);
+  border: 1px solid var(--border-warm);
+  border-radius: var(--radius-sm);
+  color: var(--text-warm);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tag-option:hover { border-color: var(--accent-amber); }
+.tag-option.selected {
+  border-color: var(--accent-gold);
+  background: rgba(232, 184, 74, 0.1);
+  color: var(--text-cream);
+}
+.tag-option-icon { margin-right: 4px; }
+
+/* Filter + sort control bar (only shown once tags exist) */
+.task-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.task-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.task-filter-chip {
+  padding: 6px 12px;
+  background: var(--bg-warm);
+  border: 1px solid var(--border-warm);
+  border-radius: 999px;
+  color: var(--text-warm);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.task-filter-chip:hover { border-color: var(--accent-amber); }
+.task-filter-chip.selected {
+  border-color: var(--accent-gold);
+  background: rgba(232, 184, 74, 0.14);
+  color: var(--text-cream);
+}
+.task-sort-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.task-sort-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--accent-3);
+  font-weight: 600;
+  margin-right: 2px;
+}
+.task-sort-chip {
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid var(--border-warm);
+  border-radius: var(--radius-sm);
+  color: var(--text-warm);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.task-sort-chip:hover { border-color: var(--accent-amber); }
+.task-sort-chip.selected {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* Tag chip on a task row + muted reward label for no-Stardust tasks */
+.task-tag-chip {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  color: var(--accent-gold);
+  letter-spacing: 0.3px;
+}
+.task-meta-muted {
+  color: var(--text-warm);
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* Reward toggle in the Tag manager */
+.tag-reward-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-cream);
+  cursor: pointer;
+  user-select: none;
+}
+.tag-reward-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-gold);
+  cursor: pointer;
+}
+
 /* ====== SCHEDULE PICKER ====== */
 .schedule-picker {
   width: 100%;

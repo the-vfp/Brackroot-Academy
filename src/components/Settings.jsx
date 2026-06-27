@@ -3,6 +3,7 @@ import { useStore } from '../store.jsx';
 import { useToast } from './Toast.jsx';
 import CategoryManager from './CategoryManager.jsx';
 import TimeCategoryManager from './TimeCategoryManager.jsx';
+import TagManager from './TagManager.jsx';
 
 function formatHour(h) {
   if (h === 0) return 'Midnight';
@@ -21,12 +22,16 @@ export default function Settings() {
   const fileInputRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
   const [showTimeCategories, setShowTimeCategories] = useState(false);
+  const [showTags, setShowTags] = useState(false);
 
   if (showCategories) {
     return <CategoryManager onBack={() => setShowCategories(false)} />;
   }
   if (showTimeCategories) {
     return <TimeCategoryManager onBack={() => setShowTimeCategories(false)} />;
+  }
+  if (showTags) {
+    return <TagManager onBack={() => setShowTags(false)} />;
   }
 
   async function onImport(e) {
@@ -87,6 +92,9 @@ export default function Settings() {
         </button>
         <button className="btn-secondary" onClick={() => setShowTimeCategories(true)}>
           {'\u231B'} Manage Time Categories
+        </button>
+        <button className="btn-secondary" onClick={() => setShowTags(true)}>
+          {'\u{1F3F7}'}{'\uFE0F'} Manage Task Tags
         </button>
       </div>
 

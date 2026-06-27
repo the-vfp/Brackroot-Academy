@@ -152,6 +152,31 @@ db.version(8).stores({
   }
 });
 
+// v9 — Task tags: project-based tags for tasks, managed in Settings.
+// Each tag carries a `reward` toggle (default true). When off, a task with
+// that tag still keeps its difficulty (for energy + sorting) but pays no
+// Stardust. Tasks reference a tag via `tagId` (nullable; one tag per task).
+// `tagId` isn't indexed — filtering happens in memory over the small task set.
+// New empty table, so no row migration is needed.
+db.version(9).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, timestamp',
+  characters: 'id',
+  interactions: '++id, characterId, date, timestamp',
+  events: 'id, purchasedAt',
+  challenges: '++id, status, startedAt',
+  heartEvents: '[characterId+level], characterId, timestamp',
+  timeCategories: '++id, sortOrder',
+  timeLogs: '++id, date, categoryId, [date+categoryId], timestamp',
+  weeklyResolutions: 'weekStart',
+  tags: 'id, sortOrder'
+});
+
 // Initialize default state values if they don't exist
 export async function initializeState() {
   const existing = await db.state.get('app');
@@ -545,8 +570,9 @@ export async function exportAllData() {
   const timeCategories = await db.timeCategories.toArray();
   const timeLogs = await db.timeLogs.toArray();
   const weeklyResolutions = await db.weeklyResolutions.toArray();
+  const tags = await db.tags.toArray();
   return {
-    version: 8,
+    version: 9,
     exportedAt: new Date().toISOString(),
     state: {
       stardust: appState.stardust || 0,
@@ -572,7 +598,8 @@ export async function exportAllData() {
     heartEvents,
     timeCategories,
     timeLogs,
-    weeklyResolutions
+    weeklyResolutions,
+    tags
   };
 }
 
@@ -627,10 +654,10 @@ function transformCategoriesToV6(list) {
 export async function importAllData(data) {
   let stateData, expenses, habits, habitLogs, meals, categories, tasks;
   let characters = null, interactions = null, events = null, challenges = null, heartEvents = null;
-  let timeCategories = null, timeLogs = null, weeklyResolutions = null;
+  let timeCategories = null, timeLogs = null, weeklyResolutions = null, tags = null;
   const version = data.version;
 
-  if ((version === 8 || version === 7 || version === 6) && data.state) {
+  if ((version === 9 || version === 8 || version === 7 || version === 6) && data.state) {
     // v6–v8: round-trip — preserve stardust as stored.
     stateData = {
       stardust: data.state.stardust || 0,
@@ -657,6 +684,7 @@ export async function importAllData(data) {
     timeCategories = data.timeCategories || null;
     timeLogs = data.timeLogs || null;
     weeklyResolutions = data.weeklyResolutions || null;
+    tags = data.tags || null;
   } else if ((version === 5 || version === 4 || version === 3 || version === 2 || version === 1) && data.state) {
     // Pre-v6: drop silverPerCategory / budgets / unlockedBuildings; reset currency.
     stateData = {
@@ -707,6 +735,7 @@ export async function importAllData(data) {
   await db.timeCategories.clear();
   await db.timeLogs.clear();
   await db.weeklyResolutions.clear();
+  await db.tags.clear();
 
   // Write state
   await db.state.put({ key: 'app', ...stateData });
@@ -731,6 +760,7 @@ export async function importAllData(data) {
   if (timeCategories && timeCategories.length > 0) await db.timeCategories.bulkAdd(timeCategories);
   if (timeLogs && timeLogs.length > 0) await db.timeLogs.bulkAdd(timeLogs);
   if (weeklyResolutions && weeklyResolutions.length > 0) await db.weeklyResolutions.bulkAdd(weeklyResolutions);
+  if (tags && tags.length > 0) await db.tags.bulkAdd(tags);
 
   // Repair: if the imported payload predates the character system, the table is
   // empty after clear(). Re-seed defaults and reconcile any purchased unlock events.
@@ -754,6 +784,7 @@ export async function resetAllData() {
   await db.timeCategories.clear();
   await db.timeLogs.clear();
   await db.weeklyResolutions.clear();
+  await db.tags.clear();
   await db.habits.bulkAdd(DEFAULT_HABITS);
   await db.categories.bulkAdd(
     DEFAULT_CATEGORIES.map((c, i) => ({

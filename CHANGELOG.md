@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-27 — Stable habit keys (groundwork for Challenges)
+
+### Added
+- **Default habits now carry a stable `key` slug** (`journal`, `tidy`, `read`, `walk`, `creative-writing`, `cook`, plus the rest). This is the durable handle the upcoming **Challenges** system needs to tie a habit to a character (Journal → Marlow, etc.) — the auto-increment `id` differs per install and a name can be renamed, so neither could be referenced from code. User-created habits have no key.
+
+### Notes
+- Schema bumped to **v10** (the `habits` table gains an indexed `key`). The upgrade backfills existing default habits by name; a default that was renamed won't be matched (acceptable — it just isn't challenge-referenceable until re-created). JSON import backfills the same way for pre-v10 payloads, and export is now v10.
+- No visible UI change — this is pure groundwork. The Challenges feature itself remains unbuilt (see the vault spec); this only lays the identity rail it will ride on.
+
 ## 2026-06-26 — Tasks page redesign: collapsible capture + a calmer control bar
 
 ### Changed

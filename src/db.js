@@ -177,6 +177,35 @@ db.version(9).stores({
   tags: 'id, sortOrder'
 });
 
+// v10 — Stable habit keys: default habits gain an indexed `key` slug so the
+// upcoming challenge system can reference a specific habit (e.g. Journal →
+// Marlow) durably, independent of the per-install auto-increment id or a
+// user-editable name. Backfills existing default rows by name. User-created
+// habits keep key === undefined (Dexie skips undefined index entries).
+db.version(10).stores({
+  expenses: '++id, category, date, timestamp',
+  state: 'key',
+  habits: '++id, sortOrder, key',
+  habitLogs: '++id, date, habitId, [date+habitId]',
+  meals: '++id, date, timestamp, mealType, source',
+  categories: 'id, sortOrder',
+  tasks: '++id, completed, timestamp',
+  characters: 'id',
+  interactions: '++id, characterId, date, timestamp',
+  events: 'id, purchasedAt',
+  challenges: '++id, status, startedAt',
+  heartEvents: '[characterId+level], characterId, timestamp',
+  timeCategories: '++id, sortOrder',
+  timeLogs: '++id, date, categoryId, [date+categoryId], timestamp',
+  weeklyResolutions: 'weekStart',
+  tags: 'id, sortOrder'
+}).upgrade(async tx => {
+  const keyByName = new Map(DEFAULT_HABITS.map(h => [h.name, h.key]));
+  await tx.table('habits').toCollection().modify(h => {
+    if (!h.key && keyByName.has(h.name)) h.key = keyByName.get(h.name);
+  });
+});
+
 // Initialize default state values if they don't exist
 export async function initializeState() {
   const existing = await db.state.get('app');
@@ -408,18 +437,36 @@ export async function migrateFromLocalStorage() {
 
 // Default habit definitions
 // type: 'daily' = checkbox (once per day), 'repeatable' = counter (multiple per day)
+// `key` is a STABLE slug for the seeded defaults \u2014 distinct from the per-install
+// auto-increment `id`. Code that needs to reference a specific default habit
+// (e.g. challenge definitions tying "Journal" \u2192 Marlow) keys off this, since the
+// numeric id differs per install and a name can be renamed. User-created habits
+// have no `key`. The six character-tied defaults are journal/tidy/read/walk/
+// creative-writing/cook \u2014 see the Challenges spec.
 export const DEFAULT_HABITS = [
-  { name: 'Drink water', icon: '\u{1F4A7}', category: 'health', type: 'repeatable', sortOrder: 0 },
-  { name: 'Walk / steps', icon: '\u{1F6B6}', category: 'transport', type: 'daily', sortOrder: 1 },
-  { name: 'Journal', icon: '\u{1F4D3}', category: 'stationery', type: 'daily', sortOrder: 2 },
-  { name: 'Read', icon: '\u{1F4D6}', category: 'stationery', type: 'daily', sortOrder: 3 },
-  { name: 'Went to bed on time', icon: '\u{1F319}', category: 'bills', type: 'daily', sortOrder: 4 },
-  { name: 'Took medication', icon: '\u{1F48A}', category: 'health', type: 'daily', sortOrder: 5 },
-  { name: 'Cooked a meal', icon: '\u{1F373}', category: 'groceries', type: 'repeatable', sortOrder: 6 },
-  { name: 'Tidied up', icon: '\u{1F9F9}', category: 'bills', type: 'daily', sortOrder: 7 },
-  { name: 'Creative writing', icon: '\u2728', category: 'stationery', type: 'daily', sortOrder: 8 },
-  { name: 'Went outside', icon: '\u{1F324}', category: 'transport', type: 'daily', sortOrder: 9 },
+  { key: 'water', name: 'Drink water', icon: '\u{1F4A7}', category: 'health', type: 'repeatable', sortOrder: 0 },
+  { key: 'walk', name: 'Walk / steps', icon: '\u{1F6B6}', category: 'transport', type: 'daily', sortOrder: 1 },
+  { key: 'journal', name: 'Journal', icon: '\u{1F4D3}', category: 'stationery', type: 'daily', sortOrder: 2 },
+  { key: 'read', name: 'Read', icon: '\u{1F4D6}', category: 'stationery', type: 'daily', sortOrder: 3 },
+  { key: 'bedtime', name: 'Went to bed on time', icon: '\u{1F319}', category: 'bills', type: 'daily', sortOrder: 4 },
+  { key: 'medication', name: 'Took medication', icon: '\u{1F48A}', category: 'health', type: 'daily', sortOrder: 5 },
+  { key: 'cook', name: 'Cooked a meal', icon: '\u{1F373}', category: 'groceries', type: 'repeatable', sortOrder: 6 },
+  { key: 'tidy', name: 'Tidied up', icon: '\u{1F9F9}', category: 'bills', type: 'daily', sortOrder: 7 },
+  { key: 'creative-writing', name: 'Creative writing', icon: '\u2728', category: 'stationery', type: 'daily', sortOrder: 8 },
+  { key: 'outside', name: 'Went outside', icon: '\u{1F324}', category: 'transport', type: 'daily', sortOrder: 9 },
 ];
+
+// Backfill stable `key` slugs onto default habits that predate the field.
+// Best-effort by NAME: only rows still carrying an original default name get a
+// key (a renamed default can't be identified, which is acceptable \u2014 it just
+// won't be challenge-referenceable until re-created). Idempotent: skips rows
+// that already have a key. Used by the v10 upgrade and after JSON import.
+export async function backfillHabitKeys() {
+  const keyByName = new Map(DEFAULT_HABITS.map(h => [h.name, h.key]));
+  await db.habits.toCollection().modify(h => {
+    if (!h.key && keyByName.has(h.name)) h.key = keyByName.get(h.name);
+  });
+}
 
 // Seed defaults exactly once per install. The state flag is the source of
 // truth — checking only `count === 0` would reseed every time the user
@@ -553,7 +600,7 @@ export async function reconcileCharactersFromEvents() {
   }
 }
 
-// Export all data as JSON (v8).
+// Export all data as JSON (v10).
 export async function exportAllData() {
   const appState = await db.state.get('app');
   const expenses = await db.expenses.toArray();
@@ -572,7 +619,7 @@ export async function exportAllData() {
   const weeklyResolutions = await db.weeklyResolutions.toArray();
   const tags = await db.tags.toArray();
   return {
-    version: 9,
+    version: 10,
     exportedAt: new Date().toISOString(),
     state: {
       stardust: appState.stardust || 0,
@@ -650,15 +697,15 @@ function transformCategoriesToV6(list) {
   }));
 }
 
-// Import data from JSON (accepts v1–v8 payloads).
+// Import data from JSON (accepts v1–v10 payloads).
 export async function importAllData(data) {
   let stateData, expenses, habits, habitLogs, meals, categories, tasks;
   let characters = null, interactions = null, events = null, challenges = null, heartEvents = null;
   let timeCategories = null, timeLogs = null, weeklyResolutions = null, tags = null;
   const version = data.version;
 
-  if ((version === 9 || version === 8 || version === 7 || version === 6) && data.state) {
-    // v6–v8: round-trip — preserve stardust as stored.
+  if ((version === 10 || version === 9 || version === 8 || version === 7 || version === 6) && data.state) {
+    // v6–v10: round-trip — preserve stardust as stored.
     stateData = {
       stardust: data.state.stardust || 0,
       totalStardustEarned: data.state.totalStardustEarned || 0,
@@ -766,6 +813,9 @@ export async function importAllData(data) {
   // empty after clear(). Re-seed defaults and reconcile any purchased unlock events.
   await initializeCharacters();
   await reconcileCharactersFromEvents();
+
+  // Backfill habit keys for payloads exported before v10 (default habits by name).
+  await backfillHabitKeys();
 }
 
 // Reset all data

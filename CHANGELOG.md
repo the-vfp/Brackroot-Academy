@@ -2,6 +2,16 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-27 — Insights: the Daily Recap (a new Journal sub-page)
+
+### Added
+- **A new third sub-page in Journal — Insights.** It's a calm, read-only "diary page the app writes for you" from what you already logged. Land on today, step back a day with the `‹ ›` keys, or tap the date plaque to open a **month calendar** and jump to any past day. Each day is rendered as an **Almanac entry**: a single cozy-book panel with a dated masthead, a factual one-line tally, and ruled ledger sections — **Habits · Tasks · Meals · Spending · Time · Visits** — each a dotted-leader row. Habits show `kept` or `×N`; meals show their type + a source glyph (🏠 home-cooked · 🍴 dining out · 🛵 delivery · 🥡 prepped); spending carries a gold day total; time sums hours per category; visits list who you spent time with.
+- **Warm empty + sparse states.** A day with nothing logged shows a soft in-world line (`The page rests empty`) and a *Return to today* key instead of a wall of zeroes; a thin day reads e.g. `1 habit · 1 meal — a slow day`. Empty sections simply vanish — the page never scores or scolds.
+- **Month-calendar date picker** with gold dots on days that have any entry, today/selected highlighting, faded future days, and a one-tap `↩ Today`.
+
+### Notes
+- **Pure reference layer** — nothing here earns or spends Stardust, shifts RP, or unlocks anything, and there's no editing; logging stays in Ledger/Tend. No schema changes: every block reads existing dated tables (`habitLogs`, `tasks` by `completedAt`, `meals`, `expenses`, `timeLogs`, `interactions`). Built in the pixel system's `--bk-*` tokens, so it themes across day/dusk/night automatically. A Trends/rollups view is a planned Phase-2 sibling.
+
 ## 2026-06-27 — Archive habits (keep their history)
 
 ### Added

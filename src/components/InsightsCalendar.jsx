@@ -1,29 +1,6 @@
 import { useState } from 'react';
 import { localDateString } from '../db.js';
 
-// Pixel calendar glyph — 16×16 crispEdges sprite, body in currentColor with one
-// gold day-cell. Authored from the design handoff masthead. Reused by the date
-// plaque (Insights.jsx) and the calendar header here.
-export function PixelCalendarIcon({ size = 15 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" shapeRendering="crispEdges" style={{ display: 'block', color: 'var(--bk-ink-strong)' }}>
-      <g fill="currentColor">
-        <rect x="5" y="1" width="1" height="3" />
-        <rect x="10" y="1" width="1" height="3" />
-        <rect x="3" y="3" width="10" height="1" />
-        <rect x="3" y="13" width="10" height="1" />
-        <rect x="3" y="3" width="1" height="11" />
-        <rect x="12" y="3" width="1" height="11" />
-        <rect x="3" y="6" width="10" height="1" />
-        <rect x="9" y="8" width="2" height="2" />
-        <rect x="5" y="11" width="2" height="2" />
-        <rect x="9" y="11" width="2" height="2" />
-      </g>
-      <rect x="5" y="8" width="2" height="2" fill="#E9B949" />
-    </svg>
-  );
-}
-
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 // Build the cells for a month grid: leading blanks, the month's days, then
@@ -73,7 +50,6 @@ export default function InsightsCalendar({ selectedDay, today, loggedDays, onPic
       <div className="ins-cal-shell" onClick={e => e.stopPropagation()}>
         <div className="ins-cal-titlebar">
           <span className="ins-cal-title">Turn to a day</span>
-          <button className="ins-cal-close" onClick={onClose} aria-label="Close calendar">{'✕'}</button>
         </div>
 
         <div className="bk-cal">

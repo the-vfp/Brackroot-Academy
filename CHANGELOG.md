@@ -9,6 +9,10 @@ All notable changes to Brackroot Academy are documented here.
 - **Warm empty + sparse states.** A day with nothing logged shows a soft in-world line (`The page rests empty`) and a *Return to today* key instead of a wall of zeroes; a thin day reads e.g. `1 habit · 1 meal — a slow day`. Empty sections simply vanish — the page never scores or scolds.
 - **Month-calendar date picker** with gold dots on days that have any entry, today/selected highlighting, faded future days, and a one-tap `↩ Today`.
 
+### Changed (same-day polish)
+- Lightened the masthead: dropped the date-plaque calendar glyph, switched the date/arrow keys (and the calendar's keys) from the chunky 2px raised box to a **thin 1px outline**, and removed the calendar's `✕` (tap outside to close, as is conventional).
+- Made the tally line **upright** (was italic, which was hard to read) and let the **spending amounts and time hours render at normal weight** — DotGothic16 is single-weight, so the previous `700` only produced heavy faux-bold. The gold spending **total** stays emphasized.
+
 ### Notes
 - **Pure reference layer** — nothing here earns or spends Stardust, shifts RP, or unlocks anything, and there's no editing; logging stays in Ledger/Tend. No schema changes: every block reads existing dated tables (`habitLogs`, `tasks` by `completedAt`, `meals`, `expenses`, `timeLogs`, `interactions`). Built in the pixel system's `--bk-*` tokens, so it themes across day/dusk/night automatically. A Trends/rollups view is a planned Phase-2 sibling.
 

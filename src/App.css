@@ -3056,12 +3056,11 @@ html, body, #root {
   width: 28px; height: 30px;
   background: var(--bk-surface); color: var(--bk-ink);
   border: none; font-family: var(--bk-font-body); font-size: 14px;
-  box-shadow: 0 0 0 2px var(--bk-ink-strong), 3px 3px 0 0 var(--bk-shadow);
+  box-shadow: 0 0 0 1px var(--bk-ink-strong);
   cursor: pointer;
 }
 .almanac-key:active:not(:disabled) {
-  transform: translate(3px, 3px);
-  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  background: var(--bk-paper-deep);
 }
 .almanac-key:disabled {
   opacity: 0.4; color: var(--bk-ink-soft); cursor: default;
@@ -3069,12 +3068,11 @@ html, body, #root {
 .almanac-plaque {
   display: inline-flex; align-items: center; gap: 9px;
   padding: 7px 14px; background: var(--bk-surface); border: none;
-  box-shadow: 0 0 0 2px var(--bk-ink-strong), 3px 3px 0 0 var(--bk-shadow);
+  box-shadow: 0 0 0 1px var(--bk-ink-strong);
   cursor: pointer;
 }
 .almanac-plaque:active {
-  transform: translate(3px, 3px);
-  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  background: var(--bk-paper-deep);
 }
 .almanac-plaque-date {
   font-family: var(--bk-font-head); font-size: 20px;
@@ -3089,7 +3087,7 @@ html, body, #root {
 
 /* — Tally line — */
 .almanac-tally {
-  font-style: italic; font-size: 12px; color: var(--bk-ink-soft);
+  font-size: 12px; color: var(--bk-ink-soft);
   text-align: center; padding: 9px 0;
   border-top: 1px solid var(--bk-border);
   border-bottom: 1px solid var(--bk-border);
@@ -3128,7 +3126,7 @@ html, body, #root {
   white-space: nowrap; flex-shrink: 0;
 }
 .almanac-row-amt {
-  font-weight: 700; color: var(--bk-ink-strong); flex-shrink: 0;
+  color: var(--bk-ink-strong); flex-shrink: 0;
 }
 
 /* — Spending total — */
@@ -3203,7 +3201,7 @@ html, body, #root {
 }
 .ins-cal-shell { width: 100%; max-width: 340px; }
 .ins-cal-titlebar {
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center;
   margin-bottom: 10px;
 }
 .ins-cal-title {
@@ -3211,13 +3209,6 @@ html, body, #root {
   font-size: var(--bk-text-micro); letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--bk-stardust-shimmer);
 }
-.ins-cal-close {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; background: var(--bk-surface);
-  color: var(--bk-ink); border: none; font-size: 13px; cursor: pointer;
-  box-shadow: 0 0 0 2px var(--bk-ink-strong), 3px 3px 0 0 var(--bk-shadow);
-}
-.ins-cal-close:active { transform: translate(3px, 3px); box-shadow: 0 0 0 2px var(--bk-ink-strong); }
 
 .bk-cal {
   background: var(--bk-surface);
@@ -3232,9 +3223,9 @@ html, body, #root {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; background: var(--bk-paper-deep);
   color: var(--bk-ink); border: none; font-size: 14px; cursor: pointer;
-  box-shadow: 0 0 0 2px var(--bk-border);
+  box-shadow: 0 0 0 1px var(--bk-border);
 }
-.bk-cal-monthbtn:active { transform: translate(1px, 1px); }
+.bk-cal-monthbtn:active { background: var(--bk-surface); }
 .bk-cal-monthlabel {
   font-family: var(--bk-font-head); font-size: 18px;
   color: var(--bk-ink-strong); letter-spacing: 0.02em;
@@ -3254,8 +3245,8 @@ html, body, #root {
   cursor: pointer;
 }
 .bk-cal-cell.selected {
-  font-weight: 700; color: #3A2A1E; background: var(--bk-stardust);
-  box-shadow: 0 0 0 2px var(--bk-ink-strong);
+  color: #3A2A1E; background: var(--bk-stardust);
+  box-shadow: 0 0 0 1px var(--bk-ink-strong);
 }
 .bk-cal-cell.future { color: var(--bk-ink-soft); opacity: 0.4; cursor: default; }
 .bk-cal-cell.adjacent { color: var(--bk-ink-soft); opacity: 0.22; cursor: default; }
@@ -3278,6 +3269,6 @@ html, body, #root {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 12px; background: var(--bk-surface); color: var(--bk-ink);
   border: none; font-family: var(--bk-font-body); font-size: 12px; cursor: pointer;
-  box-shadow: 0 0 0 2px var(--bk-ink-strong), 3px 3px 0 0 var(--bk-shadow);
+  box-shadow: 0 0 0 1px var(--bk-ink-strong);
 }
-.bk-cal-today-btn:active { transform: translate(3px, 3px); box-shadow: 0 0 0 2px var(--bk-ink-strong); }
+.bk-cal-today-btn:active { background: var(--bk-paper-deep); }

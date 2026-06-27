@@ -3,7 +3,7 @@ import { useStore } from '../store.jsx';
 import { localDateString, addDaysToDate } from '../db.js';
 import { getCategoryIcon } from '../data/categories.js';
 import { CHARACTER_DEFS } from '../data/characters.js';
-import InsightsCalendar, { PixelCalendarIcon } from './InsightsCalendar.jsx';
+import InsightsCalendar from './InsightsCalendar.jsx';
 
 // Meal type → left-hand emoji (the most meaningful glyph the data carries; meals
 // store no custom emoji). Mirrors MealEntry's MEAL_TYPES.
@@ -204,7 +204,6 @@ export default function Insights() {
           <div className="almanac-daterow">
             <button className="almanac-key" onClick={() => step(-1)} aria-label="Previous day">{'‹'}</button>
             <button className="almanac-plaque" onClick={() => setCalendarOpen(true)} aria-label="Open calendar">
-              <PixelCalendarIcon size={15} />
               <span className="almanac-plaque-date">{fmtPlaque(selectedDay)}</span>
             </button>
             <button

@@ -25,7 +25,7 @@ export default {
   midChat: [
     "Vice Chair. You've been vibrating at that desk for ten minutes. Either tell me what you're working on or go get coffee. Preferably both.",
     "I held the meeting until you got here. No one complained. They know better.",
-    "A first-year mistook me for approachable and asked if I could relay a message to you. I told her she'd have better luck asking the Wind. I believe she's still confused.",
+    "Someone left a message for you with me — they assumed I'd see you before they would. They were right. Consider it delivered.",
     "You're in a better mood than when you left this morning. I don't need to know why. I just needed to know.",
     "The office is quieter when you're not in it. Not better. Just quieter.",
     "If you see me shimmer, tell Richard. I want him to think his trick worked this time."

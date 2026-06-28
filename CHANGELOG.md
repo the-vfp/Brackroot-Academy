@@ -9,6 +9,7 @@ All notable changes to Brackroot Academy are documented here.
 
 ### Notes
 - Faithful port, no rewriting — Chat lines stripped of their markdown quote-wrapping, Hang Out prose keeps its embedded dialogue. Lv 7–10 (late Chat/Hang Out/Bond + capstone) stay intentional stubs, held for interweaving with the other character arcs. Source of truth remains the vault: `Life Tracker App/Brendan/Brendan Selma — Line Pool.md`. No code or schema changes — `drawLine` picks up the populated pools immediately.
+- Ran the lines past the loremaster. One catch: a mid-tier Chat line had Brendan name "the Wind" (Ellene's private secret no NPC may know) while brushing off a first-year — off on two counts. Reworked into a flat, unbothered "message delivered" line that keeps him perfectly courteous rather than dismissive.
 
 ## 2026-06-28 — Join the SGC (Brendan is reachable)
 

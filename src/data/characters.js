@@ -35,8 +35,8 @@ export const CHARACTER_DEFS = {
     silhouette: '\u{1F3DB}\uFE0F',
     activity: 'Tidy up',
     activityHabitName: 'Tidied up',
-    unlockEventId: 'sgc_elections',
-    unlockHint: 'Complete the SGC Elections challenge',
+    unlockEventId: 'join_sgc',
+    unlockHint: 'Join the Student Governance Council',
     titles: [
       'Fellow Freshman',
       'Recognized Competency',

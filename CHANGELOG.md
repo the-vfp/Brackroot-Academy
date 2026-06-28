@@ -2,6 +2,17 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-28 — Join the SGC (Brendan is reachable)
+
+### Added
+- **A new narrative event: "Join the Student Governance Council" (100 ✨), which unlocks Brendan Selma.** Brendan was previously gated behind the unbuilt *SGC Elections* challenge (Phase 4), so he — and everyone downstream of him — couldn't be unlocked at all. Now joining the SGC is the door in: purchasing it meets Brendan and plays his Level 1 heart event, the same as the other character-unlock events. This also un-walls **Richard** (needs Brendan Lv 2) and **Peter** (needs Brendan Lv 3).
+
+### Changed
+- Brendan's `unlockEventId` now points at `join_sgc` instead of `sgc_elections`. The *SGC Elections* challenge is being repurposed from his unlock into a **gate on his Level 5 heart event** ("Chair and Vice") — wiring for that is still ahead.
+
+### Notes
+- No schema change — `join_sgc` is just a new row in `EVENTS`, so it surfaces in the Events list and Map automatically. Cost (100 ✨) sits between Marlow (50) and Sophia (150); easy to retune.
+
 ## 2026-06-27 — Sophia's chat line pool (early + mid)
 
 ### Added

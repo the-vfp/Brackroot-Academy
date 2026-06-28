@@ -27,6 +27,14 @@ export const EVENTS = [
     flavor: null
   },
   {
+    id: 'join_sgc',
+    title: 'Join the Student Governance Council',
+    cost: 100,
+    unlocks: { type: 'character', characterId: 'brendan' },
+    requires: [],
+    flavor: null
+  },
+  {
     id: 'plan_autumn_masquerade',
     title: 'Plan the Autumn Masquerade',
     cost: 200,
@@ -50,8 +58,9 @@ export const EVENTS = [
     requires: [{ type: 'character_level', characterId: 'brendan', level: 5 }],
     flavor: null
   }
-  // Note: Brendan's unlock is via the "SGC Elections" challenge (Phase 4),
-  // not an event. It's not listed here.
+  // Note: the "SGC Elections" challenge (Phase 4) doesn't unlock anyone — it
+  // gates Brendan's Level 5 heart event ("Chair and Vice"). Joining the SGC
+  // above is what unlocks Brendan; the elections are a later milestone.
 ];
 
 export function getEvent(id) {

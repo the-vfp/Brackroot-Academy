@@ -2,6 +2,14 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-28 — Brendan starts talking (tier 1–2 lines + hang-outs)
+
+### Added
+- **Brendan Selma's day-to-day lines are in.** Ported his finished vault drafts into the app: **Chat** at Lv 1–3 (6 lines) and Lv 4–6 (6 lines), plus his **Hang Out** beats at Lv 4–6 (6 prose scenes). Until now he met you in a fully-written L1 heart event and then fell back to the `[stub]` placeholder for every interaction — now Chat and (once unlocked at Lv 4) Hang Out draw from real pools. His voice: composed, dry, control-as-care; regard shown through attention and acts of service, never flattery.
+
+### Notes
+- Faithful port, no rewriting — Chat lines stripped of their markdown quote-wrapping, Hang Out prose keeps its embedded dialogue. Lv 7–10 (late Chat/Hang Out/Bond + capstone) stay intentional stubs, held for interweaving with the other character arcs. Source of truth remains the vault: `Life Tracker App/Brendan/Brendan Selma — Line Pool.md`. No code or schema changes — `drawLine` picks up the populated pools immediately.
+
 ## 2026-06-28 — Join the SGC (Brendan is reachable)
 
 ### Added

@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-06-27 — Sophia's chat line pool (early + mid)
+
+### Added
+- **Sophia Barnes now talks.** Wrote her **Chat-tier** lines for the first two level brackets — early (Lv 1-3, Housemate → Scariest One in the Room) and mid (Lv 4-6, Divines Mascot → She Hears It Too), drawn at random when you Chat with her. Each bracket mixes her core character beats with lighter casual lines and observations about Marlow, Brendan, and Ellene. Her voice: precise, dry, self-contained — warmth shown through action, never flattery; the 1am kitchen is the spine. Late (7-9) and capstone (10) are intentionally left as stubs until that arc is mapped.
+- **Loremaster agent** (`.claude/agents/loremaster.md`) — a read-only canon-auditor for line-pool / heart-event drafts. It reads the app bibles, Arc Matrices, and Writing Brief and flags inconsistencies (wrong house/magic, lore a character couldn't know, timeline slips, voice drift, quoted scenes); the author then addresses the findings. Used it to vet this pool.
+
+### Notes
+- Chat tier only, brackets 1-2 — Hang Out and Bond pools (and late/capstone Chat) remain stubs that fall back to the visible `[stub]` placeholder. No code or schema changes; `drawLine` picks up populated pools immediately. Lines are mirrored to the vault at `Life Tracker App/Sophia/Sophia Barnes — Line Pool.md`.
+
 ## 2026-06-27 — Insights: the Daily Recap (a new Journal sub-page)
 
 ### Added

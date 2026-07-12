@@ -16,25 +16,30 @@
 //
 // The one gate defined so far: SGC Elections → Brendan's Level 4 heart event
 // (canon per Conditional Unlocks; the events.js L5 note was stale, now fixed).
-// The CHARACTER and LEVEL are settled; the GOAL below is a PLACEHOLDER — what
-// "running the elections" actually requires you to log is still Ellene's call,
-// so `provisional: true` flags it in the UI. Safe to ship because no level-hold
-// is wired into interactions yet: completing it records the completion (so the
-// event `challenge` gate resolves) but does not yet open L4. That activation
-// ships with the scene. More gates get added here as arcs are written.
+//
+// Win condition — "The Campaign": a two-front composite that mirrors running an
+// election together (Brendan's competence-as-care, the partnership arc) —
+// STRATEGY (journal on 8 days) + LEGWORK (finish 12 tasks). Both must be met.
+// Magnitudes are tunable. Still dormant: completing it records the completion
+// (so the event `challenge` gate resolves) but does not yet open L4 — the
+// level-hold + scene are the activation step, shipping with Brendan's L4 heart
+// event. More gates get added here as arcs are written.
 
 export const CHALLENGES = [
   {
     id: 'sgc_elections',
     title: 'SGC Elections',
-    blurb: 'Placeholder goal — keep order on 6 of 7 days.',
+    blurb: 'Journal on 8 days and finish 12 tasks.',
     characterId: 'brendan',
     gatesLevel: 4,
-    // PLACEHOLDER: Brendan's mapped shape (per-day-floor on `tidy`) stands in
-    // until the real win-condition for the elections is designed.
-    goal: { shape: 'per_day_floor', source: { type: 'habit', habitKey: 'tidy' }, perDay: 1, days: 6 },
+    goal: {
+      shape: 'composite',
+      parts: [
+        { shape: 'count', source: { type: 'habit', habitKey: 'journal' }, count: 8, unit: 'days journaled' },
+        { shape: 'count', source: { type: 'task' }, count: 12, unit: 'tasks done' },
+      ],
+    },
     requires: [{ type: 'character_level', characterId: 'brendan', level: 3 }],
-    provisional: true,
   },
 ];
 

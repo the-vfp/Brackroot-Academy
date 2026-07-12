@@ -23,7 +23,10 @@
 // }
 //
 // A SOURCE is one of:
-//   { type: 'habit',   habitKey }                 — completions of a default habit
+//   { type: 'habit',   habitKey?, difficulty? }   — habit completions, filtered by
+//                                                   a specific habit key and/or by
+//                                                   difficulty tier (e.g. all 'hard'
+//                                                   habits). Omit both = every habit.
 //   { type: 'meal',    mealSource? }              — meals, optionally by source id
 //   { type: 'task',    difficulty? }              — completed tasks, optionally by tier
 //   { type: 'fullday' }                           — Full Day bonus dates
@@ -52,9 +55,11 @@ function diffDays(a, b) {
 function sourceDates(source, ctx) {
   switch (source.type) {
     case 'habit': {
-      const habit = ctx.habits.find(h => h.key === source.habitKey);
-      if (!habit) return [];
-      return ctx.habitLogs.filter(l => l.habitId === habit.id).map(l => l.date);
+      let hs = ctx.habits;
+      if (source.habitKey) hs = hs.filter(h => h.key === source.habitKey);
+      if (source.difficulty) hs = hs.filter(h => (h.difficulty || 'medium') === source.difficulty);
+      const ids = new Set(hs.map(h => h.id));
+      return ctx.habitLogs.filter(l => ids.has(l.habitId)).map(l => l.date);
     }
     case 'meal': {
       let ms = ctx.meals;

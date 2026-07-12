@@ -14,56 +14,26 @@
 //   requires    prerequisite gates, same vocabulary as events.js `requires`
 //   provisional true while the level/goal are placeholders (shown flagged in UI)
 //
-// ⚠️ PROVISIONAL CONTENT: the entries below exercise the engine and follow the
-// spec's shape→character map, but the exact gated LEVELS and goal MAGNITUDES are
-// placeholders — Ellene finalizes them per-arc alongside the heart-event writing.
-// They are SAFE to ship because no level-hold is wired into interactions yet:
-// completing one records the completion (so event `challenge` gates resolve) but
-// does not currently open a level. That activation ships with the scenes.
-//
-// The canonical gate from Conditional Unlocks — SGC Elections → a Brendan heart
-// event — is intentionally omitted until its level is settled (the vault says L4,
-// events.js says L5; flagged for Ellene) and its goal is designed.
+// The one gate defined so far: SGC Elections → Brendan's Level 4 heart event
+// (canon per Conditional Unlocks; the events.js L5 note was stale, now fixed).
+// The CHARACTER and LEVEL are settled; the GOAL below is a PLACEHOLDER — what
+// "running the elections" actually requires you to log is still Ellene's call,
+// so `provisional: true` flags it in the UI. Safe to ship because no level-hold
+// is wired into interactions yet: completing it records the completion (so the
+// event `challenge` gate resolves) but does not yet open L4. That activation
+// ships with the scene. More gates get added here as arcs are written.
 
 export const CHALLENGES = [
   {
-    id: 'the_nightly_vigil',
-    title: 'The Nightly Vigil',
-    blurb: 'Journal 7 days running.',
-    characterId: 'marlow',
-    gatesLevel: 3,
-    goal: { shape: 'streak', source: { type: 'habit', habitKey: 'journal' }, days: 7 },
-    requires: [{ type: 'character_level', characterId: 'marlow', level: 2 }],
-    provisional: true,
-  },
-  {
-    id: 'order_in_the_chamber',
-    title: 'Order in the Chamber',
-    blurb: 'Tidy up on 6 of 7 days.',
+    id: 'sgc_elections',
+    title: 'SGC Elections',
+    blurb: 'Placeholder goal — keep order on 6 of 7 days.',
     characterId: 'brendan',
     gatesLevel: 4,
+    // PLACEHOLDER: Brendan's mapped shape (per-day-floor on `tidy`) stands in
+    // until the real win-condition for the elections is designed.
     goal: { shape: 'per_day_floor', source: { type: 'habit', habitKey: 'tidy' }, perDay: 1, days: 6 },
     requires: [{ type: 'character_level', characterId: 'brendan', level: 3 }],
-    provisional: true,
-  },
-  {
-    id: 'the_midnight_kitchen',
-    title: 'The Midnight Kitchen',
-    blurb: 'Cook 10 meals.',
-    characterId: 'sophia',
-    gatesLevel: 3,
-    goal: { shape: 'count', source: { type: 'habit', habitKey: 'cook' }, count: 10, unit: 'meals' },
-    requires: [{ type: 'character_level', characterId: 'sophia', level: 2 }],
-    provisional: true,
-  },
-  {
-    id: 'the_set_reading',
-    title: 'The Set Reading',
-    blurb: 'Log 3 Hard tasks.',
-    characterId: 'diana',
-    gatesLevel: 5,
-    goal: { shape: 'count', source: { type: 'task', difficulty: 'hard' }, count: 3, unit: 'hard tasks' },
-    requires: [{ type: 'character_level', characterId: 'diana', level: 4 }],
     provisional: true,
   },
 ];

@@ -58,9 +58,9 @@ export const EVENTS = [
     requires: [{ type: 'character_level', characterId: 'brendan', level: 5 }],
     flavor: null
   }
-  // Note: the "SGC Elections" challenge (Phase 4) doesn't unlock anyone — it
-  // gates Brendan's Level 5 heart event ("Chair and Vice"). Joining the SGC
-  // above is what unlocks Brendan; the elections are a later milestone.
+  // Note: the "SGC Elections" challenge doesn't unlock anyone — it gates
+  // Brendan's Level 4 heart event (see Conditional Unlocks + data/challenges.js).
+  // Joining the SGC above is what unlocks Brendan; the elections are a later gate.
 ];
 
 export function getEvent(id) {

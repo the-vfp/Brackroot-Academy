@@ -2,6 +2,11 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-07-12 — Night-mode text contrast on the gold spine
+
+### Fixed
+- **Gold buttons were near-illegible in the night theme.** `--text-dark` (the ink used on gold — primary CTAs like "Add" / "Add Habit", the selected difficulty/habit-type/meal pickers, the "New Day" highlight, and the heart-event Continue button) was aliased to `--bk-ink-strong`, which the night theme flips to near-white. Since the gold spine is constant across day/dusk/night, that put pale text on bright gold after dark. `--text-dark` is now a fixed dark brown in every theme, so on-gold text stays crisp at night. (This was the real cause behind the "hard to see" report — a contrast bug, not the font face.)
+
 ## 2026-07-12 — Tend & Hearth polish batch
 
 A round of usability fixes from a play-through.

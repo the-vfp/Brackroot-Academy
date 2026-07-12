@@ -27,12 +27,11 @@ export default function EventModal({ eventId, onClose }) {
     if (ev.unlocks?.type === 'character') {
       const def = CHARACTER_DEFS[ev.unlocks.characterId];
       showToast(`\u2728 ${def?.name || ev.unlocks.characterId} has entered the Academy.`);
-    }
-    // If the event unlocks a character, play the L1 heart event; otherwise show
-    // the event's own flavor text ceremony (non-character-unlock events only).
-    if (r.heartEvent) {
-      setPendingHeartEvent(r.heartEvent);
+      // The L1 heart event no longer auto-opens \u2014 it's recorded and waits as a
+      // letter on the Hearth. The modal re-renders into its purchased/Replay
+      // state, so the player can replay the intro here or read it from home.
     } else {
+      // Non-character events have no letter; show their flavor ceremony inline.
       setShowFlavor(true);
     }
   }

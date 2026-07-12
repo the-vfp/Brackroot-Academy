@@ -30,9 +30,8 @@ function nextRecurrenceDate(rec, todayDow, todayDateStr) {
   return `${y}-${m}-${day}`;
 }
 
-function formatDueDate(dateStr) {
+function formatDueDate(dateStr, today = localDateString()) {
   if (!dateStr) return null;
-  const today = localDateString();
   if (dateStr === today) return 'Today';
   const d = new Date(dateStr + 'T12:00:00');
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -152,9 +151,9 @@ function TagPicker({ tags, value, onChange, className = '' }) {
   );
 }
 
-function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, confirmingDelete }) {
+function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, confirmingDelete, today }) {
   const handlers = useLongPress(onLongPress, onTap);
-  const dueLabel = formatDueDate(task.dueDate);
+  const dueLabel = formatDueDate(task.dueDate, today);
   const recLabel = formatRecurrence(task.recurrence);
   const schedule = recLabel ? `\u{1F501} ${recLabel}` : (dueLabel ? `\u{1F4C5} ${dueLabel}` : null);
 
@@ -202,7 +201,7 @@ function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, 
 }
 
 export default function TaskView() {
-  const { tasks, tags, addTask, completeTask, uncheckTask, deleteTask, updateTask } = useStore();
+  const { tasks, tags, addTask, completeTask, uncheckTask, deleteTask, updateTask, getHabitDay } = useStore();
   const showToast = useToast();
   const [text, setText] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
@@ -243,7 +242,10 @@ export default function TaskView() {
     return () => window.removeEventListener('resize', measureFilter);
   }, [measureFilter, tags, hasTags, filter]);
 
-  const today = localDateString();
+  // "Today" follows the configured day-rollover hour (Settings → Day & Rollover),
+  // not calendar midnight — so a task logged at 1am with a 4am rollover still
+  // belongs to the previous day, matching the habit checklist.
+  const today = getHabitDay();
   const todayDow = new Date(today + 'T12:00:00').getDay();
 
   // A selected tag the user later deletes would leave the filter pointing at a
@@ -274,7 +276,9 @@ export default function TaskView() {
         return a.text.localeCompare(b.text);
       });
     }
-    return arr; // 'added' → leave in incoming (newest-first) order
+    // 'added' → oldest-first, so a newly added task lands at the bottom of the
+    // list (mirrors the Habits screen, where new habits also append at the end).
+    return arr.reverse();
   }
 
   // Bucket active tasks into Overdue / Today / Upcoming.
@@ -433,6 +437,7 @@ export default function TaskView() {
                 tag={tagById[task.tagId]}
                 completed={false}
                 overdue={overdue}
+                today={today}
                 onTap={() => handleToggle(task)}
                 onLongPress={() => startEdit(null, task)}
                 onDelete={(e) => handleDelete(e, task.id)}
@@ -459,62 +464,6 @@ export default function TaskView() {
   return (
     <div className="tab-view active">
       <div className="section-title">Tasks</div>
-
-      <form className="task-add-form" onSubmit={handleAdd}>
-        <div className="task-add-top">
-          <input
-            type="text"
-            className="task-input"
-            placeholder="What needs doing?"
-            value={text}
-            onChange={e => setText(e.target.value)}
-          />
-          <button type="submit" className="btn-primary task-add-btn" disabled={!text.trim()}>
-            Add
-          </button>
-        </div>
-
-        <div className="task-add-summary">
-          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
-            {DIFFICULTY_LABELS[difficulty]}
-          </button>
-          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
-            {tagId
-              ? `${tagById[tagId]?.icon ? tagById[tagId].icon + ' ' : ''}${tagById[tagId]?.name ?? 'Tag'}`
-              : 'No tag'}
-          </button>
-          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
-            {scheduleSummary}
-          </button>
-          <button
-            type="button"
-            className="task-details-toggle"
-            onClick={() => setDetailsOpen(o => !o)}
-            aria-expanded={detailsOpen}
-          >
-            {detailsOpen ? `Hide ▴` : `Details ▾`}
-          </button>
-        </div>
-
-        {detailsOpen && (
-          <div className="task-add-details">
-            <div className="task-eyebrow">Difficulty {'·'} energy {'&'} reward</div>
-            <DifficultyPicker
-              value={difficulty}
-              onChange={setDifficulty}
-              className="task-difficulty-picker"
-            />
-            {hasTags && (
-              <>
-                <div className="task-eyebrow">Project tag</div>
-                <TagPicker tags={tags} value={tagId} onChange={setTagId} className="task-add-tags" />
-              </>
-            )}
-            <div className="task-eyebrow">Schedule</div>
-            <SchedulePicker value={schedule} onChange={setSchedule} />
-          </div>
-        )}
-      </form>
 
       {hasTags && (
         <div className="task-controls">
@@ -589,7 +538,7 @@ export default function TaskView() {
       {nothingVisible && (
         <div className="history-empty">
           {tasks.length === 0
-            ? 'No tasks yet. Add one above!'
+            ? 'No tasks yet. Add one below!'
             : 'Nothing here under this filter.'}
         </div>
       )}
@@ -608,6 +557,7 @@ export default function TaskView() {
                 task={task}
                 tag={tagById[task.tagId]}
                 completed
+                today={today}
                 onTap={() => handleToggle(task)}
                 onLongPress={() => {}}
                 onDelete={(e) => handleDelete(e, task.id)}
@@ -617,6 +567,62 @@ export default function TaskView() {
           </div>
         </>
       )}
+
+      <form className="task-add-form" onSubmit={handleAdd}>
+        <div className="task-add-top">
+          <input
+            type="text"
+            className="task-input"
+            placeholder="What needs doing?"
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <button type="submit" className="btn-primary task-add-btn" disabled={!text.trim()}>
+            Add
+          </button>
+        </div>
+
+        <div className="task-add-summary">
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {DIFFICULTY_LABELS[difficulty]}
+          </button>
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {tagId
+              ? `${tagById[tagId]?.icon ? tagById[tagId].icon + ' ' : ''}${tagById[tagId]?.name ?? 'Tag'}`
+              : 'No tag'}
+          </button>
+          <button type="button" className="task-summary-pill" onClick={() => setDetailsOpen(true)}>
+            {scheduleSummary}
+          </button>
+          <button
+            type="button"
+            className="task-details-toggle"
+            onClick={() => setDetailsOpen(o => !o)}
+            aria-expanded={detailsOpen}
+          >
+            {detailsOpen ? `Hide ▴` : `Details ▾`}
+          </button>
+        </div>
+
+        {detailsOpen && (
+          <div className="task-add-details">
+            <div className="task-eyebrow">Difficulty {'·'} energy {'&'} reward</div>
+            <DifficultyPicker
+              value={difficulty}
+              onChange={setDifficulty}
+              className="task-difficulty-picker"
+            />
+            {hasTags && (
+              <>
+                <div className="task-eyebrow">Project tag</div>
+                <TagPicker tags={tags} value={tagId} onChange={setTagId} className="task-add-tags" />
+              </>
+            )}
+            <div className="task-eyebrow">Schedule</div>
+            <SchedulePicker value={schedule} onChange={setSchedule} />
+          </div>
+        )}
+      </form>
     </div>
   );
 }

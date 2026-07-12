@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store.jsx';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, PLAYABLE_CHARACTER_IDS, getTitle } from '../data/characters.js';
-import { INTERACTION_TIERS } from '../data/interactions.js';
 import HeartEventOverlay from './HeartEventOverlay.jsx';
 import CharacterCrest from './CharacterCrest.jsx';
 import Flower from './Flower.jsx';
@@ -37,7 +36,6 @@ function HeartPips({ level, color }) {
 export default function JournalCharacters() {
   const {
     getCharacterState,
-    getInteractionsForCharacter,
     getHeartEventsForCharacter,
     getHeartEventContent,
   } = useStore();
@@ -90,7 +88,6 @@ export default function JournalCharacters() {
         const threshold = state.level < MAX_LEVEL ? RP_THRESHOLDS[state.level] : null;
         const rpPct = threshold ? Math.min(100, (state.rpTowardNext / threshold) * 100) : 100;
         const expanded = expandedId === id;
-        const interactions = getInteractionsForCharacter(id);
         const heartEvts = getHeartEventsForCharacter(id);
         const sealed = heartEvts.length >= MAX_LEVEL;
         const firstName = def.name.split(' ')[0];
@@ -152,23 +149,7 @@ export default function JournalCharacters() {
                     </div>
                   </>
                 )}
-                {interactions.length > 0 && (
-                  <>
-                    <div className="journal-subhead">Recent Interactions</div>
-                    <div className="journal-interaction-list">
-                      {interactions.slice(0, 20).map(i => (
-                        <div key={i.id} className="journal-interaction-item">
-                          <span className="journal-interaction-tier">
-                            {INTERACTION_TIERS[i.tier].icon} {INTERACTION_TIERS[i.tier].label}
-                          </span>
-                          <span className="journal-interaction-line">{i.line}</span>
-                          <span className="journal-interaction-date">{formatDate(i.timestamp)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-                {heartEvts.length === 0 && interactions.length === 0 && (
+                {heartEvts.length === 0 && (
                   <div className="history-empty">No memories yet. Go say hi.</div>
                 )}
               </div>

@@ -2,6 +2,20 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-07-12 — Tend & Hearth polish batch
+
+A round of usability fixes from a play-through.
+
+### Changed
+- **Snacks no longer count toward the "Meals logged" goal.** The Hearth tally's `Meals logged · X / 3` now counts only breakfast / lunch / dinner; snacks stay in the "Earned Today" Stardust figure but don't fill one of the three squares.
+- **Tasks now match Habits: add-box at the bottom, newest task at the bottom.** The task add-form moved from the top of the screen to below the lists, and the default "Added" order is now oldest-first, so a freshly added task appears at the end of Today (the way new habits already append to the habit list).
+- **Selected buttons are now obviously selected.** The difficulty (Easy / Medium / Hard), habit-type, and meal type/source pickers used a barely-visible 10 %-gold wash for the selected state; they're now a solid gold fill with dark ink text and a double pixel-edge, so the current choice reads at a glance.
+- **Tasks and time entries follow the day-rollover hour, not calendar midnight.** Task Today/Overdue/Upcoming bucketing and the default date on a new time entry now use the same rollover-aware "today" as the habit checklist (Settings → Day & Rollover). Hours or tasks logged after midnight but before your set rollover hour stay on the correct day.
+
+### Removed
+- **The "Recent Interactions" list is gone from Journal character cards.** The expanded card now shows the Seal and the Heart Events history only; day-to-day chat lines no longer pile up there. (Interaction data is still tracked for RP — it's just not surfaced.)
+- **Heart events no longer auto-open.** Leveling a character up (or unlocking a new one) used to seize the screen with the scene immediately. Now the scene is recorded and waits as the "A letter is waiting" card on the Hearth, to read when you like. Character-unlock intros can still be replayed from the Event's Replay button, and any heart event opens from the Hearth letter or the Journal.
+
 ## 2026-07-12 — Challenge engine groundwork (dormant)
 
 ### Added

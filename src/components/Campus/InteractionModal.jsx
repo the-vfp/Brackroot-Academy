@@ -3,13 +3,11 @@ import { useStore } from '../../store.jsx';
 import { useToast } from '../Toast.jsx';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from '../../data/characters.js';
 import { INTERACTION_TIERS, TIER_ORDER } from '../../data/interactions.js';
-import HeartEventOverlay from '../HeartEventOverlay.jsx';
 
 export default function InteractionModal({ characterId, onClose }) {
   const { getCharacterState, canInteract, purchaseInteraction } = useStore();
   const showToast = useToast();
   const [result, setResult] = useState(null);
-  const [pendingHeartEvent, setPendingHeartEvent] = useState(null);
 
   const def = CHARACTER_DEFS[characterId];
   const state = getCharacterState(characterId);
@@ -32,33 +30,10 @@ export default function InteractionModal({ characterId, onClose }) {
   }
 
   function handleDismissLine() {
-    const r = result;
+    // Heart events no longer auto-open — a level-up records the event, which
+    // then waits as a letter on the Hearth for the player to open when they like.
     setResult(null);
-    if (r?.leveledUp) {
-      // Queue the heart event overlay after line dismiss.
-      setPendingHeartEvent(r.heartEvent);
-    } else {
-      onClose();
-    }
-  }
-
-  function handleDismissHeartEvent() {
-    setPendingHeartEvent(null);
     onClose();
-  }
-
-  // Heart event takes over the screen when queued.
-  if (pendingHeartEvent) {
-    return (
-      <HeartEventOverlay
-        characterId={pendingHeartEvent.characterId}
-        level={pendingHeartEvent.level}
-        title={pendingHeartEvent.title}
-        text={pendingHeartEvent.text}
-        background={pendingHeartEvent.background}
-        onClose={handleDismissHeartEvent}
-      />
-    );
   }
 
   // Line result view (small modal).
@@ -77,7 +52,7 @@ export default function InteractionModal({ characterId, onClose }) {
             +{result.rpGained} RP
           </div>
           <button className="modal-close" onClick={handleDismissLine}>
-            {result.leveledUp ? 'Continue \u2192' : 'Close'}
+            {result.leveledUp ? '\u2728 A letter is waiting \u2014 Close' : 'Close'}
           </button>
         </div>
       </div>

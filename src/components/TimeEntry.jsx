@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store.jsx';
-import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
 import { HOUR_INCREMENT } from '../data/timeBudget.js';
 
@@ -69,6 +68,7 @@ export default function TimeEntry() {
     getTimeTotalsInRange,
     getNightlyTotalsForWeek,
     getWeekEnd,
+    getHabitDay,
     logTime
   } = useStore();
   const showToast = useToast();
@@ -84,7 +84,9 @@ export default function TimeEntry() {
   const firstCatId = activeCats[0]?.id ?? '';
   const [categoryId, setCategoryId] = useState(firstCatId);
   const [hours, setHours] = useState(1);
-  const [date, setDate] = useState(localDateString());
+  // Default a new entry to the rollover-aware "today" (Settings → Day & Rollover),
+  // so hours logged after midnight but before the rollover land on the right day.
+  const [date, setDate] = useState(getHabitDay());
   const [note, setNote] = useState('');
 
   // Keep the selected category valid if the active list changes.
@@ -103,7 +105,7 @@ export default function TimeEntry() {
     const result = await logTime(categoryId, hours, date, note.trim() || null);
     if (result) {
       setNote('');
-      setDate(localDateString());
+      setDate(getHabitDay());
       showToast(`\u231B ${result.hours}h logged`);
     }
   }

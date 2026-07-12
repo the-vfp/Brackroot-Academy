@@ -51,6 +51,9 @@ export default function Hearth({ onNavigate }) {
 
   // ── Today's Tally ──
   const mealsToday = meals.filter(m => m.date === today);
+  // Snacks don't count toward the 3-meal goal (they're extras, not one of the
+  // three squares), but they still earn Stardust in the "Earned Today" figure.
+  const mainMealsToday = mealsToday.filter(m => m.mealType !== 'snack');
   const dailyHabits = habits.filter(h => h.type !== 'repeatable' && h.active !== false);
   const completedIds = new Set(getTodayCompletedHabits());
   const habitsKept = dailyHabits.filter(h => completedIds.has(h.id)).length;
@@ -86,7 +89,7 @@ export default function Hearth({ onNavigate }) {
         <div className="tally-row">
           <span className="tally-icon">{'\u{1F371}'}</span>
           <span className="tally-name">Meals logged</span>
-          <span className="tally-count">{mealsToday.length} / 3</span>
+          <span className="tally-count">{mainMealsToday.length} / 3</span>
         </div>
         <div className="tally-row">
           <span className="tally-icon">{'✓'}</span>

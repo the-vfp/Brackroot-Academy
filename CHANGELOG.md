@@ -2,6 +2,19 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-07-12 — Challenge engine groundwork (dormant)
+
+### Added
+- **The Challenges system's engine**, built content-independent so it can exist ahead of the gated heart-event scenes (see the vault spec). Three new pieces:
+  - **`data/challengeGoals.js`** — pure goal evaluators for every goal shape: `streak`, `count` (cumulative / quality-tier / full-day-run), `per_day_floor`, `comeback`, and `composite` (duo/group). Reads the habit/meal/task/full-day logs already tracked; no new data. Covered by 15 unit cases.
+  - **`data/challenges.js`** — the challenge definition format (tied character, gated level, goal, prerequisites) plus a **provisional** demo set (one per shape) that exercises the engine.
+  - **Store engine** — arm / abandon / claim a challenge (one active at a time), live progress, and status grouping, persisted in the existing `challenges` table. The event-side `gate.type === 'challenge'` check is now live (consults completions) instead of hard-locked.
+- **A functional Challenges page** (replacing the "Coming in Phase 4" placeholder): available / active (with progress bar) / locked (with reasons) / completed.
+
+### Notes
+- **Dormant by design.** Completing a challenge currently *records* the completion but does not yet open a relationship level or fire its heart event — that "activation" (the RP-then-gate level-hold in `purchaseInteraction`) ships alongside the gated scenes, since the scene is the reward. Nothing player-facing changes in the interaction/level-up loop.
+- The demo challenges are flagged **Provisional** in the UI; their gated levels and goal magnitudes are placeholders pending the per-character arc writing. No schema change (rides on the habit `key` slug added 2026-06-27).
+
 ## 2026-06-28 — Brendan starts talking (tier 1–2 lines + hang-outs)
 
 ### Added

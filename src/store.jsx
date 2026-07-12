@@ -3,6 +3,8 @@ import { db, initializeState, initializeHabits, dedupeHabits, initializeCategori
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
+import { CHALLENGES, getChallenge } from './data/challenges.js';
+import { evaluateGoal } from './data/challengeGoals.js';
 import { getHeartEvent } from './data/heartEvents/index.js';
 
 const StoreContext = createContext(null);
@@ -60,6 +62,7 @@ export function StoreProvider({ children }) {
   const [timeLogs, setTimeLogs] = useState([]);
   const [weeklyResolutions, setWeeklyResolutions] = useState([]);
   const [tags, setTags] = useState([]);
+  const [challengeRuns, setChallengeRuns] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Load state from IndexedDB
@@ -83,6 +86,7 @@ export function StoreProvider({ children }) {
     const allWeeklyResolutions = await db.weeklyResolutions.orderBy('weekStart').reverse().toArray();
     const allTags = await db.tags.toArray();
     allTags.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    const allChallengeRuns = await db.challenges.toArray();
     setAppState(state);
     setExpenses(allExpenses);
     setHabits(allHabits);
@@ -98,6 +102,7 @@ export function StoreProvider({ children }) {
     setTimeLogs(allTimeLogs);
     setWeeklyResolutions(allWeeklyResolutions);
     setTags(allTags);
+    setChallengeRuns(allChallengeRuns);
   }, []);
 
   // Data is local-first (Dexie/IndexedDB). No cloud sync — JSON export/import
@@ -927,12 +932,17 @@ export function StoreProvider({ children }) {
           return { ok: false, reason: `Requires: ${req?.title || gate.eventId}.` };
         }
       } else if (gate.type === 'challenge') {
-        // Phase 4 territory — treat as locked for now.
-        return { ok: false, reason: 'Requires a challenge (Phase 4).' };
+        const done = challengeRuns.some(
+          r => r.challengeId === gate.challengeId && r.status === 'completed'
+        );
+        if (!done) {
+          const c = getChallenge(gate.challengeId);
+          return { ok: false, reason: `Requires: ${c?.title || gate.challengeId}.` };
+        }
       }
     }
     return { ok: true };
-  }, [appState, getCharacterState, events, isEventPurchased]);
+  }, [appState, getCharacterState, events, isEventPurchased, challengeRuns]);
 
   const purchaseEvent = useCallback(async (eventId) => {
     const gate = canPurchaseEvent(eventId);
@@ -986,6 +996,126 @@ export function StoreProvider({ children }) {
     return heartEvents.filter(h => h.characterId === characterId)
       .sort((a, b) => a.level - b.level);
   }, [heartEvents]);
+
+  // ====== CHALLENGE OPERATIONS ======
+  //
+  // Challenges are KEYS, not reward-dispensers: completing one records a
+  // completion (which event `challenge` gates consult, and which the future
+  // level-hold will read) and grants NO Stardust or RP. One active at a time.
+  // Persisted in the `challenges` table as
+  //   { id, challengeId, status: 'active'|'completed', startedAt, startDate, completedAt }.
+  //
+  // NOTE (dormant by design): opening the gated level + firing its heart event
+  // is the deferred "activation" step that ships with the scenes. For now a
+  // completed challenge is inert beyond being recorded — see the vault spec's
+  // Build Sequencing.
+
+  const activeChallengeRun = challengeRuns.find(r => r.status === 'active') || null;
+
+  const isChallengeCompleted = useCallback(
+    (challengeId) => challengeRuns.some(r => r.challengeId === challengeId && r.status === 'completed'),
+    [challengeRuns]
+  );
+
+  // Evaluate a challenge's goal against current logs. `startDate` windows the
+  // count/floor shapes to logs made since the challenge was armed.
+  const evaluateChallenge = useCallback((challengeId, startDate) => {
+    const def = getChallenge(challengeId);
+    if (!def) return null;
+    return evaluateGoal(def.goal, {
+      habits,
+      habitLogs,
+      meals,
+      tasks,
+      fullDayDates: appState?.fullDayDates || [],
+      today: localDateString(),
+      startDate: startDate || null,
+    });
+  }, [habits, habitLogs, meals, tasks, appState]);
+
+  const getActiveChallengeProgress = useCallback(() => {
+    if (!activeChallengeRun) return null;
+    return evaluateChallenge(activeChallengeRun.challengeId, activeChallengeRun.startDate);
+  }, [activeChallengeRun, evaluateChallenge]);
+
+  const canArmChallenge = useCallback((challengeId) => {
+    const def = getChallenge(challengeId);
+    if (!def) return { ok: false, reason: 'Challenge not found.' };
+    if (isChallengeCompleted(challengeId)) return { ok: false, reason: 'Already completed.' };
+    if (activeChallengeRun) {
+      return activeChallengeRun.challengeId === challengeId
+        ? { ok: false, reason: 'Already active.' }
+        : { ok: false, reason: 'Another challenge is active.' };
+    }
+    // Prerequisite: the tied character must be met (unlocked).
+    if (def.characterId) {
+      const char = getCharacterState(def.characterId);
+      if (!char || !char.unlocked) {
+        const cdef = CHARACTER_DEFS[def.characterId];
+        return { ok: false, reason: `${cdef?.name || def.characterId} not yet met.` };
+      }
+    }
+    // Explicit requires — same vocabulary as events.js.
+    for (const req of def.requires || []) {
+      if (req.type === 'character_level') {
+        const char = getCharacterState(req.characterId);
+        if (!char || char.level < req.level) {
+          const cdef = CHARACTER_DEFS[req.characterId];
+          return { ok: false, reason: `Requires ${cdef?.name || req.characterId} at Lv ${req.level}.` };
+        }
+      } else if (req.type === 'event') {
+        if (!isEventPurchased(req.eventId)) {
+          const ev = getEvent(req.eventId);
+          return { ok: false, reason: `Requires: ${ev?.title || req.eventId}.` };
+        }
+      } else if (req.type === 'challenge') {
+        if (!isChallengeCompleted(req.challengeId)) {
+          const c = getChallenge(req.challengeId);
+          return { ok: false, reason: `Requires: ${c?.title || req.challengeId}.` };
+        }
+      }
+    }
+    return { ok: true };
+  }, [activeChallengeRun, isChallengeCompleted, getCharacterState, isEventPurchased]);
+
+  const getChallengeStatus = useCallback((challengeId) => {
+    if (isChallengeCompleted(challengeId)) return 'completed';
+    if (activeChallengeRun?.challengeId === challengeId) return 'active';
+    return canArmChallenge(challengeId).ok ? 'available' : 'locked';
+  }, [isChallengeCompleted, activeChallengeRun, canArmChallenge]);
+
+  const armChallenge = useCallback(async (challengeId) => {
+    const gate = canArmChallenge(challengeId);
+    if (!gate.ok) return { ok: false, reason: gate.reason };
+    await db.challenges.add({
+      challengeId,
+      status: 'active',
+      startedAt: Date.now(),
+      startDate: localDateString(),
+      completedAt: null,
+    });
+    await loadAll();
+    return { ok: true };
+  }, [canArmChallenge, loadAll]);
+
+  const abandonChallenge = useCallback(async () => {
+    if (!activeChallengeRun) return { ok: false, reason: 'No active challenge.' };
+    await db.challenges.delete(activeChallengeRun.id);
+    await loadAll();
+    return { ok: true };
+  }, [activeChallengeRun, loadAll]);
+
+  const claimChallenge = useCallback(async () => {
+    if (!activeChallengeRun) return { ok: false, reason: 'No active challenge.' };
+    const progress = evaluateChallenge(activeChallengeRun.challengeId, activeChallengeRun.startDate);
+    if (!progress?.met) return { ok: false, reason: 'Not complete yet.' };
+    await db.challenges.update(activeChallengeRun.id, {
+      status: 'completed',
+      completedAt: Date.now(),
+    });
+    await loadAll();
+    return { ok: true, challenge: getChallenge(activeChallengeRun.challengeId) };
+  }, [activeChallengeRun, evaluateChallenge, loadAll]);
 
   // Export data
   const handleExport = useCallback(async () => {
@@ -1087,6 +1217,15 @@ export function StoreProvider({ children }) {
       getHeartEventContent,
       getInteractionsForCharacter,
       getHeartEventsForCharacter,
+      activeChallengeRun,
+      isChallengeCompleted,
+      canArmChallenge,
+      getChallengeStatus,
+      getActiveChallengeProgress,
+      evaluateChallenge,
+      armChallenge,
+      abandonChallenge,
+      claimChallenge,
       handleExport,
       handleImport,
       handleReset

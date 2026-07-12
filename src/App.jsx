@@ -28,7 +28,19 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('hearth');
   const [ledgerInitial, setLedgerInitial] = useState('spend');
   const [tendInitial, setTendInitial] = useState('habits');
+  const [campusInitial, setCampusInitial] = useState('map');
   const [showSettings, setShowSettings] = useState(false);
+
+  // Navigate to a tab, optionally landing on a specific sub-page (used by the
+  // Hearth's shortcuts, e.g. the active-challenge card → Campus / Challenges).
+  function navigate(tab, sub) {
+    setShowSettings(false);
+    setActiveTab(tab);
+    if (!sub) return;
+    if (tab === 'campus') setCampusInitial(sub);
+    else if (tab === 'ledger') setLedgerInitial(sub);
+    else if (tab === 'tend') setTendInitial(sub);
+  }
   const [clock, setClock] = useState(() => clockState(new Date()));
 
   // Drive the day/dusk/night palette off the real clock; refresh each minute.
@@ -53,6 +65,7 @@ function AppContent() {
     else if (tab === 'time') { setActiveTab('ledger'); setLedgerInitial('time'); }
     else if (tab === 'habits') { setActiveTab('tend'); setTendInitial('habits'); }
     else if (tab === 'tasks') { setActiveTab('tend'); setTendInitial('tasks'); }
+    else if (tab === 'challenges') { setActiveTab('campus'); setCampusInitial('challenges'); }
     else if (VALID_TABS.includes(tab)) setActiveTab(tab);
   }, []);
 
@@ -85,8 +98,8 @@ function AppContent() {
             <Settings />
           ) : (
             <>
-              {activeTab === 'hearth' && <Hearth onNavigate={setActiveTab} />}
-              {activeTab === 'campus' && <Campus />}
+              {activeTab === 'hearth' && <Hearth onNavigate={navigate} />}
+              {activeTab === 'campus' && <Campus initialSubPage={campusInitial} />}
               {activeTab === 'journal' && <Journal />}
               {activeTab === 'ledger' && <LedgerView initialSubPage={ledgerInitial} />}
               {activeTab === 'tend' && <TendView initialSubPage={tendInitial} />}

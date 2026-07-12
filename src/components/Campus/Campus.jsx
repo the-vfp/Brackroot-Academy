@@ -9,8 +9,8 @@ const SUBPAGES = [
   { id: 'challenges', label: 'Challenges' },
 ];
 
-export default function Campus() {
-  const [subPage, setSubPage] = useState('map');
+export default function Campus({ initialSubPage = 'map' }) {
+  const [subPage, setSubPage] = useState(initialSubPage);
 
   return (
     <div className="tab-view active">

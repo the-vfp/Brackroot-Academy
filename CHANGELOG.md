@@ -2,6 +2,17 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-07-12 — The active challenge shows on the Hearth
+
+### Added
+- **The Hearth now surfaces the challenge you're currently taking on.** When a challenge is armed, a card appears under Today's Tally: its in-world title, the tied character and the relationship level it unlocks, and **live progress** — composite goals (like SGC Elections) render each part as its own bar (e.g. "days journaled 3/8", "tasks done 5/12"). A **View →** button (or **Claim →** once the goal is met) jumps straight to Campus → Challenges. Nothing shows when no challenge is armed. Reads from the same store engine as the Challenges page, so progress is always in sync.
+
+### Changed
+- **Campus takes an initial sub-page** (Map / Events / Challenges), the same way Tend and Ledger already do, so the app can deep-link into a specific Campus view. Also added a `?tab=challenges` deep link.
+
+### Fixed
+- **`.bk-btn` (the gold "key" buttons) inverted to near-white text on gold at night** — same root cause as the contrast pass below (`--bk-ink-strong` flips in the night theme). Now uses the constant `--text-dark`.
+
 ## 2026-07-12 — Night-mode text contrast on the gold spine
 
 ### Fixed

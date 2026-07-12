@@ -3048,7 +3048,7 @@ html, body, #root {
 .bk-btn {
   display: inline-flex; align-items: center; gap: 7px;
   font-family: var(--bk-font-body); font-weight: 700; font-size: 16px;
-  background: var(--bk-stardust); color: var(--bk-ink-strong);
+  background: var(--bk-stardust); color: var(--text-dark);
   border: none; padding: 11px 20px; cursor: pointer;
   image-rendering: pixelated;
   box-shadow:
@@ -3062,6 +3062,42 @@ html, body, #root {
   box-shadow: inset 2px 2px 0 0 rgba(78,58,44,.25), 0 0 0 2px var(--bk-ink-strong);
 }
 .bk-btn--indigo { background: var(--bk-indigo); color: var(--bk-stardust-shimmer); }
+
+/* ── Hearth: the challenge you're currently taking on ── */
+.challenge-hearth-card {
+  padding: 14px 16px; margin: 0 7px 16px;
+}
+.challenge-hearth-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.challenge-hearth-eyebrow {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase;
+}
+.challenge-hearth-ready {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase;
+  color: var(--text-dark); background: var(--bk-stardust);
+  padding: 2px 6px;
+}
+.challenge-hearth-title {
+  font-family: var(--bk-font-body); font-size: 18px;
+  color: var(--bk-ink-strong); line-height: 1.25; margin-top: 6px;
+}
+.challenge-hearth-sub {
+  font-family: var(--bk-font-body); font-size: 12px;
+  color: var(--bk-ink-soft); margin-top: 2px;
+}
+.challenge-hearth-bars {
+  display: flex; flex-direction: column; gap: 8px; margin-top: 12px;
+}
+.challenge-hearth-bar-label {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--bk-font-body); font-size: 12px;
+  color: var(--bk-ink-soft); margin-bottom: 3px;
+}
 
 /* empty state — nothing waiting */
 .hearth-quiet {

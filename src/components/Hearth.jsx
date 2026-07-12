@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useStore, stardustForDifficulty } from '../store.jsx';
 import { CHARACTER_DEFS, getTitle } from '../data/characters.js';
+import { getChallenge } from '../data/challenges.js';
 import { colorsFor } from '../data/characterColors.js';
 import StardustStar from './StardustStar.jsx';
 import HeartEventOverlay from './HeartEventOverlay.jsx';
@@ -36,6 +37,7 @@ export default function Hearth({ onNavigate }) {
   const {
     appState, meals, habits, habitLogs, tasks, expenses, heartEvents,
     getHabitDay, getTodayCompletedHabits, getHeartEventContent,
+    activeChallengeRun, getActiveChallengeProgress,
   } = useStore();
 
   const [replay, setReplay] = useState(null);
@@ -79,6 +81,21 @@ export default function Hearth({ onNavigate }) {
   const letterTitle = latestLetter ? getTitle(latestLetter.characterId, latestLetter.level) : '';
   const letterColors = latestLetter ? colorsFor(latestLetter.characterId) : null;
 
+  // ── The challenge you're currently taking on (if any) ──
+  const challengeDef = activeChallengeRun ? getChallenge(activeChallengeRun.challengeId) : null;
+  const challengeProgress = challengeDef ? getActiveChallengeProgress() : null;
+  // Composite goals expose per-part results; simple goals are a single row.
+  const challengeRows = challengeProgress ? (challengeProgress.parts || [challengeProgress]) : [];
+  const challengeColors = challengeDef?.characterId ? colorsFor(challengeDef.characterId) : null;
+  // Use the character BASE hue (not the day-tuned ink) for both the frame band
+  // and the eyebrow, so the label stays legible on the dark night paper too.
+  const challengeBand = challengeColors?.base || 'var(--bk-indigo)';
+  const challengeWho = challengeDef
+    ? (challengeDef.characterId
+        ? (CHARACTER_DEFS[challengeDef.characterId]?.name.split(' ')[0] || 'Someone')
+        : 'Campus')
+    : '';
+
   return (
     <div className="tab-view active hearth">
       <h1 className="hearth-greeting">{greetingFor(phase)}<br />Ellene.</h1>
@@ -109,6 +126,45 @@ export default function Hearth({ onNavigate }) {
           </span>
         </div>
       </div>
+
+      {challengeDef && (
+        <>
+          <div className="bk-frame challenge-hearth-card" style={{ '--bk-frame-band-color': challengeBand }}>
+            <div className="challenge-hearth-top">
+              <span className="challenge-hearth-eyebrow" style={{ color: challengeBand }}>Challenge underway</span>
+              {challengeProgress?.met && <span className="challenge-hearth-ready">Ready to claim</span>}
+            </div>
+            <div className="challenge-hearth-title">{challengeDef.title}</div>
+            <div className="challenge-hearth-sub">
+              {challengeWho} {'·'} unlocks Lv {challengeDef.gatesLevel}
+            </div>
+            <div className="challenge-hearth-bars">
+              {challengeRows.map((r, i) => {
+                const pct = r.target ? Math.min(100, Math.round((r.current / r.target) * 100)) : 0;
+                return (
+                  <div key={i} className="challenge-hearth-bar">
+                    <div className="challenge-hearth-bar-label">
+                      <span>{r.unit}</span>
+                      <span>{r.current}/{r.target}</span>
+                    </div>
+                    <div className="challenge-progress-track">
+                      <div className="challenge-progress-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="hearth-letter-actions">
+            <button
+              className="bk-btn bk-btn--indigo"
+              onClick={() => onNavigate?.('campus', 'challenges')}
+            >
+              {challengeProgress?.met ? 'Claim →' : 'View →'}
+            </button>
+          </div>
+        </>
+      )}
 
       {latestLetter ? (
         <>

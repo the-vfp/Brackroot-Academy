@@ -5,7 +5,7 @@ import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from '../../data/c
 import { INTERACTION_TIERS, TIER_ORDER } from '../../data/interactions.js';
 
 export default function InteractionModal({ characterId, onClose }) {
-  const { getCharacterState, canInteract, purchaseInteraction } = useStore();
+  const { getCharacterState, canInteract, purchaseInteraction, getNextLevelGate } = useStore();
   const showToast = useToast();
   const [result, setResult] = useState(null);
 
@@ -16,6 +16,10 @@ export default function InteractionModal({ characterId, onClose }) {
   const title = getTitle(characterId, state.level);
   const threshold = state.level < MAX_LEVEL ? RP_THRESHOLDS[state.level] : null;
   const rpPct = threshold ? Math.min(100, (state.rpTowardNext / threshold) * 100) : 100;
+  // A challenge may hold the next level shut. When RP is already at the wall,
+  // it's "held"; otherwise it's just an upcoming gate.
+  const nextGate = getNextLevelGate(characterId);
+  const held = nextGate && rpPct >= 100;
 
   async function handleTier(tierId) {
     const r = await purchaseInteraction(characterId, tierId);
@@ -26,6 +30,8 @@ export default function InteractionModal({ characterId, onClose }) {
     setResult(r);
     if (r.leveledUp) {
       showToast(`\u2728 Lv ${r.newLevel} \u2014 ${r.newTitle}`);
+    } else if (r.held) {
+      showToast(`\u2726 Lv ${state.level + 1} is held \u2014 complete \u201c${r.heldByChallenge.title}\u201d`);
     }
   }
 
@@ -81,6 +87,13 @@ export default function InteractionModal({ characterId, onClose }) {
           <div className="interaction-progress-bar">
             <div className="interaction-progress-fill" style={{ width: `${rpPct}%` }} />
           </div>
+          {nextGate && (
+            <div className="interaction-gate-note">
+              {held
+                ? `Held at Lv ${state.level} — complete “${nextGate.title}” to open Lv ${state.level + 1}.`
+                : `Lv ${state.level + 1} opens by completing “${nextGate.title}”.`}
+            </div>
+          )}
         </div>
 
         <div className="interaction-tiers">

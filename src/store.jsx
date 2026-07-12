@@ -3,7 +3,7 @@ import { db, initializeState, initializeHabits, dedupeHabits, initializeCategori
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
 import { EVENTS, getEvent } from './data/events.js';
-import { CHALLENGES, getChallenge } from './data/challenges.js';
+import { CHALLENGES, getChallenge, getChallengesForCharacter } from './data/challenges.js';
 import { evaluateGoal } from './data/challengeGoals.js';
 import { getHeartEvent } from './data/heartEvents/index.js';
 
@@ -844,28 +844,41 @@ export function StoreProvider({ children }) {
     let leveledUp = false;
     let heartEvent = null;
     let newTitle = null;
+    let heldByChallenge = null;
 
     if (char.level < MAX_LEVEL) {
       const threshold = RP_THRESHOLDS[char.level];
       if (newRp >= threshold) {
-        leveledUp = true;
-        newLevel = char.level + 1;
-        newRp = newRp - threshold; // carry overflow into next level
-        newTitle = getTitle(characterId, newLevel);
-        // Persist heart event row (idempotent via compound key).
-        await db.heartEvents.put({
-          characterId,
-          level: newLevel,
-          timestamp: Date.now()
-        });
-        const he = getHeartEvent(characterId, newLevel);
-        heartEvent = {
-          characterId,
-          level: newLevel,
-          title: newTitle,
-          text: he?.text ?? null,
-          background: he?.background ?? null
-        };
+        const nextLevel = char.level + 1;
+        // A challenge can hold a level shut ("RP-then-gate"): you build RP to the
+        // wall, but the level only opens once the tied challenge is completed.
+        const gating = getChallengesForCharacter(characterId).find(c => c.gatesLevel === nextLevel);
+        const gateOpen = !gating
+          || challengeRuns.some(r => r.challengeId === gating.id && r.status === 'completed');
+        if (!gateOpen) {
+          // Held: cap RP at the wall (full bar), don't level, don't fire the scene.
+          newRp = threshold;
+          heldByChallenge = gating;
+        } else {
+          leveledUp = true;
+          newLevel = nextLevel;
+          newRp = newRp - threshold; // carry overflow into next level
+          newTitle = getTitle(characterId, newLevel);
+          // Persist heart event row (idempotent via compound key).
+          await db.heartEvents.put({
+            characterId,
+            level: newLevel,
+            timestamp: Date.now()
+          });
+          const he = getHeartEvent(characterId, newLevel);
+          heartEvent = {
+            characterId,
+            level: newLevel,
+            title: newTitle,
+            text: he?.text ?? null,
+            background: he?.background ?? null
+          };
+        }
       }
     } else {
       // At MAX_LEVEL — RP goes to totalRpEarned only; rpTowardNext stays at 0.
@@ -902,9 +915,11 @@ export function StoreProvider({ children }) {
       leveledUp,
       newLevel,
       newTitle,
-      heartEvent
+      heartEvent,
+      held: !!heldByChallenge,
+      heldByChallenge
     };
-  }, [canInteract, loadAll]);
+  }, [canInteract, loadAll, challengeRuns]);
 
   // ====== EVENT OPERATIONS ======
 
@@ -1005,10 +1020,10 @@ export function StoreProvider({ children }) {
   // Persisted in the `challenges` table as
   //   { id, challengeId, status: 'active'|'completed', startedAt, startDate, completedAt }.
   //
-  // NOTE (dormant by design): opening the gated level + firing its heart event
-  // is the deferred "activation" step that ships with the scenes. For now a
-  // completed challenge is inert beyond being recorded — see the vault spec's
-  // Build Sequencing.
+  // ACTIVATION (live): a challenge with a `gatesLevel` holds that level shut —
+  // `purchaseInteraction` caps RP at the wall until the challenge is completed,
+  // and `claimChallenge` opens the held level + records its heart event (which
+  // surfaces as a Hearth letter). Completions also resolve event `challenge` gates.
 
   const activeChallengeRun = challengeRuns.find(r => r.status === 'active') || null;
 
@@ -1016,6 +1031,16 @@ export function StoreProvider({ children }) {
     (challengeId) => challengeRuns.some(r => r.challengeId === challengeId && r.status === 'completed'),
     [challengeRuns]
   );
+
+  // The (incomplete) challenge that holds a character's NEXT level shut, or null.
+  // Drives the "held — complete X to advance" hint on the interaction screen.
+  const getNextLevelGate = useCallback((characterId) => {
+    const char = getCharacterState(characterId);
+    if (!char || char.level >= MAX_LEVEL) return null;
+    const gating = getChallengesForCharacter(characterId).find(c => c.gatesLevel === char.level + 1);
+    if (!gating || isChallengeCompleted(gating.id)) return null;
+    return gating;
+  }, [getCharacterState, isChallengeCompleted]);
 
   // Evaluate a challenge's goal against current logs. `startDate` windows the
   // count/floor shapes to logs made since the challenge was armed.
@@ -1107,14 +1132,33 @@ export function StoreProvider({ children }) {
 
   const claimChallenge = useCallback(async () => {
     if (!activeChallengeRun) return { ok: false, reason: 'No active challenge.' };
+    const def = getChallenge(activeChallengeRun.challengeId);
     const progress = evaluateChallenge(activeChallengeRun.challengeId, activeChallengeRun.startDate);
     if (!progress?.met) return { ok: false, reason: 'Not complete yet.' };
     await db.challenges.update(activeChallengeRun.id, {
       status: 'completed',
       completedAt: Date.now(),
     });
+
+    // Activation: completing the challenge opens the level it was gating. If the
+    // character has already built RP to the wall (held at gatesLevel-1), open the
+    // level now and record its heart event (it surfaces as a Hearth letter — heart
+    // events don't auto-open). If they haven't hit the wall yet, the gate is simply
+    // cleared and the next interaction that crosses the threshold will level them.
+    let opened = null;
+    if (def?.characterId && def?.gatesLevel) {
+      const heldLevel = def.gatesLevel - 1;
+      const char = await db.characters.get(def.characterId);
+      if (char && char.level === heldLevel && (char.rpTowardNext || 0) >= RP_THRESHOLDS[heldLevel]) {
+        const newLevel = def.gatesLevel;
+        await db.heartEvents.put({ characterId: def.characterId, level: newLevel, timestamp: Date.now() });
+        await db.characters.update(def.characterId, { level: newLevel, rpTowardNext: 0 });
+        opened = { characterId: def.characterId, level: newLevel, title: getTitle(def.characterId, newLevel) };
+      }
+    }
+
     await loadAll();
-    return { ok: true, challenge: getChallenge(activeChallengeRun.challengeId) };
+    return { ok: true, challenge: def, opened };
   }, [activeChallengeRun, evaluateChallenge, loadAll]);
 
   // Export data
@@ -1219,6 +1263,7 @@ export function StoreProvider({ children }) {
       getHeartEventsForCharacter,
       activeChallengeRun,
       isChallengeCompleted,
+      getNextLevelGate,
       canArmChallenge,
       getChallengeStatus,
       getActiveChallengeProgress,

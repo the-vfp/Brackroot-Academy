@@ -2,6 +2,15 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-07-12 — Challenge level-gating goes live + Tally tweaks
+
+### Added
+- **Challenges now actually gate a relationship level — the engine is no longer dormant.** A challenge with a `gatesLevel` holds that level shut: you build RP to the wall, but the level only opens once you complete the tied challenge. Concretely, **Brendan's Level 4 is held behind *SGC Elections*.** Interactions cap his RP at the L3→L4 threshold (bar reads full, no overflow wasted), and the interaction screen shows the gate — "Lv 4 opens by completing 'SGC Elections'", or "Held at Lv 3 …" once you're at the wall. **Claiming the challenge opens the held level and records its heart event**, which surfaces as the "A letter is waiting" card on the Hearth (heart events don't auto-open). If you finish the challenge *before* reaching the wall, the gate simply clears and your next interaction levels you up normally.
+  - Store: `purchaseInteraction` holds at a gated threshold instead of leveling; `claimChallenge` performs the deferred level-up + heart-event on claim; new `getNextLevelGate(characterId)` helper drives the hint. Verified end-to-end (hold → claim → Lv 4 + letter).
+
+### Changed
+- **Today's Tally** on the Hearth: "Tasks done" is now a plain **counter** (was `done / total`), and a new **"Spent today"** row shows the day's dollar spend (CAD).
+
 ## 2026-07-12 — The active challenge shows on the Hearth
 
 ### Added

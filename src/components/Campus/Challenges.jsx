@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store.jsx';
+import { useToast } from '../Toast.jsx';
 import { CHALLENGES } from '../../data/challenges.js';
 import { CHARACTER_DEFS } from '../../data/characters.js';
 
@@ -13,7 +14,23 @@ export default function Challenges() {
     abandonChallenge,
     claimChallenge,
   } = useStore();
+  const showToast = useToast();
   const [busy, setBusy] = useState(false);
+
+  async function handleClaim() {
+    setBusy(true);
+    try {
+      const r = await claimChallenge();
+      if (!r.ok) { showToast(r.reason); return; }
+      if (r.opened) {
+        showToast(`✨ Lv ${r.opened.level} opened — a letter is waiting on the Hearth`);
+      } else {
+        showToast(`✓ ${r.challenge?.title || 'Challenge'} complete`);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const groups = { active: [], available: [], locked: [], completed: [] };
   for (const def of CHALLENGES) groups[getChallengeStatus(def.id)].push(def);
@@ -66,7 +83,7 @@ export default function Challenges() {
               <button
                 className="challenge-btn primary"
                 disabled={busy || !p?.met}
-                onClick={() => run(claimChallenge)}
+                onClick={handleClaim}
               >
                 {p?.met ? 'Claim' : 'In progress'}
               </button>

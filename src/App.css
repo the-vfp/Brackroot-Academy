@@ -1863,6 +1863,13 @@ html, body, #root {
   border-radius: 3px;
   transition: width 0.5s ease;
 }
+.interaction-gate-note {
+  margin-top: 7px;
+  font-family: var(--bk-font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--bk-ink-soft);
+}
 .interaction-tiers {
   display: flex;
   flex-direction: column;

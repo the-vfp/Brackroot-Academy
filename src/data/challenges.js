@@ -20,10 +20,10 @@
 // Win condition — "The Campaign": a two-front composite that mirrors running an
 // election together (Brendan's competence-as-care, the partnership arc) —
 // STRATEGY (journal on 8 days) + LEGWORK (finish 12 tasks). Both must be met.
-// Magnitudes are tunable. Still dormant: completing it records the completion
-// (so the event `challenge` gate resolves) but does not yet open L4 — the
-// level-hold + scene are the activation step, shipping with Brendan's L4 heart
-// event. More gates get added here as arcs are written.
+// Magnitudes are tunable. LIVE: `gatesLevel` now holds the level shut —
+// interactions cap RP at the L3→L4 wall until the challenge is claimed, and
+// claiming opens L4 + records its heart event (see store `purchaseInteraction`
+// / `claimChallenge`). More gates get added here as arcs are written.
 
 export const CHALLENGES = [
   {

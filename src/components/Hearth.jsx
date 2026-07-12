@@ -60,7 +60,9 @@ export default function Hearth({ onNavigate }) {
   const completedIds = new Set(getTodayCompletedHabits());
   const habitsKept = dailyHabits.filter(h => completedIds.has(h.id)).length;
   const tasksDone = tasks.filter(t => t.completed).length;
-  const tasksTotal = tasks.length;
+  const spentToday = expenses
+    .filter(e => e.date === today)
+    .reduce((s, e) => s + (e.amount || 0), 0);
 
   // Stardust earned today — summed from the day's real entries (bonuses excluded;
   // this is the at-a-glance figure, not the canonical ledger).
@@ -116,7 +118,12 @@ export default function Hearth({ onNavigate }) {
         <div className="tally-row">
           <span className="tally-icon">{'◇'}</span>
           <span className="tally-name">Tasks done</span>
-          <span className="tally-count">{tasksDone} / {tasksTotal}</span>
+          <span className="tally-count">{tasksDone}</span>
+        </div>
+        <div className="tally-row">
+          <span className="tally-icon">{'\u{1F4B8}'}</span>
+          <span className="tally-name">Spent today</span>
+          <span className="tally-count">${spentToday.toFixed(2)}</span>
         </div>
         <div className="tally-divider" />
         <div className="tally-earned">

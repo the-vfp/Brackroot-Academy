@@ -1,0 +1,30 @@
+# Fires the nudge scheduler. GitHub cron is the free scheduler here (Vercel's
+# Hobby cron only runs once a day). Runs can land several minutes late at busy
+# times; the tick catches up on anything that came due since the last run.
+#
+# NOTE: GitHub pauses scheduled workflows after 60 days without a commit on
+# the repo. If nudges stop, push any commit (or re-enable under Actions).
+name: Nudge tick
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call /api/tick
+        env:
+          NUDGE_API: ${{ vars.VITE_NUDGE_API }}
+          NUDGE_ADMIN_KEY: ${{ secrets.NUDGE_ADMIN_KEY }}
+        run: |
+          if [ -z "$NUDGE_API" ] || [ -z "$NUDGE_ADMIN_KEY" ]; then
+            echo "VITE_NUDGE_API variable or NUDGE_ADMIN_KEY secret not set; skipping."; exit 0
+          fi
+          curl --fail --silent --show-error --max-time 60 \
+            -H "X-Nudge-Key: $NUDGE_ADMIN_KEY" "$NUDGE_API/api/tick"

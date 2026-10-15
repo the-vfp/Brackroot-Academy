@@ -24,18 +24,22 @@ function clockState(d) {
 }
 
 function AppContent() {
-  const { appState } = useStore();
+  const { appState, answerNudge } = useStore();
   const [activeTab, setActiveTab] = useState('hearth');
   const [ledgerInitial, setLedgerInitial] = useState('spend');
   const [tendInitial, setTendInitial] = useState('habits');
   const [campusInitial, setCampusInitial] = useState('map');
   const [showSettings, setShowSettings] = useState(false);
+  // A task/habit to flash + scroll to when landing on Tend (from a nudge).
+  const [highlight, setHighlight] = useState(null); // { task?: id, habit?: id, at: ts }
 
   // Navigate to a tab, optionally landing on a specific sub-page (used by the
   // Hearth's shortcuts, e.g. the active-challenge card → Campus / Challenges).
-  function navigate(tab, sub) {
+  // `extra` can name a task/habit id to highlight once there.
+  function navigate(tab, sub, extra) {
     setShowSettings(false);
     setActiveTab(tab);
+    if (extra && (extra.task || extra.habit)) setHighlight({ ...extra, at: Date.now() });
     if (!sub) return;
     if (tab === 'campus') setCampusInitial(sub);
     else if (tab === 'ledger') setLedgerInitial(sub);
@@ -67,6 +71,22 @@ function AppContent() {
     else if (tab === 'tasks') { setActiveTab('tend'); setTendInitial('tasks'); }
     else if (tab === 'challenges') { setActiveTab('campus'); setCampusInitial('challenges'); }
     else if (VALID_TABS.includes(tab)) setActiveTab(tab);
+
+    // Arrived from a nudge notification: highlight its task/habit and record
+    // that the notification was opened (the nudge itself stays open until
+    // answered on the Hearth).
+    const task = params.get('task');
+    const habit = params.get('habit');
+    if (task || habit) setHighlight({ task: task ? Number(task) : undefined, habit: habit ? Number(habit) : undefined, at: Date.now() });
+    const nudge = params.get('nudge');
+    if (nudge) {
+      answerNudge(nudge, 'opened');
+      // Don't re-record on a reload.
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('nudge');
+      window.history.replaceState(null, '', clean.toString());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -102,7 +122,7 @@ function AppContent() {
               {activeTab === 'campus' && <Campus initialSubPage={campusInitial} />}
               {activeTab === 'journal' && <Journal />}
               {activeTab === 'ledger' && <LedgerView initialSubPage={ledgerInitial} />}
-              {activeTab === 'tend' && <TendView initialSubPage={tendInitial} />}
+              {activeTab === 'tend' && <TendView initialSubPage={tendInitial} highlight={highlight} />}
             </>
           )}
         </div>

@@ -3442,3 +3442,87 @@ html, body, #root {
   box-shadow: 0 0 0 1px var(--bk-ink-strong);
 }
 .bk-cal-today-btn:active { background: var(--bk-paper-deep); }
+
+
+/* ── Nudges ───────────────────────────────────────────────────────────── */
+/* Hearth card: things waiting on you */
+.nudge-card {
+  --bk-frame-band-color: var(--bk-indigo);
+  padding: 14px 16px; margin: 0 7px 26px;
+}
+.nudge-card-label {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-indigo);
+  margin-bottom: 10px;
+}
+.nudge-row {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 0;
+  border-top: 2px solid var(--bk-paper-deep);
+}
+.nudge-row:first-of-type { border-top: none; padding-top: 0; }
+.nudge-row:last-of-type { padding-bottom: 0; }
+.nudge-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.nudge-kind {
+  font-family: var(--bk-font-micro);
+  font-size: var(--bk-text-micro); letter-spacing: var(--bk-tracking-micro);
+  text-transform: uppercase; color: var(--bk-ink-soft);
+}
+.nudge-label {
+  font-family: var(--bk-font-body); font-size: 17px; line-height: 1.25;
+  color: var(--bk-ink-strong); overflow-wrap: anywhere;
+}
+.nudge-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.nudge-btn {
+  font-family: var(--bk-font-body); font-weight: 700; font-size: 14px;
+  background: var(--bk-paper); color: var(--bk-ink-strong);
+  border: none; padding: 7px 12px; cursor: pointer;
+  image-rendering: pixelated;
+  box-shadow:
+    inset 2px 2px 0 0 rgba(255,255,255,.5),
+    inset -2px -2px 0 0 rgba(78,58,44,.25),
+    0 0 0 2px var(--bk-ink-strong),
+    2px 2px 0 2px var(--bk-shadow);
+}
+.nudge-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: inset 2px 2px 0 0 rgba(78,58,44,.2), 0 0 0 2px var(--bk-ink-strong);
+}
+.nudge-btn--did { background: var(--bk-stardust); color: var(--text-dark); }
+.nudge-btn--go { background: var(--bk-indigo); color: var(--bk-stardust-shimmer); }
+.nudge-btn--skip { color: var(--bk-ink-soft); }
+
+/* A task/habit row a nudge pointed at */
+@keyframes nudge-flash {
+  0%, 100% { box-shadow: none; }
+  20%, 60% { box-shadow: 0 0 0 3px var(--bk-stardust); }
+}
+.nudge-highlight { animation: nudge-flash 1.2s ease-in-out 2; }
+
+/* "Remind me" time row (task schedule picker + habit edit) */
+.schedule-remind {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-top: 8px; font-size: 13px; color: var(--ink-2);
+}
+.schedule-remind-input { width: auto; padding: 8px 10px; }
+.schedule-remind-clear {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; line-height: 1; color: var(--ink-3); padding: 4px 6px;
+}
+
+/* Settings → Nudges */
+.nudge-status-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--ink-2); margin: 0 0 10px;
+}
+.nudge-status-dot {
+  width: 10px; height: 10px; flex-shrink: 0;
+  background: var(--ink-3); box-shadow: 0 0 0 2px var(--bk-ink-strong);
+}
+.nudge-status-dot.on { background: var(--accent-gold, #d9a441); }
+.nudge-status-dot.warn { background: var(--accent-ruby, #c74b4b); }
+.nudge-time-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: var(--ink-2); margin: 10px 0;
+}

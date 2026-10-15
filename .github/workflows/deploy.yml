@@ -28,7 +28,12 @@ jobs:
           cache: npm
 
       - run: npm ci
+      # Nudge config is public (API origin + VAPID public key); set as repo
+      # variables so the GitHub Pages build knows where the nudge server is.
       - run: npm run build
+        env:
+          VITE_NUDGE_API: ${{ vars.VITE_NUDGE_API }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
 
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

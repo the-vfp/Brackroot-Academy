@@ -63,6 +63,7 @@ Log your real life — expenses, meals, habits, tasks — and earn **Stardust �
 | PWA / offline | [Workbox](https://developer.chrome.com/docs/workbox) via [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) |
 | Styling | Plain CSS (custom properties, no framework) |
 | Hosting | [GitHub Pages](https://pages.github.com/), auto-deployed via Actions on push to `main` |
+| Nudges (push reminders) | [Vercel](https://vercel.com/) Node functions in `api/` + a private Vercel Blob store, fired by a GitHub Actions cron (`nudge-tick.yml`); [web-push](https://github.com/web-push-libs/web-push) with VAPID |
 
 Fonts: Cormorant Garamond (display), Nunito (body). Palette: dark academia — burgundy, bronze, gold on deep brown.
 
@@ -88,6 +89,12 @@ npm run build
 ```
 
 Output lands in `dist/`. The GitHub Actions workflow at `.github/workflows/deploy.yml` runs this on every push to `main` and deploys to Pages automatically.
+
+### Nudges (push reminders)
+
+Reminders are optional and off until switched on in **Settings → Nudges**. The client needs two public build-time values — `VITE_NUDGE_API` (the server origin) and `VITE_VAPID_PUBLIC_KEY` — set as GitHub repository variables for the Pages build (and as Vercel env vars for the Vercel copy). Without them the Nudges section simply reports that it isn't configured and nothing else changes.
+
+The server side is the handful of functions in `api/`. Secrets (`VAPID_PRIVATE_KEY`, `NUDGE_ADMIN_KEY`, …) live in the gitignored `.env.local`; `scripts/nudges-setup.ps1` provisions Vercel from it after `npx vercel login`. The schedule itself is derived on-device from your tasks, habits and the daily-log time, and mirrored up whenever it changes; answers (*Did it* / *Later* / *Skip*, or *ignored* when a reminder lapses) are kept in the device's document and readable through `GET /api/log` with the admin key.
 
 ### Firebase (optional)
 
@@ -168,7 +175,7 @@ Missing content degrades gracefully:
 - Phase 4: Challenge system (calendar + character challenges)
 - Phase 5: Level 10 capstone rewards
 
-See [`CHANGELOG.md`](CHANGELOG.md) for the full history.
+See [`CHANGELOG.md`](888.%20%20🤖%20claude%20code/Brackroot-Academy/CHANGELOG.md) for the full history.
 
 ---
 

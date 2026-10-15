@@ -50,18 +50,24 @@ function SchedulePicker({ value, onChange }) {
   // value: { dueDate?: string, recurrence?: object } | null
   const dueDate = value?.dueDate || '';
   const recurrence = value?.recurrence || null;
+  // remindAt: 'HH:MM' nudge time on the due day(s), or null for no reminder.
+  const remindAt = value?.remindAt || null;
   const mode = recurrence ? 'weekly' : (dueDate ? 'date' : 'anytime');
 
   function setMode(newMode) {
     if (newMode === 'anytime') onChange(null);
-    else if (newMode === 'date') onChange({ dueDate: localDateString(), recurrence: null });
-    else if (newMode === 'weekly') onChange({ dueDate: null, recurrence: { type: 'weekly', days: [] } });
+    else if (newMode === 'date') onChange({ dueDate: localDateString(), recurrence: null, remindAt });
+    else if (newMode === 'weekly') onChange({ dueDate: null, recurrence: { type: 'weekly', days: [] }, remindAt });
   }
 
   function toggleDay(d) {
     const days = recurrence?.days || [];
     const next = days.includes(d) ? days.filter(x => x !== d) : [...days, d];
-    onChange({ dueDate: null, recurrence: { type: 'weekly', days: next } });
+    onChange({ dueDate: null, recurrence: { type: 'weekly', days: next }, remindAt });
+  }
+
+  function setRemind(hhmm) {
+    onChange({ dueDate, recurrence, remindAt: hhmm || null });
   }
 
   return (
@@ -83,7 +89,7 @@ function SchedulePicker({ value, onChange }) {
           type="date"
           className="form-input schedule-date-input"
           value={dueDate || localDateString()}
-          onChange={(e) => onChange({ dueDate: e.target.value, recurrence: null })}
+          onChange={(e) => onChange({ dueDate: e.target.value, recurrence: null, remindAt })}
         />
       )}
 
@@ -101,6 +107,23 @@ function SchedulePicker({ value, onChange }) {
             </button>
           ))}
         </div>
+      )}
+
+      {mode !== 'anytime' && (
+        <label className="schedule-remind">
+          <span>{'\u{1F514}'} Remind me</span>
+          <input
+            type="time"
+            className="form-input schedule-remind-input"
+            value={remindAt || ''}
+            onChange={(e) => setRemind(e.target.value)}
+          />
+          {remindAt && (
+            <button type="button" className="schedule-remind-clear" onClick={() => setRemind(null)} aria-label="No reminder">
+              {'×'}
+            </button>
+          )}
+        </label>
       )}
     </div>
   );
@@ -151,11 +174,24 @@ function TagPicker({ tags, value, onChange, className = '' }) {
   );
 }
 
-function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, confirmingDelete, today }) {
+function formatRemind(hhmm) {
+  if (!hhmm) return null;
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h < 12 ? 'am' : 'pm';
+  const display = h % 12 === 0 ? 12 : h % 12;
+  return m ? `${display}:${String(m).padStart(2, '0')}${period}` : `${display}${period}`;
+}
+
+function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, confirmingDelete, today, highlighted }) {
   const handlers = useLongPress(onLongPress, onTap);
   const dueLabel = formatDueDate(task.dueDate, today);
   const recLabel = formatRecurrence(task.recurrence);
+  const remind = (task.dueDate || task.recurrence) ? formatRemind(task.remindAt) : null;
   const schedule = recLabel ? `\u{1F501} ${recLabel}` : (dueLabel ? `\u{1F4C5} ${dueLabel}` : null);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (highlighted && ref.current) ref.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [highlighted]);
 
   const earn = stardustForTask(task, tag);
   const rewards = earn > 0;
@@ -167,7 +203,8 @@ function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, 
 
   return (
     <div
-      className={`task-item ${completed ? 'completed' : ''} ${overdue ? 'overdue' : ''}`}
+      ref={ref}
+      className={`task-item ${completed ? 'completed' : ''} ${overdue ? 'overdue' : ''} ${highlighted ? 'nudge-highlight' : ''}`}
       role="button"
       tabIndex={0}
       {...handlers}
@@ -188,6 +225,9 @@ function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, 
           {schedule && (
             <span className="task-schedule-chip">{schedule}</span>
           )}
+          {remind && (
+            <span className="task-schedule-chip">{'\u{1F514}'} {remind}</span>
+          )}
         </div>
       </div>
       <button
@@ -200,9 +240,17 @@ function TaskRow({ task, tag, completed, overdue, onTap, onLongPress, onDelete, 
   );
 }
 
-export default function TaskView() {
+export default function TaskView({ highlightId = null, highlightKey = 0 }) {
   const { tasks, tags, addTask, completeTask, uncheckTask, deleteTask, updateTask, getHabitDay } = useStore();
   const showToast = useToast();
+  // Flash the task a nudge pointed at, then let it go after a few seconds.
+  const [flashId, setFlashId] = useState(null);
+  useEffect(() => {
+    if (!highlightId) return;
+    setFlashId(highlightId);
+    const id = setTimeout(() => setFlashId(null), 4000);
+    return () => clearTimeout(id);
+  }, [highlightId, highlightKey]);
   const [text, setText] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
   const [schedule, setSchedule] = useState(null);
@@ -356,8 +404,8 @@ export default function TaskView() {
     setEditDifficulty(task.difficulty || 'medium');
     setEditTagId(task.tagId || null);
     setEditSchedule(
-      task.recurrence ? { dueDate: null, recurrence: task.recurrence }
-      : task.dueDate ? { dueDate: task.dueDate, recurrence: null }
+      task.recurrence ? { dueDate: null, recurrence: task.recurrence, remindAt: task.remindAt || null }
+      : task.dueDate ? { dueDate: task.dueDate, recurrence: null, remindAt: task.remindAt || null }
       : null
     );
     setConfirmDelete(null);
@@ -386,6 +434,7 @@ export default function TaskView() {
       tagId: editTagId || null,
       dueDate: sched?.recurrence ? null : (sched?.dueDate ?? null),
       recurrence: sched?.recurrence ?? null,
+      remindAt: sched ? (sched.remindAt || null) : null,
     });
     setEditing(null);
     showToast('Task updated');
@@ -442,6 +491,7 @@ export default function TaskView() {
                 onLongPress={() => startEdit(null, task)}
                 onDelete={(e) => handleDelete(e, task.id)}
                 confirmingDelete={confirmDelete === task.id}
+                highlighted={flashId === task.id}
               />
             )
           ))}

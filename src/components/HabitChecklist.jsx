@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStore, stardustForDifficulty } from '../store.jsx';
 import { localDateString } from '../db.js';
 import { useToast } from './Toast.jsx';
@@ -6,11 +6,22 @@ import { useLongPress } from '../hooks/useLongPress.js';
 import { DEFAULT_ICON, DifficultyPicker, TypePicker } from './HabitFields.jsx';
 import HabitDetail from './HabitDetail.jsx';
 
-function DailyHabitRow({ habit, isDone, streak, earn, onTap, onLongPress }) {
+// Scrolls a row into view and flashes it when a nudge pointed at it.
+function useHighlight(highlighted) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (highlighted && ref.current) ref.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [highlighted]);
+  return ref;
+}
+
+function DailyHabitRow({ habit, isDone, streak, earn, onTap, onLongPress, highlighted }) {
   const handlers = useLongPress(onLongPress, onTap);
+  const ref = useHighlight(highlighted);
   return (
     <div
-      className={`habit-item ${isDone ? 'completed' : ''}`}
+      ref={ref}
+      className={`habit-item ${isDone ? 'completed' : ''} ${highlighted ? 'nudge-highlight' : ''}`}
       role="button"
       tabIndex={0}
       {...handlers}
@@ -32,11 +43,13 @@ function DailyHabitRow({ habit, isDone, streak, earn, onTap, onLongPress }) {
   );
 }
 
-function RepeatableHabitRow({ habit, count, earn, onIncrement, onLongPress }) {
+function RepeatableHabitRow({ habit, count, earn, onIncrement, onLongPress, highlighted }) {
   const handlers = useLongPress(onLongPress);
+  const ref = useHighlight(highlighted);
   return (
     <div
-      className={`habit-item ${count > 0 ? 'completed' : ''}`}
+      ref={ref}
+      className={`habit-item ${count > 0 ? 'completed' : ''} ${highlighted ? 'nudge-highlight' : ''}`}
       {...handlers}
     >
       <div className="habit-icon">{habit.icon}</div>
@@ -53,13 +66,22 @@ function RepeatableHabitRow({ habit, count, earn, onIncrement, onLongPress }) {
   );
 }
 
-export default function HabitChecklist() {
+export default function HabitChecklist({ highlightId = null, highlightKey = 0 }) {
   const {
     habits, toggleHabit, addHabit,
     getTodayCompletedHabits, getTodayHabitCounts, getHabitStreak,
     getHabitDay, startNewDay
   } = useStore();
   const showToast = useToast();
+
+  // Flash the habit a nudge pointed at, then let it go after a few seconds.
+  const [flashId, setFlashId] = useState(null);
+  useEffect(() => {
+    if (!highlightId) return;
+    setFlashId(highlightId);
+    const id = setTimeout(() => setFlashId(null), 4000);
+    return () => clearTimeout(id);
+  }, [highlightId, highlightKey]);
 
   // Inline add state — emoji + name + type + difficulty (defaults: daily, Medium, ✨).
   const [newIcon, setNewIcon] = useState(DEFAULT_ICON);
@@ -165,6 +187,7 @@ export default function HabitChecklist() {
                 earn={earn}
                 onIncrement={() => handleToggle(habit)}
                 onLongPress={() => setDetailId(habit.id)}
+                highlighted={flashId === habit.id}
               />
             );
           }
@@ -178,6 +201,7 @@ export default function HabitChecklist() {
               earn={earn}
               onTap={() => handleToggle(habit)}
               onLongPress={() => setDetailId(habit.id)}
+              highlighted={flashId === habit.id}
             />
           );
         })}

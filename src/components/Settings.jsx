@@ -16,13 +16,49 @@ function formatHour(h) {
 export default function Settings() {
   const {
     appState, setDayRolloverHour,
-    handleExport, handleImport, handleReset
+    handleExport, handleImport, handleReset,
+    nudgesAvailable, nudgesEnabled, nudgeStatus, openNudges,
+    enableNudges, disableNudges, setNudgeDailyTime, sendTestNudge,
   } = useStore();
   const showToast = useToast();
   const fileInputRef = useRef(null);
   const [showCategories, setShowCategories] = useState(false);
   const [showTimeCategories, setShowTimeCategories] = useState(false);
   const [showTags, setShowTags] = useState(false);
+  const [nudgeBusy, setNudgeBusy] = useState(false);
+
+  async function onToggleNudges() {
+    setNudgeBusy(true);
+    try {
+      if (nudgesEnabled) {
+        await disableNudges();
+        showToast('Nudges off');
+      } else {
+        await enableNudges();
+        showToast('\u{1F514} Nudges on');
+      }
+    } catch (err) {
+      showToast(err.message || 'Could not switch nudges on');
+    }
+    setNudgeBusy(false);
+  }
+
+  async function onTestNudge() {
+    setNudgeBusy(true);
+    try {
+      const res = await sendTestNudge();
+      showToast(res.ok ? 'Sent — check your notifications' : `Couldn’t send (${res.reason})`);
+    } catch (err) {
+      showToast(err.message || 'Could not send a test');
+    }
+    setNudgeBusy(false);
+  }
+
+  const nudgeStatusLabel = !nudgesEnabled ? 'Off'
+    : nudgeStatus === 'blocked' ? 'Blocked by the browser'
+    : nudgeStatus === 'error' ? 'Can’t reach the server'
+    : nudgeStatus === 'syncing' ? 'Syncing…'
+    : `On · ${openNudges.length} waiting`;
 
   if (showCategories) {
     return <CategoryManager onBack={() => setShowCategories(false)} />;
@@ -83,6 +119,50 @@ export default function Settings() {
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="data-actions">
+        <div className="section-title">Nudges</div>
+        <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: '0 0 8px', lineHeight: 1.5 }}>
+          Reminders that come to you as notifications, even with the app closed.
+          Each one waits on the Hearth until you answer it, and the answers are
+          kept so the pattern can be looked at later.
+        </p>
+        {!nudgesAvailable ? (
+          <p style={{ fontSize: '12px', color: 'var(--ink-3)', margin: 0 }}>
+            Not available here {'—'} this browser can{'’'}t do push notifications,
+            or this build has no nudge server configured.
+          </p>
+        ) : (
+          <>
+            <div className="nudge-status-row">
+              <span className={`nudge-status-dot ${nudgesEnabled ? (nudgeStatus === 'ok' || nudgeStatus === 'syncing' ? 'on' : 'warn') : ''}`} />
+              <span>{nudgeStatusLabel}</span>
+            </div>
+            <button className="btn-secondary" onClick={onToggleNudges} disabled={nudgeBusy}>
+              {nudgesEnabled ? '\u{1F515} Turn nudges off' : '\u{1F514} Turn nudges on'}
+            </button>
+            <label className="nudge-time-row">
+              <span>Daily log nudge at</span>
+              <input
+                type="time"
+                className="form-input"
+                style={{ width: 'auto', padding: '8px 10px' }}
+                value={appState?.nudgeDailyTime || '10:00'}
+                onChange={(e) => setNudgeDailyTime(e.target.value)}
+              />
+            </label>
+            {nudgesEnabled && (
+              <button className="btn-secondary" onClick={onTestNudge} disabled={nudgeBusy}>
+                {'\u{1F4E8}'} Send a test nudge
+              </button>
+            )}
+            <p style={{ fontSize: '11px', color: 'var(--ink-3)', margin: '6px 0 0', lineHeight: 1.5 }}>
+              Task and habit reminders are set on the task or habit itself
+              (long-press one to edit). Nudges can arrive a few minutes late.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="data-actions">

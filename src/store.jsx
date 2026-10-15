@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import * as nudgeApi from './nudges.js';
 import { db, initializeState, initializeHabits, dedupeHabits, initializeCategories, initializeCharacters, initializeTimeCategories, reconcileCharactersFromEvents, resolveCompletedWeeks, migrateFromLocalStorage, getWeekStart, getMonthStart, getHabitDayFor, localDateString, addDaysToDate, exportAllData, importAllData, resetAllData } from './db.js';
 import { CHARACTER_DEFS, RP_THRESHOLDS, MAX_LEVEL, getTitle } from './data/characters.js';
 import { INTERACTION_TIERS, drawLine, isTierUnlocked } from './data/interactions.js';
@@ -144,6 +145,138 @@ export function StoreProvider({ children }) {
       window.removeEventListener('focus', recheck);
     };
   }, [loading, loadAllBase]);
+
+  // ====== NUDGES (push reminders; see src/nudges.js + api/) ======
+  const [openNudges, setOpenNudges] = useState([]);
+  const [nudgeLog, setNudgeLog] = useState([]);
+  // 'off' | 'syncing' | 'ok' | 'error' | 'blocked'
+  const [nudgeStatus, setNudgeStatus] = useState('off');
+  const nudgesEnabled = !!appState?.nudgesEnabled;
+  const nudgesAvailable = nudgeApi.nudgesConfigured && nudgeApi.pushSupported;
+  const lastScheduleHash = useRef(null);
+  // Latest data for effects that shouldn't re-run on every render.
+  const nudgeDataRef = useRef({ appState, tasks, habits });
+  nudgeDataRef.current = { appState, tasks, habits };
+
+  // 'ok' unless the browser has notifications blocked, which the user needs to see.
+  const settledStatus = () => (nudgeApi.pushSupported && Notification.permission === 'denied') ? 'blocked' : 'ok';
+
+  const applyNudgeState = useCallback((s) => {
+    const open = s?.open || [];
+    setOpenNudges(open);
+    if (s?.log) setNudgeLog(s.log);
+    nudgeApi.setBadge(open.length);
+  }, []);
+
+  const refreshNudges = useCallback(async () => {
+    if (!nudgesAvailable || !nudgesEnabled) return;
+    try {
+      applyNudgeState(await nudgeApi.fetchState());
+      setNudgeStatus(settledStatus());
+    } catch {
+      setNudgeStatus('error');
+    }
+  }, [nudgesAvailable, nudgesEnabled, applyNudgeState]);
+
+  // Push the current schedule (and optionally the subscription) to the server.
+  const syncNudges = useCallback(async ({ subscription } = {}) => {
+    const { appState: st, tasks: ts, habits: hs } = nudgeDataRef.current;
+    const schedule = nudgeApi.buildSchedule({ appState: st, tasks: ts, habits: hs });
+    setNudgeStatus('syncing');
+    try {
+      const res = await nudgeApi.syncToServer({ schedule, subscription });
+      lastScheduleHash.current = nudgeApi.scheduleHash(schedule);
+      applyNudgeState(res);
+      setNudgeStatus(settledStatus());
+      return res;
+    } catch (err) {
+      setNudgeStatus('error');
+      throw err;
+    }
+  }, [applyNudgeState]);
+
+  // On open (and when nudges get switched on): heal the push subscription if
+  // the browser dropped it, re-send it with the schedule, then pull the open
+  // nudges. Also re-pull whenever the app comes back to the foreground.
+  useEffect(() => {
+    if (loading || !nudgesAvailable || !nudgesEnabled) return;
+    let cancelled = false;
+    (async () => {
+      let subscription;
+      try {
+        if (Notification.permission === 'granted') {
+          subscription = (await nudgeApi.currentSubscription()) || (await nudgeApi.subscribePush());
+        }
+      } catch { /* keep going with the schedule only */ }
+      if (cancelled) return;
+      try { await syncNudges({ subscription }); } catch { /* status already set */ }
+    })();
+    const onVisible = () => { if (!document.hidden) refreshNudges(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', refreshNudges);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', refreshNudges);
+    };
+  }, [loading, nudgesAvailable, nudgesEnabled, syncNudges, refreshNudges]);
+
+  // Mirror schedule changes (new reminder, task completed, time changed…) to
+  // the server, debounced, only when the derived schedule actually differs.
+  useEffect(() => {
+    if (loading || !nudgesAvailable || !nudgesEnabled) return;
+    const schedule = nudgeApi.buildSchedule({ appState, tasks, habits });
+    const hash = nudgeApi.scheduleHash(schedule);
+    if (lastScheduleHash.current === null || hash === lastScheduleHash.current) return;
+    const id = setTimeout(() => { syncNudges().catch(() => {}); }, 1200);
+    return () => clearTimeout(id);
+  }, [loading, nudgesAvailable, nudgesEnabled, appState, tasks, habits, syncNudges]);
+
+  const enableNudges = useCallback(async () => {
+    const subscription = await nudgeApi.subscribePush(); // throws a readable reason
+    // Reach the server first; only then record "on", so a failed switch-on
+    // doesn't leave the setting stuck at On with nothing behind it.
+    await syncNudges({ subscription });
+    await db.state.update('app', { nudgesEnabled: true });
+    await loadAll();
+  }, [syncNudges, loadAll]);
+
+  const disableNudges = useCallback(async () => {
+    try { await nudgeApi.syncToServer({ schedule: [], subscription: null }); } catch { /* best-effort */ }
+    try { await nudgeApi.unsubscribePush(); } catch { /* best-effort */ }
+    await db.state.update('app', { nudgesEnabled: false });
+    lastScheduleHash.current = null;
+    setOpenNudges([]);
+    nudgeApi.setBadge(0);
+    setNudgeStatus('off');
+    await loadAll();
+  }, [loadAll]);
+
+  const setNudgeDailyTime = useCallback(async (hhmm) => {
+    if (!/^\d{2}:\d{2}$/.test(hhmm || '')) return;
+    await db.state.update('app', { nudgeDailyTime: hhmm });
+    await loadAll();
+  }, [loadAll]);
+
+  // 'did' | 'later' | 'skip' | 'opened'
+  const answerNudge = useCallback(async (nudgeId, answer) => {
+    if (answer === 'did' || answer === 'skip') {
+      setOpenNudges(list => list.filter(n => n.nudgeId !== nudgeId));
+    }
+    try {
+      const res = await nudgeApi.answerNudge(nudgeId, answer);
+      applyNudgeState(res);
+    } catch {
+      setNudgeStatus('error');
+      refreshNudges();
+    }
+  }, [applyNudgeState, refreshNudges]);
+
+  const sendTestNudge = useCallback(async () => {
+    const res = await nudgeApi.sendTestNudge();
+    applyNudgeState(res);
+    return res;
+  }, [applyNudgeState]);
 
   // Get expenses for the current week
   const getWeekExpenses = useCallback(() => {
@@ -545,15 +678,17 @@ export function StoreProvider({ children }) {
   // ====== TASK OPERATIONS ======
 
   const addTask = useCallback(async (text, difficulty = 'medium', schedule = null, tagId = null) => {
-    // schedule is { dueDate?: 'YYYY-MM-DD', recurrence?: {type:'weekly', days:number[]} }
-    // Mutually exclusive — recurrence wins if both set.
-    const { dueDate = null, recurrence = null } = schedule || {};
+    // schedule is { dueDate?: 'YYYY-MM-DD', recurrence?: {type:'weekly', days:number[]}, remindAt?: 'HH:MM' }
+    // Mutually exclusive — recurrence wins if both set. remindAt is the nudge
+    // time on the due day(s); it only means something with a date or days.
+    const { dueDate = null, recurrence = null, remindAt = null } = schedule || {};
     await db.tasks.add({
       text,
       difficulty,
       tagId: tagId || null,
       dueDate: recurrence ? null : dueDate,
       recurrence,
+      remindAt: (recurrence || dueDate) ? (remindAt || null) : null,
       completed: false,
       timestamp: Date.now(),
       completedAt: null
@@ -1273,7 +1408,19 @@ export function StoreProvider({ children }) {
       claimChallenge,
       handleExport,
       handleImport,
-      handleReset
+      handleReset,
+      // nudges
+      openNudges,
+      nudgeLog,
+      nudgeStatus,
+      nudgesEnabled,
+      nudgesAvailable,
+      enableNudges,
+      disableNudges,
+      setNudgeDailyTime,
+      answerNudge,
+      sendTestNudge,
+      refreshNudges
     }}>
       {children}
     </StoreContext.Provider>

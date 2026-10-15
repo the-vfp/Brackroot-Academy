@@ -220,13 +220,19 @@ export async function initializeState() {
       fullDayDates: [],
       mealStreakWeeks: [],
       windRp: 0,
-      lastResolvedWeek: null
+      lastResolvedWeek: null,
+      // Nudges: the daily-log reminder time ('HH:MM', local) and whether push
+      // is switched on for this device.
+      nudgeDailyTime: '10:00',
+      nudgesEnabled: false
     });
   } else {
     const currentWeek = getWeekStart();
     const patch = {};
     if (existing.weekStart !== currentWeek) patch.weekStart = currentWeek;
     if (existing.dayRolloverHour === undefined) patch.dayRolloverHour = 0;
+    if (existing.nudgeDailyTime === undefined) patch.nudgeDailyTime = '10:00';
+    if (existing.nudgesEnabled === undefined) patch.nudgesEnabled = false;
     if (existing.windRp === undefined) patch.windRp = 0;
     if (existing.lastResolvedWeek === undefined) patch.lastResolvedWeek = null;
     // Treat existing installs as already-seeded so deleting your last
@@ -630,7 +636,10 @@ export async function exportAllData() {
       fullDayDates: appState.fullDayDates || [],
       mealStreakWeeks: appState.mealStreakWeeks || [],
       windRp: appState.windRp ?? 0,
-      lastResolvedWeek: appState.lastResolvedWeek ?? null
+      lastResolvedWeek: appState.lastResolvedWeek ?? null,
+      dayRolloverHour: appState.dayRolloverHour ?? 0,
+      // nudgesEnabled is deliberately NOT exported: push is per-device.
+      nudgeDailyTime: appState.nudgeDailyTime || '10:00'
     },
     expenses,
     habits,
@@ -715,7 +724,9 @@ export async function importAllData(data) {
       fullDayDates: data.state.fullDayDates || [],
       mealStreakWeeks: data.state.mealStreakWeeks || [],
       windRp: data.state.windRp ?? 0,
-      lastResolvedWeek: data.state.lastResolvedWeek ?? null
+      lastResolvedWeek: data.state.lastResolvedWeek ?? null,
+      dayRolloverHour: data.state.dayRolloverHour ?? 0,
+      nudgeDailyTime: data.state.nudgeDailyTime || '10:00'
     };
     expenses = data.expenses;
     habits = data.habits;
@@ -784,8 +795,10 @@ export async function importAllData(data) {
   await db.weeklyResolutions.clear();
   await db.tags.clear();
 
-  // Write state
-  await db.state.put({ key: 'app', ...stateData });
+  // Write state. Push enablement is a property of THIS device, not of the
+  // backup, so carry it over from whatever was here before the import.
+  const prior = await db.state.get('app');
+  await db.state.put({ key: 'app', nudgesEnabled: !!prior?.nudgesEnabled, ...stateData });
 
   if (expenses && expenses.length > 0) await db.expenses.bulkAdd(expenses);
   if (habits && habits.length > 0) {

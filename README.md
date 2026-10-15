@@ -175,7 +175,7 @@ Missing content degrades gracefully:
 - Phase 4: Challenge system (calendar + character challenges)
 - Phase 5: Level 10 capstone rewards
 
-See [`CHANGELOG.md`](888.%20%20🤖%20claude%20code/Brackroot-Academy/CHANGELOG.md) for the full history.
+See [`CHANGELOG.md`](CHANGELOG.md) for the full history.
 
 ---
 

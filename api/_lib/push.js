@@ -1,12 +1,16 @@
 import webpush from 'web-push';
 
 let configured = false;
+// Env values are trimmed: a value pasted from a CRLF .env file once carried a
+// trailing , which web-push rejects as "not a valid URL" and which took the
+// whole function down before it could answer.
+const env = (k, fallback = '') => (process.env[k] || fallback).trim();
 function configure() {
   if (configured) return;
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:addictedtopillows@gmail.com',
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY,
+    env('VAPID_SUBJECT', 'mailto:addictedtopillows@gmail.com'),
+    env('VAPID_PUBLIC_KEY'),
+    env('VAPID_PRIVATE_KEY'),
   );
   configured = true;
 }
@@ -16,7 +20,6 @@ function configure() {
 export async function sendNudge(subscription, nudge) {
   if (!subscription) return 'error';
   if (process.env.NUDGE_FAKE_PUSH) { return 'ok'; }
-  configure();
   const payload = JSON.stringify({
     title: titleFor(nudge),
     body: nudge.label,
@@ -25,6 +28,7 @@ export async function sendNudge(subscription, nudge) {
     tag: `nudge-${nudge.itemId}`,
   });
   try {
+    configure(); // inside the try: a misconfigured key must not 500 the endpoint
     await webpush.sendNotification(subscription, payload, { TTL: 6 * 3600, urgency: 'high' });
     return 'ok';
   } catch (err) {

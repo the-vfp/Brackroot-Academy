@@ -45,7 +45,7 @@ export function validDeviceId(id) {
 
 // Admin endpoints (tick, log) take the shared key via header or ?key=.
 export function isAdmin(req) {
-  const key = process.env.NUDGE_ADMIN_KEY;
+  const key = (process.env.NUDGE_ADMIN_KEY || '').trim();
   if (!key) return false;
   const given = req.headers['x-nudge-key'] || req.query?.key;
   return typeof given === 'string' && given.length === key.length && timingSafeEqual(given, key);

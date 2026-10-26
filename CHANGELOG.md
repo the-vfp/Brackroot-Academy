@@ -2,6 +2,20 @@
 
 All notable changes to Brackroot Academy are documented here.
 
+## 2026-10-15 — Nudges: reminders that come to you (push notifications)
+
+### Added
+- **Nudges.** The app can now send push notifications even when it's closed, on any device the PWA is installed on. Three kinds: the **daily log** nudge (one time a day, set in Settings → Nudges, default 10:00 AM; opens the Hearth), **task reminders** (a "Remind me" time on any task with a date or weekly days — opens Tasks with that task highlighted), and **habit reminders** (a daily "Remind me" time on the habit's edit page — opens Habits with the habit highlighted).
+- **Nudges wait on the Hearth until you answer them**: *Did it* / *Later* (an hour's snooze, then it re-fires) / *Skip*. A nudge that's still unanswered when the same reminder fires again is closed as *ignored*. Every answer is logged with how long it took, so the pattern can be looked at honestly later. The app icon badge shows how many are waiting (where the OS supports it).
+- **Settings → Nudges**: switch on (asks for notification permission), status line, daily-log time, and a *Send a test nudge* button.
+- **Server** (`api/`, Vercel Node functions + a private Vercel Blob store): `sync` (the app mirrors its schedule + push subscription up whenever it changes), `state`, `answer`, `test`, and the admin-only `tick` (fired every 10 minutes by `.github/workflows/nudge-tick.yml`) and `log` (the accountability record). Each device has its own document keyed by a random 32-hex id generated in the app; the id doubles as that device's credential and is deliberately left out of the JSON export.
+- `scripts/nudges-setup.ps1` provisions the server side once `vercel login` has been done; secrets live in the gitignored `.env.local`.
+
+### Changed
+- The service worker is now a custom one (`src/sw.js`, vite-plugin-pwa `injectManifest`) — same precaching + offline navigation as before, plus `push` / `notificationclick` handlers. Notification taps reuse the open app window instead of opening a second copy.
+- Export/import now round-trips `dayRolloverHour` and `nudgeDailyTime` (it never carried the rollover hour before). `nudgesEnabled` is per-device and is preserved across an import rather than taken from the backup.
+- Tasks carry an optional `remindAt` (`'HH:MM'`), habits too; no Dexie schema bump needed (unindexed fields).
+
 ## 2026-07-12 — Challenge level-gating goes live + Tally tweaks
 
 ### Added

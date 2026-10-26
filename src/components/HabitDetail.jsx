@@ -35,6 +35,7 @@ export default function HabitDetail({ habitId, onClose }) {
   const [icon, setIcon] = useState(habit?.icon || DEFAULT_ICON);
   const [type, setType] = useState(habit?.type || 'daily');
   const [difficulty, setDifficulty] = useState(habit?.difficulty || 'medium');
+  const [remindAt, setRemindAt] = useState(habit?.remindAt || '');
   const [rangeId, setRangeId] = useState('month');
 
   // The habit was deleted out from under us (or never existed) — bail to the list.
@@ -59,7 +60,7 @@ export default function HabitDetail({ habitId, onClose }) {
       return;
     }
     const safeIcon = (icon || DEFAULT_ICON).trim() || DEFAULT_ICON;
-    await updateHabit(habit.id, { name: trimmed, icon: safeIcon, type, difficulty });
+    await updateHabit(habit.id, { name: trimmed, icon: safeIcon, type, difficulty, remindAt: remindAt || null });
     showToast('Habit updated');
     onClose();
   }
@@ -116,6 +117,20 @@ export default function HabitDetail({ habitId, onClose }) {
         </div>
         <TypePicker value={type} onChange={setType} />
         <DifficultyPicker value={difficulty} onChange={setDifficulty} />
+        <label className="schedule-remind">
+          <span>{'\u{1F514}'} Remind me daily</span>
+          <input
+            type="time"
+            className="form-input schedule-remind-input"
+            value={remindAt}
+            onChange={(e) => setRemindAt(e.target.value)}
+          />
+          {remindAt && (
+            <button type="button" className="schedule-remind-clear" onClick={() => setRemindAt('')} aria-label="No reminder">
+              {'×'}
+            </button>
+          )}
+        </label>
         <div className="habit-edit-actions">
           <button className="btn-primary" onClick={handleSave}>Save</button>
           <button className="btn-secondary" onClick={handleArchiveToggle} style={{ margin: 0 }}>

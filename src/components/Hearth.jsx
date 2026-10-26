@@ -38,9 +38,28 @@ export default function Hearth({ onNavigate }) {
     appState, meals, habits, habitLogs, tasks, expenses, heartEvents,
     getHabitDay, getTodayCompletedHabits, getHeartEventContent,
     activeChallengeRun, getActiveChallengeProgress,
+    openNudges, answerNudge, nudgesEnabled,
   } = useStore();
 
   const [replay, setReplay] = useState(null);
+
+  // Open nudges, oldest first. Snoozed ones stay listed (they're still owed).
+  const nudges = nudgesEnabled ? [...openNudges].sort((a, b) => a.firedAt - b.firedAt) : [];
+  function nudgeWhen(n) {
+    const mins = Math.max(0, Math.round((Date.now() - n.firedAt) / 60000));
+    const ago = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago`
+      : mins < 48 * 60 ? `${Math.round(mins / 60)} h ago` : `${Math.round(mins / 1440)} d ago`;
+    return n.snoozeUntil && n.snoozeUntil > Date.now() ? `${ago} · snoozed` : ago;
+  }
+  function goToNudge(n) {
+    if (!onNavigate) return;
+    const params = new URLSearchParams((n.url || '').split('?')[1] || '');
+    const tab = params.get('tab');
+    // ids come back as strings from the URL; Dexie ids are numbers.
+    if (tab === 'tasks') onNavigate('tend', 'tasks', { task: Number(params.get('task')) || undefined });
+    else if (tab === 'habits') onNavigate('tend', 'habits', { habit: Number(params.get('habit')) || undefined });
+    else if (tab) onNavigate(tab);
+  }
 
   const now = new Date();
   const phase = phaseOf(now.getHours());
@@ -102,6 +121,34 @@ export default function Hearth({ onNavigate }) {
     <div className="tab-view active hearth">
       <h1 className="hearth-greeting">{greetingFor(phase)}<br />Ellene.</h1>
       <p className="hearth-subtitle">{flavor}</p>
+
+      {nudges.length > 0 && (
+        <div className="bk-frame nudge-card">
+          <div className="nudge-card-label">
+            {nudges.length === 1 ? 'Something is waiting on you' : `${nudges.length} things are waiting on you`}
+          </div>
+          {nudges.map(n => (
+            <div key={n.nudgeId} className="nudge-row">
+              <div className="nudge-text">
+                <span className="nudge-kind">
+                  {n.kind === 'daily' ? 'Daily log' : n.kind === 'task' ? 'Task' : n.kind === 'habit' ? 'Habit' : 'Test'}
+                  {' · '}{nudgeWhen(n)}
+                  {n.laterCount > 0 && ` · later ×${n.laterCount}`}
+                </span>
+                <span className="nudge-label">{n.label}</span>
+              </div>
+              <div className="nudge-actions">
+                {n.kind !== 'daily' && n.kind !== 'test' && (
+                  <button type="button" className="nudge-btn nudge-btn--go" onClick={() => goToNudge(n)}>Go {'→'}</button>
+                )}
+                <button type="button" className="nudge-btn nudge-btn--did" onClick={() => answerNudge(n.nudgeId, 'did')}>Did it</button>
+                <button type="button" className="nudge-btn" onClick={() => answerNudge(n.nudgeId, 'later')}>Later</button>
+                <button type="button" className="nudge-btn nudge-btn--skip" onClick={() => answerNudge(n.nudgeId, 'skip')}>Skip</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="bk-frame tally-card">
         <div className="tally-label">Today's Tally</div>

@@ -10,6 +10,14 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Custom service worker (src/sw.js): same precaching as the generated one
+      // used to do, plus push-notification handling for nudges.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
+      },
       includeAssets: ['favicon.svg', 'icons/*.svg'],
       manifest: {
         name: 'Brackroot Academy — Life Tracker',
@@ -69,11 +77,8 @@ export default defineConfig({
           }
         ]
       },
-      workbox: {
-        // Fonts are self-hosted now (woff2 below), so they're precached here
-        // rather than runtime-cached from the Google Fonts CDN.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
-      }
+      // Fonts are self-hosted (woff2), so they're precached via the
+      // injectManifest globPatterns above rather than runtime-cached.
     })
   ]
 });

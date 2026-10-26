@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HabitChecklist from './HabitChecklist.jsx';
 import TaskView from './TaskView.jsx';
 
@@ -7,8 +7,16 @@ const SUB_PAGES = [
   { id: 'tasks',  label: 'Tasks' },
 ];
 
-export default function TendView({ initialSubPage = 'habits' }) {
+// `highlight` ({ task?, habit?, at }) comes from a nudge deep link / the
+// Hearth's "Go →": it picks the sub-page and flashes the row once there.
+export default function TendView({ initialSubPage = 'habits', highlight = null }) {
   const [subPage, setSubPage] = useState(initialSubPage);
+
+  useEffect(() => {
+    if (!highlight) return;
+    if (highlight.task) setSubPage('tasks');
+    else if (highlight.habit) setSubPage('habits');
+  }, [highlight]);
 
   return (
     <>
@@ -23,8 +31,8 @@ export default function TendView({ initialSubPage = 'habits' }) {
           </button>
         ))}
       </div>
-      {subPage === 'habits' && <HabitChecklist />}
-      {subPage === 'tasks' && <TaskView />}
+      {subPage === 'habits' && <HabitChecklist highlightId={highlight?.habit} highlightKey={highlight?.at} />}
+      {subPage === 'tasks' && <TaskView highlightId={highlight?.task} highlightKey={highlight?.at} />}
     </>
   );
 }

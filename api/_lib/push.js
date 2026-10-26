@@ -2,8 +2,8 @@ import webpush from 'web-push';
 
 let configured = false;
 // Env values are trimmed: a value pasted from a CRLF .env file once carried a
-// trailing , which web-push rejects as "not a valid URL" and which took the
-// whole function down before it could answer.
+// trailing carriage return, which web-push rejects as "not a valid URL" and
+// which took the whole function down before it could answer.
 const env = (k, fallback = '') => (process.env[k] || fallback).trim();
 function configure() {
   if (configured) return;

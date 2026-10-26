@@ -25,8 +25,10 @@ self.addEventListener('push', (event) => {
     body: data.body || '',
     tag: data.tag || 'brackroot-nudge',
     renotify: true,
-    icon: appUrl('icons/icon-192.svg'),
-    badge: appUrl('icons/icon-192.svg'),
+    // Android won't render SVG here: PNG icon, and a monochrome PNG badge
+    // (the status-bar glyph is drawn from the badge's alpha channel).
+    icon: appUrl('icons/icon-192.png'),
+    badge: appUrl('icons/badge-96.png'),
     data: { url: data.url || './', nudgeId: data.nudgeId || null },
   };
   event.waitUntil((async () => {

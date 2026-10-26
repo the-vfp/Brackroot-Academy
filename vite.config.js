@@ -18,7 +18,7 @@ export default defineConfig({
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
       },
-      includeAssets: ['favicon.svg', 'icons/*.svg'],
+      includeAssets: ['favicon.svg', 'icons/*.svg', 'icons/*.png'],
       manifest: {
         name: 'Brackroot Academy — Life Tracker',
         short_name: 'Brackroot',
@@ -29,6 +29,10 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: './',
         icons: [
+          // PNGs first: Android uses these for the launcher + notifications.
+          { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           {
             src: 'icons/icon-192.svg',
             sizes: '192x192',

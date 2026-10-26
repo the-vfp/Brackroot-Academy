@@ -23,7 +23,7 @@ npx vercel link --yes --project brackroot
 if ($LASTEXITCODE -ne 0) { npx vercel link }   # fall back to the interactive picker
 
 Write-Host '2/5 Creating the private Blob store (safe to re-run; the CLI refuses duplicates)...'
-npx vercel blob create-store brackroot-nudges
+npx vercel blob create-store brackroot-nudges --access private --yes
 # Linking the store injects BLOB_READ_WRITE_TOKEN into the project. If the CLI
 # didn't link it automatically, do it once in the dashboard: Storage > Connect.
 

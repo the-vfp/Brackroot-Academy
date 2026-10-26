@@ -42,23 +42,50 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const { url, nudgeId } = event.notification.data || {};
-  const target = new URL(appUrl(url));
-  if (nudgeId) target.searchParams.set('nudge', nudgeId);
+  let href;
+  try {
+    const { url, nudgeId } = event.notification.data || {};
+    const target = new URL(appUrl(url));
+    if (nudgeId) target.searchParams.set('nudge', nudgeId);
+    href = target.href;
+  } catch {
+    href = self.registration.scope;
+  }
   event.waitUntil((async () => {
-    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    // Reuse an open window if there is one: navigate it rather than spawning
-    // a second copy of the app.
-    for (const c of all) {
-      if ('navigate' in c) {
-        try {
-          await c.navigate(target.href);
-          if ('focus' in c) await c.focus();
-          return;
-        } catch { /* fall through to openWindow */ }
+    // Android: focus() has to come FIRST, while the tap's user activation is
+    // still live — focusing after an awaited navigate() silently does nothing.
+    // Anything that fails falls through to openWindow, which always brings
+    // the installed app up.
+    try {
+      const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const scope = self.registration.scope;
+      const client = all.find(c => c.url && c.url.startsWith(scope)) || all[0];
+      if (client) {
+        let focused = null;
+        try { focused = await client.focus(); } catch { focused = null; }
+        if (focused) {
+          try { await focused.navigate(href); return; } catch { /* fall through */ }
+        }
       }
+    } catch { /* fall through */ }
+    try {
+      await self.clients.openWindow(href);
+    } catch {
+      // Last resort: the bare scope is always openable.
+      await self.clients.openWindow(self.registration.scope);
     }
-    await self.clients.openWindow(target.href);
+  })());
+});
+
+// Clearing a notification by swiping shouldn't leave a stale badge count.
+self.addEventListener('notificationclose', (event) => {
+  event.waitUntil((async () => {
+    try {
+      if (!('setAppBadge' in navigator)) return;
+      const open = await self.registration.getNotifications();
+      if (open.length === 0) await navigator.clearAppBadge();
+      else await navigator.setAppBadge(open.length);
+    } catch { /* best-effort */ }
   })());
 });
 
